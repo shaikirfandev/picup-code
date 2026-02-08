@@ -1,31 +1,49 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import { toggleSidebar } from '@/store/slices/uiSlice';
 import { useClickOutside } from '@/hooks';
 import {
-  Search, Plus, Bell, Menu, X, Sun, Moon, LogOut,
+  Search, Plus, Bell, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Sparkles, Home,
+  Home, Shield, Zap, Crosshair,
 } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((s) => s.auth);
-  const handleToggleSidebar = () => dispatch(toggleSidebar());
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [time, setTime] = useState('');
 
-  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () => setShowUserMenu(false));
+  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () =>
+    setShowUserMenu(false)
+  );
+
+  /* Live HUD clock */
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setTime(
+        d.toLocaleTimeString('en-US', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,166 +59,233 @@ export default function Header() {
     setShowUserMenu(false);
   };
 
+  const navItems = [
+    { href: '/', label: 'HOME', icon: Home },
+    { href: '/explore', label: 'EXPLORE', icon: Zap },
+    ...(isAuthenticated ? [{ href: '/create', label: 'CREATE', icon: Plus }] : []),
+  ];
+
+  const menuLinks = [
+    { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
+    { href: '/saved', label: 'Saved Intel', icon: Bookmark },
+    { href: '/boards', label: 'Boards', icon: LayoutDashboard },
+    ...(user?.role === 'admin'
+      ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
+      : []),
+  ];
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/80 dark:bg-surface-950/80 backdrop-blur-xl border-b border-surface-100 dark:border-surface-800">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 h-14"
+      style={{
+        background:
+          'linear-gradient(180deg, rgba(5,5,16,0.95), rgba(5,5,16,0.85))',
+        backdropFilter: 'blur(30px) saturate(1.2)',
+        WebkitBackdropFilter: 'blur(30px) saturate(1.2)',
+        borderBottom: '1px solid rgba(0,212,255,0.1)',
+        boxShadow:
+          '0 1px 30px rgba(0,0,0,0.5), 0 0 60px rgba(0,212,255,0.03)',
+      }}
+    >
+      {/* Top accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[1px]"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent 5%, rgba(0,212,255,0.4) 30%, rgba(0,136,255,0.3) 50%, rgba(191,0,255,0.3) 70%, transparent 95%)',
+        }}
+      />
+
       <div className="max-w-[2000px] mx-auto px-4 h-full flex items-center gap-3">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/25">
-            <Sparkles className="w-4 h-4 text-white" />
+        {/* ── Logo ── */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <div className="absolute inset-0 rounded border border-edith-cyan/30 rotate-45 group-hover:rotate-[225deg] transition-transform duration-700" />
+            <Crosshair
+              className="w-4 h-4 text-edith-cyan relative z-10"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(0,212,255,0.6))' }}
+            />
           </div>
-          <span className="text-xl font-bold hidden sm:block">
-            Pic<span className="text-brand-600">Up</span>
-          </span>
+          <div className="hidden sm:flex flex-col leading-none">
+            <span
+              className="text-[15px] font-display font-bold tracking-[0.2em] text-edith-cyan"
+              style={{ textShadow: '0 0 15px rgba(0,212,255,0.5)' }}
+            >
+              E.D.I.T.H
+            </span>
+            <span className="text-[7px] font-mono text-edith-cyan/30 tracking-[0.3em] uppercase">
+              Visual Discovery
+            </span>
+          </div>
         </Link>
 
-        {/* Nav Links */}
-        <nav className="hidden md:flex items-center gap-1 ml-2">
-          <Link href="/" className="btn-ghost text-sm font-semibold">
-            <Home className="w-4 h-4 mr-1.5" />
-            Home
-          </Link>
-          <Link href="/explore" className="btn-ghost text-sm font-semibold">
-            Explore
-          </Link>
-          {isAuthenticated && (
-            <Link href="/create" className="btn-ghost text-sm font-semibold">
-              Create
+        {/* ── Nav ── */}
+        <nav className="hidden md:flex items-center gap-0.5 ml-3">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-medium tracking-wider text-white/40 hover:text-edith-cyan transition-all duration-300 hover:bg-edith-cyan/5 rounded"
+            >
+              <item.icon className="w-3 h-3" />
+              {item.label}
             </Link>
-          )}
+          ))}
         </nav>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+        {/* ── Search ── */}
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
+          <div className="relative w-full group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-edith-cyan/40 group-focus-within:text-edith-cyan/70 transition-colors" />
             <input
               type="text"
-              placeholder="Search for inspiration, products, tags..."
+              placeholder="SEARCH TARGETS..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 
-                border-0 text-sm placeholder:text-surface-400 
-                focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-surface-700
-                transition-all duration-200"
+              className="w-full pl-9 pr-4 py-2 text-[11px] font-mono tracking-wider rounded transition-all duration-300 outline-none placeholder:text-edith-cyan/20"
+              style={{
+                background: 'rgba(0,212,255,0.03)',
+                border: '1px solid rgba(0,212,255,0.1)',
+                color: 'var(--edith-text)',
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 right-0 h-[1px] opacity-0 group-focus-within:opacity-100 transition-opacity"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent)',
+              }}
             />
           </div>
         </form>
 
-        {/* Right side */}
+        {/* ── Right side ── */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* Live clock */}
+          <div className="hidden lg:flex items-center gap-2 mr-2">
+            <span className="text-[10px] font-mono text-edith-cyan/25 tracking-wider">
+              {time}
+            </span>
+            <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
+          </div>
+
           {/* Mobile search toggle */}
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="md:hidden btn-ghost p-2"
+            className="md:hidden p-2 text-white/40 hover:text-edith-cyan transition-colors"
           >
-            <Search className="w-5 h-5" />
-          </button>
-
-          {/* Theme toggle */}
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="btn-ghost p-2"
-            aria-label="Toggle theme"
-          >
-            <Sun className="w-5 h-5 hidden dark:block" />
-            <Moon className="w-5 h-5 dark:hidden" />
+            <Search className="w-4 h-4" />
           </button>
 
           {isAuthenticated ? (
             <>
-              {/* Create button */}
-              <Link href="/create" className="btn-primary gap-1.5 hidden sm:inline-flex">
-                <Plus className="w-4 h-4" />
-                <span className="hidden lg:inline">Create</span>
+              <Link
+                href="/create"
+                className="btn-primary gap-1.5 hidden sm:inline-flex text-[10px] py-1.5 px-3"
+              >
+                <Plus className="w-3 h-3" />
+                <span className="hidden lg:inline">CREATE</span>
               </Link>
 
               {/* Notifications */}
-              <button className="btn-ghost p-2 relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              <button className="relative p-2 text-white/30 hover:text-edith-cyan transition-all duration-300 hover:bg-edith-cyan/5 rounded">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-edith-red animate-pulse" />
               </button>
 
               {/* User menu */}
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                  className="flex items-center gap-2 p-1 rounded hover:bg-edith-cyan/5 transition-all duration-300"
                 >
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt={user.displayName}
-                      className="w-8 h-8 rounded-full object-cover ring-2 ring-surface-200 dark:ring-surface-700"
+                      className="w-7 h-7 rounded object-cover"
+                      style={{
+                        border: '1px solid rgba(0,212,255,0.2)',
+                        boxShadow: '0 0 10px rgba(0,212,255,0.1)',
+                      }}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-sm font-semibold text-brand-600">
+                    <div
+                      className="w-7 h-7 rounded flex items-center justify-center text-[10px] font-mono font-bold text-edith-cyan"
+                      style={{
+                        background: 'rgba(0,212,255,0.08)',
+                        border: '1px solid rgba(0,212,255,0.2)',
+                      }}
+                    >
                       {user?.displayName?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
-                  <ChevronDown className="w-3.5 h-3.5 text-surface-500 hidden sm:block" />
+                  <ChevronDown className="w-3 h-3 text-white/20 hidden sm:block" />
                 </button>
 
-                {/* Dropdown menu */}
+                {/* Dropdown */}
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-64 glass-card py-2 animate-scale-in origin-top-right">
-                    <div className="px-4 py-3 border-b border-surface-100 dark:border-surface-800">
-                      <p className="font-semibold text-sm">{user?.displayName}</p>
-                      <p className="text-xs text-surface-500">@{user?.username}</p>
+                  <div
+                    className="absolute right-0 top-full mt-2 w-60 animate-scale-in origin-top-right overflow-hidden rounded-md"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, rgba(10,10,26,0.97), rgba(15,15,35,0.95))',
+                      backdropFilter: 'blur(30px)',
+                      border: '1px solid rgba(0,212,255,0.15)',
+                      boxShadow:
+                        '0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,255,0.05)',
+                    }}
+                  >
+                    {/* Top glow line */}
+                    <div
+                      className="h-[1px]"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent)',
+                      }}
+                    />
+
+                    {/* User info */}
+                    <div className="px-4 py-3 border-b border-edith-cyan/10">
+                      <p className="text-xs font-semibold text-white/80">
+                        {user?.displayName}
+                      </p>
+                      <p className="text-[10px] font-mono text-edith-cyan/40">
+                        @{user?.username}
+                      </p>
                     </div>
 
+                    {/* Links */}
                     <div className="py-1">
-                      <Link
-                        href={`/profile/${user?.username}`}
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                      >
-                        <User className="w-4 h-4 text-surface-500" />
-                        Your Profile
-                      </Link>
-                      <Link
-                        href="/saved"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                      >
-                        <Bookmark className="w-4 h-4 text-surface-500" />
-                        Saved Posts
-                      </Link>
-                      <Link
-                        href="/boards"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-surface-500" />
-                        My Boards
-                      </Link>
-                      {user?.role === 'admin' && (
+                      {menuLinks.map((item) => (
                         <Link
-                          href="/admin"
+                          key={item.href}
+                          href={item.href}
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors text-brand-600"
+                          className="flex items-center gap-3 px-4 py-2 text-[11px] font-mono text-white/50 hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
                         >
-                          <Settings className="w-4 h-4" />
-                          Admin Panel
+                          <item.icon className="w-3.5 h-3.5" />
+                          {item.label}
                         </Link>
-                      )}
+                      ))}
                     </div>
 
-                    <div className="border-t border-surface-100 dark:border-surface-800 pt-1">
+                    {/* Settings & logout */}
+                    <div className="border-t border-edith-cyan/10 py-1">
                       <Link
                         href="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                        className="flex items-center gap-3 px-4 py-2 text-[11px] font-mono text-white/50 hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
                       >
-                        <Settings className="w-4 h-4 text-surface-500" />
+                        <Settings className="w-3.5 h-3.5" />
                         Settings
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2 text-[11px] font-mono text-edith-red/60 hover:text-edith-red hover:bg-edith-red/5 transition-all"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Log Out
+                        <LogOut className="w-3.5 h-3.5" />
+                        Disconnect
                       </button>
                     </div>
                   </div>
@@ -209,42 +294,62 @@ export default function Header() {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="btn-ghost text-sm font-semibold">
-                Log In
+              <Link
+                href="/login"
+                className="btn-ghost text-[11px] font-mono tracking-wider"
+              >
+                LOG IN
               </Link>
-              <Link href="/register" className="btn-primary text-sm">
-                Sign Up
+              <Link
+                href="/register"
+                className="btn-primary text-[10px] py-1.5 px-3"
+              >
+                SIGN UP
               </Link>
             </div>
           )}
 
-          {/* Mobile menu */}
-          <button onClick={toggleSidebar} className="md:hidden btn-ghost p-2">
-            <Menu className="w-5 h-5" />
+          {/* Mobile menu toggle */}
+          <button
+            onClick={() => dispatch(toggleSidebar())}
+            className="md:hidden p-2 text-white/40 hover:text-edith-cyan transition-colors"
+          >
+            <Menu className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Mobile search */}
+      {/* Mobile search panel */}
       {showMobileSearch && (
-        <div className="md:hidden absolute top-full left-0 right-0 p-3 bg-white dark:bg-surface-950 border-b border-surface-100 dark:border-surface-800 animate-slide-up">
+        <div
+          className="md:hidden absolute top-full left-0 right-0 p-3 animate-slide-up"
+          style={{
+            background: 'rgba(5,5,16,0.95)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(0,212,255,0.1)',
+          }}
+        >
           <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-edith-cyan/40" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="SEARCH..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full pl-11 pr-10 py-3 rounded-full bg-surface-100 dark:bg-surface-800 
-                border-0 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-9 pr-10 py-2.5 text-[11px] font-mono tracking-wider rounded outline-none"
+              style={{
+                background: 'rgba(0,212,255,0.05)',
+                border: '1px solid rgba(0,212,255,0.15)',
+                color: 'var(--edith-text)',
+              }}
             />
             <button
               type="button"
               onClick={() => setShowMobileSearch(false)}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
-              <X className="w-4 h-4 text-surface-400" />
+              <X className="w-3.5 h-3.5 text-white/30" />
             </button>
           </form>
         </div>

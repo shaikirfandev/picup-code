@@ -9,6 +9,7 @@ import {
   Heart, Eye, Sparkles, Tag, ExternalLink, Play, Clock,
   Bookmark, Zap,
 } from 'lucide-react';
+import MatrixText from '@/components/ui/MatrixText';
 
 interface CyberHoverModalProps {
   post: Post;
@@ -222,22 +223,24 @@ export default function CyberHoverModal({
           {/* Content */}
           <div className="p-3.5 space-y-2.5">
             <Link href={`/post/${post._id}`}>
-              <h3 className="text-[13px] font-semibold text-white leading-snug line-clamp-2 font-mono hover:text-cyan-400 transition-colors cursor-pointer"
-                style={{ textShadow: '0 0 10px rgba(0,240,255,0.3)' }}>
-                {post.title}
+              <h3 className="text-[13px] font-semibold text-cyan-400 leading-snug line-clamp-2 font-mono hover:text-white transition-colors cursor-pointer"
+                style={{ textShadow: '0 0 10px rgba(0,240,255,0.4)' }}>
+                <MatrixText text={post.title} trigger={animIn} speed={18} scramblePasses={2} />
               </h3>
             </Link>
 
             {post.description && (
-              <p className="text-[10px] text-white/35 line-clamp-2 leading-relaxed">{post.description}</p>
+              <p className="text-[10px] text-white/35 line-clamp-2 leading-relaxed font-mono">
+                <MatrixText text={post.description.slice(0, 80)} trigger={animIn} speed={12} scramblePasses={1} />
+              </p>
             )}
 
             {/* Stats */}
             <div className="flex items-center gap-3 text-[9px] font-mono text-white/25">
-              <span className="flex items-center gap-1"><Heart className="w-2.5 h-2.5 text-pink-500/50" />{formatNumber(post.likesCount)}</span>
-              <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{formatNumber(post.viewsCount || 0)}</span>
-              <span className="flex items-center gap-1"><Bookmark className="w-2.5 h-2.5" />{formatNumber(post.savesCount || 0)}</span>
-              <span className="ml-auto">{timeAgo(post.createdAt)}</span>
+              <span className="flex items-center gap-1"><Heart className="w-2.5 h-2.5 text-pink-500/50" /><MatrixText text={formatNumber(post.likesCount)} trigger={animIn} speed={30} scramblePasses={3} /></span>
+              <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" /><MatrixText text={formatNumber(post.viewsCount || 0)} trigger={animIn} speed={30} scramblePasses={3} /></span>
+              <span className="flex items-center gap-1"><Bookmark className="w-2.5 h-2.5" /><MatrixText text={formatNumber(post.savesCount || 0)} trigger={animIn} speed={30} scramblePasses={3} /></span>
+              <span className="ml-auto text-emerald-400/30"><MatrixText text={timeAgo(post.createdAt)} trigger={animIn} speed={20} scramblePasses={2} /></span>
             </div>
 
             {/* Author */}
@@ -252,19 +255,23 @@ export default function CyberHoverModal({
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-medium text-white/60 block truncate">{post.author?.displayName}</span>
-                <span className="text-[9px] text-emerald-400/40 font-mono">@{post.author?.username}</span>
+                <span className="text-[10px] font-medium text-white/60 block truncate font-mono">
+                  <MatrixText text={post.author?.displayName || ''} trigger={animIn} speed={22} scramblePasses={2} />
+                </span>
+                <span className="text-[9px] text-emerald-400/40 font-mono">
+                  <MatrixText text={`@${post.author?.username || ''}`} trigger={animIn} speed={18} scramblePasses={1} />
+                </span>
               </div>
             </Link>
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 pt-1">
-                {post.tags.slice(0, 4).map((tag) => (
+                {post.tags.slice(0, 4).map((tag, i) => (
                   <span key={tag}
                     className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-mono text-cyan-400/40 border border-cyan-400/[0.07]"
                     style={{ background: 'rgba(0,240,255,0.02)' }}>
-                    <Tag className="w-2 h-2" />{tag}
+                    <Tag className="w-2 h-2" /><MatrixText text={tag} trigger={animIn} speed={15 + i * 5} scramblePasses={1} />
                   </span>
                 ))}
                 {post.tags.length > 4 && (
@@ -279,13 +286,13 @@ export default function CyberHoverModal({
                 {post.price?.amount && (
                   <span className="text-sm font-bold font-mono"
                     style={{ color: '#00f0ff', textShadow: '0 0 8px rgba(0,240,255,0.5)' }}>
-                    {formatPrice(post.price.amount)}
+                    <MatrixText text={formatPrice(post.price.amount)} trigger={animIn} speed={25} scramblePasses={3} />
                   </span>
                 )}
                 {post.productUrl && (
                   <a href={post.productUrl} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[8px] font-mono text-cyan-400/50 hover:text-cyan-400 transition-colors">
-                    <ExternalLink className="w-2.5 h-2.5" />VISIT
+                    <ExternalLink className="w-2.5 h-2.5" /><MatrixText text="VISIT" trigger={animIn} speed={40} scramblePasses={4} />
                   </a>
                 )}
               </div>
@@ -300,7 +307,7 @@ export default function CyberHoverModal({
                     borderColor: `${post.category.color}44`,
                     color: post.category.color,
                   }}>
-                  {post.category.icon} {post.category.name}
+                  {post.category.icon} <MatrixText text={post.category.name} trigger={animIn} speed={20} scramblePasses={2} />
                 </span>
               </div>
             )}

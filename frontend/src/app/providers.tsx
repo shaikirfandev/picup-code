@@ -17,7 +17,7 @@ function AuthInit() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
       <AuthInit />
       {children}
       <Toaster
@@ -25,10 +25,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         toastOptions={{
           duration: 3000,
           style: {
-            background: 'var(--toast-bg, #18181b)',
-            color: 'var(--toast-color, #fafafa)',
-            borderRadius: '12px',
-            fontSize: '14px',
+            background: 'rgba(10,10,26,0.95)',
+            color: 'rgba(200,230,255,0.9)',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontFamily: "'JetBrains Mono', monospace",
+            border: '1px solid rgba(0,212,255,0.15)',
+            boxShadow: '0 0 20px rgba(0,212,255,0.1)',
             padding: '12px 16px',
           },
         }}

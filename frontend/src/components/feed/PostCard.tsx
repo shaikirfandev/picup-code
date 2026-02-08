@@ -37,6 +37,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const rafRef = useRef<number | null>(null);
   const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isModalHovered, setIsModalHovered] = useState(false);
+  const isModalHoveredRef = useRef(false);
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
 
@@ -72,14 +73,16 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
     setShowModal(false);
     setCardRect(null);
     setIsModalHovered(false);
+    isModalHoveredRef.current = false;
   }, [isVideo]);
 
   const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
     cancelPendingLeave();
     leaveTimerRef.current = setTimeout(() => {
-      if (!isModalHovered) dismissAll();
+      if (!isModalHoveredRef.current) dismissAll();
     }, 250);
-  }, [cancelPendingLeave, dismissAll, isModalHovered]);
+  }, [cancelPendingLeave, dismissAll]);
 
   // When modal becomes un-hovered and card isn't hovered, dismiss
   useEffect(() => {
@@ -92,11 +95,17 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const handleModalMouseEnter = useCallback(() => {
     cancelPendingLeave();
     setIsModalHovered(true);
+    isModalHoveredRef.current = true;
   }, [cancelPendingLeave]);
 
   const handleModalMouseLeave = useCallback(() => {
     setIsModalHovered(false);
-  }, []);
+    isModalHoveredRef.current = false;
+    cancelPendingLeave();
+    leaveTimerRef.current = setTimeout(() => {
+      dismissAll();
+    }, 200);
+  }, [cancelPendingLeave, dismissAll]);
 
   // Cleanup on unmount
   useEffect(() => () => {
