@@ -168,6 +168,8 @@ const streamFile = async (bucketName, fileId, req, res) => {
       'Content-Length': chunkSize,
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+      'Access-Control-Allow-Origin': '*',
     });
 
     bucket.openDownloadStream(_id, { start, end: end + 1 }).pipe(res);
@@ -176,6 +178,8 @@ const streamFile = async (bucketName, fileId, req, res) => {
       'Content-Length': fileSize,
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+      'Access-Control-Allow-Origin': '*',
     });
 
     bucket.openDownloadStream(_id).pipe(res);

@@ -1,6 +1,13 @@
 const router = require('express').Router();
 const { streamFile } = require('../config/gridfs');
 
+// Allow cross-origin access for all file routes (images/videos loaded by <img>/<video> on frontend)
+router.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
 // Serve images from GridFS
 router.get('/image/:id', async (req, res) => {
   try {

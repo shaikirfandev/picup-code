@@ -35,7 +35,10 @@ connectDB().then(() => {
 configurePassport(passport);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(compression());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
