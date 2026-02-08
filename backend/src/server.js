@@ -23,6 +23,7 @@ const searchRoutes = require('./routes/search');
 const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
 const fileRoutes = require('./routes/files');
+const parallelRoutes = require('./routes/parallel');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/parallel', parallelRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

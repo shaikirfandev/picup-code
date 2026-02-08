@@ -10,7 +10,7 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Bell, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Shield, Zap, Crosshair,
+  Home, Shield, Zap, Crosshair, Brain,
 } from 'lucide-react';
 
 export default function Header() {
@@ -62,6 +62,7 @@ export default function Header() {
   const navItems = [
     { href: '/', label: 'HOME', icon: Home },
     { href: '/explore', label: 'EXPLORE', icon: Zap },
+    { href: '/parallel', label: 'PARALLEL', icon: Brain },
     ...(isAuthenticated ? [{ href: '/create', label: 'CREATE', icon: Plus }] : []),
   ];
 
@@ -70,7 +71,10 @@ export default function Header() {
     { href: '/saved', label: 'Saved Intel', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
     ...(user?.role === 'admin'
-      ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
+      ? [
+          { href: '/admin', label: 'Command Center', icon: Shield },
+          { href: '/parallel/admin', label: 'Parallel Admin', icon: Brain },
+        ]
       : []),
   ];
 
