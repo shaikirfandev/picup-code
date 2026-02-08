@@ -131,8 +131,10 @@ function reciprocalRankFusion(keywordResults, semanticResults) {
       TRUST_WEIGHT * (entry.trustScore / (RRF_K + 1));
 
     const confidence = Math.min(1, Math.max(0,
-      (entry.keywordRRF > 0 && entry.semanticRRF > 0 ? 0.85 : 0.55) +
-      entry.trustScore * 0.15
+      (entry.keywordRRF > 0 && entry.semanticRRF > 0 ? 0.80 : 0.45) +
+      (entry.keywordScore > 2 ? 0.10 : 0) +
+      (entry.semanticScore > 0.5 ? 0.08 : 0) +
+      entry.trustScore * 0.12
     ));
 
     fused.push({
@@ -213,6 +215,17 @@ async function hybridSearch(query, options = {}) {
     ]);
     results = reciprocalRankFusion(kwResults, semResults);
   }
+
+  // Filter out irrelevant results — require minimum keyword match or semantic score
+  results = results.filter((r) => {
+    const kw = r.keywordScore || r._keywordScore || 0;
+    const sem = r.semanticScore || r._semanticScore || 0;
+    // In keyword mode, need non-zero text score; in semantic mode, need decent cosine;
+    // in hybrid, need at least one signal
+    if (searchType === 'keyword') return kw > 0.3;
+    if (searchType === 'semantic') return sem > 0.15;
+    return kw > 0.1 || sem > 0.15;
+  });
 
   // Deduplicate
   if (deduplicate) {

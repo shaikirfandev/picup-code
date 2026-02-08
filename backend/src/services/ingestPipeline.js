@@ -62,9 +62,20 @@ async function ingestUrl(url, sourceId, options = {}) {
 
     /* ── Stage 2: Clean ─────────────────────────────── */
     const isHtml = (crawlResult.contentType || '').includes('html');
+
+    // Cap raw content at 500 KB to prevent OOM on very large pages
+    const MAX_CLEAN_INPUT = 500 * 1024;
+    let rawInput = crawlResult.rawContent;
+    if (rawInput.length > MAX_CLEAN_INPUT) {
+      rawInput = rawInput.slice(0, MAX_CLEAN_INPUT);
+    }
+    // Free original content reference
+    crawlResult.rawContent = null;
+
     const { text, metadata } = isHtml
-      ? cleanHtml(crawlResult.rawContent)
-      : cleanText(crawlResult.rawContent);
+      ? cleanHtml(rawInput)
+      : cleanText(rawInput);
+    rawInput = null; // free
 
     // Don't persist full cleaned text on job to save memory
     job.cleanedBytes = Buffer.byteLength(text, 'utf-8');

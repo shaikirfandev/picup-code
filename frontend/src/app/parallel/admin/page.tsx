@@ -115,9 +115,9 @@ export default function ParallelAdminPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-display font-bold tracking-wider">
-              <MatrixText text="PARALLEL" animate={animTitle} className="text-edith-cyan" />
+              <MatrixText text="PARALLEL" trigger={animTitle} className="text-edith-cyan" />
               <span className="text-white/15 mx-2">/</span>
-              <MatrixText text="ADMIN" animate={animTitle} className="text-purple-400" />
+              <MatrixText text="ADMIN" trigger={animTitle} className="text-purple-400" />
             </h1>
             <p className="text-[10px] font-mono text-white/20 tracking-wider mt-1">
               Source Management · Ingestion Monitor · System Stats
@@ -157,9 +157,9 @@ export default function ParallelAdminPage() {
                 { label: 'SOURCES', value: stats.overview.totalSources, icon: Globe, color: 'cyan' },
                 { label: 'CHUNKS', value: stats.overview.totalChunks, icon: Database, color: 'purple' },
                 { label: 'CRAWL JOBS', value: stats.overview.totalCrawlJobs, icon: Activity, color: 'yellow' },
-                { label: 'TASKS', value: stats.overview.totalResearchTasks, icon: Brain, color: 'green' },
+                { label: 'TASKS', value: stats.overview.totalTaskRuns, icon: Brain, color: 'green' },
+                { label: 'FINDALL', value: stats.overview.totalFindAllRuns, icon: Eye, color: 'pink' },
                 { label: 'SEARCHES', value: stats.overview.totalSearches, icon: Search, color: 'blue' },
-                { label: 'AVG RESPONSE', value: `${stats.overview.avgSearchResponseMs}ms`, icon: Zap, color: 'orange' },
               ].map((s, i) => (
                 <div key={i} className="rounded-xl p-4"
                   style={{

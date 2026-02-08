@@ -1,6 +1,32 @@
 /**
  * Routes for the Parallel AI Search Platform.
  * Base path: /api/parallel
+ *
+ * Mirrors real Parallel.ai endpoints:
+ *   POST   /search
+ *   POST   /extract
+ *   POST   /tasks/runs
+ *   GET    /tasks/runs
+ *   GET    /tasks/runs/:id
+ *   GET    /tasks/runs/:id/result
+ *   GET    /tasks/runs/:id/events
+ *   POST   /findall/runs
+ *   GET    /findall/runs/:id
+ *   GET    /findall/runs/:id/result
+ *   POST   /findall/runs/:id/cancel
+ *   POST   /findall/ingest
+ *   POST   /chat/completions
+ *   POST   /chat/sessions
+ *   GET    /chat/sessions
+ *   GET    /chat/sessions/:id
+ *   POST   /monitor/watches
+ *   GET    /monitor/watches
+ *   GET    /monitor/watches/:id
+ *   DELETE /monitor/watches/:id
+ *   POST   /monitor/watches/:id/check
+ *   POST   /monitor/watches/:id/toggle
+ *   GET    /monitor/watches/:id/changes
+ *   + Source/Chunk/Stats admin endpoints
  */
 
 const express = require('express');
@@ -22,33 +48,82 @@ const taskLimiter = rateLimit({
   message: { success: false, message: 'Task rate limit exceeded' },
 });
 
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { success: false, message: 'Chat rate limit exceeded' },
+});
+
 const ingestLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,
   message: { success: false, message: 'Ingest rate limit exceeded' },
 });
 
-/* ── Core AI endpoints ──────────────────────────────── */
-router.post('/search',   searchLimiter, optionalAuth, ctrl.search);
-router.post('/extract',  taskLimiter,   optionalAuth, ctrl.extract);
-router.post('/task',     taskLimiter,   optionalAuth, ctrl.createTask);
-router.post('/findall',  taskLimiter,   optionalAuth, ctrl.findAll);
+/* ═══════════════════════════════════════════════════════
+   SEARCH API
+   ═══════════════════════════════════════════════════════ */
+router.post('/search', searchLimiter, optionalAuth, ctrl.search);
 
-/* ── Tasks ──────────────────────────────────────────── */
-router.get('/tasks',     optionalAuth, ctrl.listTasks);
-router.get('/tasks/:id', optionalAuth, ctrl.getTask);
+/* ═══════════════════════════════════════════════════════
+   EXTRACT API
+   ═══════════════════════════════════════════════════════ */
+router.post('/extract', taskLimiter, optionalAuth, ctrl.extract);
 
-/* ── Sources (ingestion) ────────────────────────────── */
-router.get('/sources',           optionalAuth, ctrl.listSources);
-router.post('/sources',          ingestLimiter, optionalAuth, ctrl.addSource);
-router.get('/sources/:id',       optionalAuth, ctrl.getSource);
-router.delete('/sources/:id',    authenticate,  ctrl.deleteSource);
+/* ═══════════════════════════════════════════════════════
+   TASK API
+   ═══════════════════════════════════════════════════════ */
+router.post('/tasks/runs',              taskLimiter, optionalAuth, ctrl.createTaskRun);
+router.get('/tasks/runs',               optionalAuth, ctrl.listTaskRuns);
+router.get('/tasks/runs/:id',           optionalAuth, ctrl.getTaskRun);
+router.get('/tasks/runs/:id/result',    optionalAuth, ctrl.getTaskRunResult);
+router.get('/tasks/runs/:id/events',    optionalAuth, ctrl.getTaskRunEvents);
+
+/* ═══════════════════════════════════════════════════════
+   FINDALL API
+   ═══════════════════════════════════════════════════════ */
+router.post('/findall/runs',            taskLimiter, optionalAuth, ctrl.createFindAllRun);
+router.get('/findall/runs/:id',         optionalAuth, ctrl.getFindAllRun);
+router.get('/findall/runs/:id/result',  optionalAuth, ctrl.getFindAllRunResult);
+router.post('/findall/runs/:id/cancel', optionalAuth, ctrl.cancelFindAllRun);
+router.post('/findall/ingest',          taskLimiter, optionalAuth, ctrl.findAllIngest);
+
+/* ═══════════════════════════════════════════════════════
+   CHAT API
+   ═══════════════════════════════════════════════════════ */
+router.post('/chat/completions',  chatLimiter, optionalAuth, ctrl.chatCompletion);
+router.post('/chat/sessions',     chatLimiter, optionalAuth, ctrl.createChatSession);
+router.get('/chat/sessions',      optionalAuth, ctrl.listChatSessions);
+router.get('/chat/sessions/:id',  optionalAuth, ctrl.getChatSession);
+
+/* ═══════════════════════════════════════════════════════
+   MONITOR API
+   ═══════════════════════════════════════════════════════ */
+router.post('/monitor/watches',              taskLimiter, optionalAuth, ctrl.createWatch);
+router.get('/monitor/watches',               optionalAuth, ctrl.listWatches);
+router.get('/monitor/watches/:id',           optionalAuth, ctrl.getWatch);
+router.delete('/monitor/watches/:id',        authenticate, ctrl.deleteWatch);
+router.post('/monitor/watches/:id/check',    taskLimiter, optionalAuth, ctrl.triggerCheck);
+router.post('/monitor/watches/:id/toggle',   optionalAuth, ctrl.toggleWatch);
+router.get('/monitor/watches/:id/changes',   optionalAuth, ctrl.getWatchChanges);
+
+/* ═══════════════════════════════════════════════════════
+   SOURCES (ingestion admin)
+   ═══════════════════════════════════════════════════════ */
+router.get('/sources',              optionalAuth, ctrl.listSources);
+router.post('/sources',             ingestLimiter, optionalAuth, ctrl.addSource);
+router.get('/sources/:id',          optionalAuth, ctrl.getSource);
+router.delete('/sources/:id',       authenticate, ctrl.deleteSource);
 router.post('/sources/:id/recrawl', ingestLimiter, authenticate, ctrl.recrawlSource);
 
-/* ── Chunks ─────────────────────────────────────────── */
-router.get('/chunks',            optionalAuth, ctrl.listChunks);
+/* ═══════════════════════════════════════════════════════
+   CHUNKS
+   ═══════════════════════════════════════════════════════ */
+router.get('/chunks', optionalAuth, ctrl.listChunks);
 
-/* ── Stats / Admin ──────────────────────────────────── */
-router.get('/stats',             optionalAuth, ctrl.getStats);
+/* ═══════════════════════════════════════════════════════
+   STATS / ADMIN
+   ═══════════════════════════════════════════════════════ */
+router.get('/stats', optionalAuth, ctrl.getStats);
 
 module.exports = router;

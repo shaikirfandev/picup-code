@@ -16,7 +16,7 @@ const { URL } = require('url');
 
 const USER_AGENT = 'PicUp-AISearchBot/1.0 (+https://picup.ai/bot)';
 const TIMEOUT = 15000;
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 /* ── Simple HTTP(S) fetch ───────────────────────────── */
 function httpFetch(url, options = {}) {
