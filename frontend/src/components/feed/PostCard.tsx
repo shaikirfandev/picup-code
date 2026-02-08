@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, Bookmark, ExternalLink, Share2, MoreHorizontal, Sparkles, Play, Volume2, VolumeX } from 'lucide-react';
@@ -9,6 +9,7 @@ import { formatNumber, formatPrice, timeAgo } from '@/lib/utils';
 import { postsAPI } from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import toast from 'react-hot-toast';
+import CyberHoverModal from '@/components/ui/CyberHoverModal';
 
 interface PostCardProps {
   post: Post;
@@ -24,6 +25,25 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardRect, setCardRect] = useState<DOMRect | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const modalTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  // Keep cardRect in sync while hovering (handles scroll / resize)
+  const updateCardRect = useCallback(() => {
+    if (cardRef.current) {
+      setCardRect(cardRef.current.getBoundingClientRect());
+      rafRef.current = requestAnimationFrame(updateCardRect);
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
 
@@ -32,6 +52,12 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
     if (isVideo && videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
+    // Show modal after a short hover delay
+    if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
+    modalTimerRef.current = setTimeout(() => {
+      setShowModal(true);
+      updateCardRect(); // start tracking position
+    }, 400);
   };
 
   const handleMouseLeave = () => {
@@ -40,6 +66,11 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
+    // Cancel / hide modal
+    if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    setShowModal(false);
+    setCardRect(null);
   };
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -118,6 +149,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
@@ -324,6 +356,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
           </div>
         </div>
       </Link>
+      <CyberHoverModal post={post} cardRect={cardRect} isVisible={showModal} />
     </motion.div>
   );
 }
