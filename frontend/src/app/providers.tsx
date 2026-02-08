@@ -17,23 +17,27 @@ function AuthInit() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthInit />
-      {children}
-      <Toaster
-        position="bottom-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: 'var(--toast-bg, #18181b)',
-            color: 'var(--toast-color, #fafafa)',
-            borderRadius: '12px',
-            fontSize: '14px',
-            padding: '12px 16px',
-          },
-        }}
-      />
-    </ThemeProvider>
+      <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+        <AuthInit />
+        {children}
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: 'rgba(14, 14, 30, 0.95)',
+              color: '#00f0ff',
+              borderRadius: '12px',
+              fontSize: '13px',
+              padding: '12px 16px',
+              border: '1px solid rgba(0, 240, 255, 0.15)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 240, 255, 0.05)',
+              fontFamily: 'JetBrains Mono, monospace',
+              backdropFilter: 'blur(20px)',
+            },
+          }}
+        />
+      </ThemeProvider>
     </Provider>
   );
 }

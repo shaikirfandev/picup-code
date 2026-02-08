@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { postsAPI, categoriesAPI, searchAPI } from '@/lib/api';
 import MasonryFeed from '@/components/feed/MasonryFeed';
 import { FeedSkeleton } from '@/components/shared/Skeletons';
+import MatrixText from '@/components/ui/MatrixText';
 import { Post, Category } from '@/types';
-import { TrendingUp, Flame, Clock, Star, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { TrendingUp, Flame, Clock, Star, Zap, ChevronRight } from 'lucide-react';
 
 type SortOption = 'recent' | 'popular' | 'trending' | 'featured';
 
@@ -26,49 +26,33 @@ export default function HomePage() {
       try {
         setIsLoading(true);
         const { data } = await postsAPI.getFeed({
-          page: pageNum,
-          limit: 30,
-          sort,
+          page: pageNum, limit: 30, sort,
           category: selectedCategory || undefined,
           tag: selectedTag || undefined,
         });
-
-        if (reset) {
-          setPosts(data.data);
-        } else {
-          setPosts((prev) => [...prev, ...data.data]);
-        }
+        if (reset) setPosts(data.data);
+        else setPosts((prev) => [...prev, ...data.data]);
         setHasMore(data.pagination.hasMore);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      } catch (error) { console.error('Failed to fetch posts:', error); }
+      finally { setIsLoading(false); }
     },
     [sort, selectedCategory, selectedTag]
   );
 
-  // Initial load
   useEffect(() => {
     const loadInitial = async () => {
       try {
         const [catRes, tagsRes] = await Promise.all([
-          categoriesAPI.getAll(),
-          searchAPI.getTrendingTags(),
+          categoriesAPI.getAll(), searchAPI.getTrendingTags(),
         ]);
         setCategories(catRes.data.data);
         setTrendingTags(tagsRes.data.data);
-      } catch (e) {
-        console.error('Failed to load categories/tags:', e);
-      }
+      } catch (e) { console.error('Failed to load categories/tags:', e); }
     };
     loadInitial();
   }, []);
 
-  useEffect(() => {
-    setPage(1);
-    fetchPosts(1, true);
-  }, [fetchPosts]);
+  useEffect(() => { setPage(1); fetchPosts(1, true); }, [fetchPosts]);
 
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore) {
@@ -79,63 +63,77 @@ export default function HomePage() {
   }, [isLoading, hasMore, page, fetchPosts]);
 
   const sortOptions: { key: SortOption; label: string; icon: React.ReactNode }[] = [
-    { key: 'recent', label: 'Latest', icon: <Clock className="w-4 h-4" /> },
-    { key: 'popular', label: 'Popular', icon: <Flame className="w-4 h-4" /> },
-    { key: 'trending', label: 'Trending', icon: <TrendingUp className="w-4 h-4" /> },
-    { key: 'featured', label: 'Featured', icon: <Star className="w-4 h-4" /> },
+    { key: 'recent', label: 'LATEST', icon: <Clock className="w-3.5 h-3.5" /> },
+    { key: 'popular', label: 'POPULAR', icon: <Flame className="w-3.5 h-3.5" /> },
+    { key: 'trending', label: 'TRENDING', icon: <TrendingUp className="w-3.5 h-3.5" /> },
+    { key: 'featured', label: 'FEATURED', icon: <Star className="w-3.5 h-3.5" /> },
   ];
 
   return (
     <div className="min-h-screen">
-      {/* Hero section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-purple-50 dark:from-surface-950 dark:via-surface-900 dark:to-brand-950 py-12 md:py-16">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-400/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl" />
+      {/* Hero */}
+      <section className="relative overflow-hidden py-16 md:py-20">
+        {/* Gradient orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 left-1/3 w-[500px] h-[500px] bg-cyber-glow/[0.04] rounded-full blur-[100px]" />
+          <div className="absolute -bottom-20 right-1/4 w-[400px] h-[400px] bg-cyber-purple/[0.05] rounded-full blur-[80px]" />
         </div>
+
         <div className="relative max-w-4xl mx-auto text-center px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-100/80 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-sm font-medium mb-6 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4" />
-            Discover & Shop Visual Inspiration
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 font-mono text-xs uppercase tracking-[0.2em]"
+            style={{
+              background: 'rgba(0,240,255,0.06)',
+              border: '1px solid rgba(0,240,255,0.15)',
+              color: 'var(--cyber-glow)',
+              boxShadow: '0 0 15px rgba(0,240,255,0.08)',
+            }}>
+            <Zap className="w-3.5 h-3.5" />
+            <span>Visual Discovery Interface</span>
+            <ChevronRight className="w-3 h-3" />
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
-            Find Products You&apos;ll{' '}
-            <span className="text-gradient">Love</span>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 tracking-tight leading-[1.1]">
+            <span className="text-white">Find Products You&apos;ll </span>
+            <MatrixText
+              text="Love"
+              className="text-gradient text-4xl md:text-5xl lg:text-6xl font-bold"
+              speed={40}
+              delay={500}
+            />
           </h1>
-          <p className="text-lg text-surface-500 dark:text-surface-400 max-w-2xl mx-auto">
-            Explore a curated collection of amazing products, AI-generated art, and creative inspiration. Save, share, and shop.
+          <p className="text-base text-white/40 max-w-2xl mx-auto font-mono leading-relaxed">
+            &gt; Explore a curated collection of amazing products, AI-generated art, and creative inspiration.
           </p>
         </div>
       </section>
 
       {/* Categories */}
       {categories.length > 0 && (
-        <section className="border-b border-surface-100 dark:border-surface-800 bg-white dark:bg-surface-950 sticky top-16 z-30">
+        <section className="sticky top-16 z-30"
+          style={{
+            background: 'rgba(10,10,15,0.8)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(0,240,255,0.06)',
+          }}>
           <div className="max-w-[2000px] mx-auto">
             <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
-              <button
-                onClick={() => { setSelectedCategory(''); setSelectedTag(''); }}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all
+              <button onClick={() => { setSelectedCategory(''); setSelectedTag(''); }}
+                className={`shrink-0 px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all border
                   ${!selectedCategory && !selectedTag
-                    ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900'
-                    : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700'
-                  }`}
-              >
-                All
+                    ? 'bg-cyber-glow/10 border-cyber-glow/30 text-cyber-glow shadow-cyber'
+                    : 'bg-white/[0.03] border-white/[0.06] text-white/40 hover:text-white/60 hover:border-white/10'}`}>
+                ALL
               </button>
               {categories.map((cat) => (
-                <button
-                  key={cat._id}
-                  onClick={() => { setSelectedCategory(cat._id); setSelectedTag(''); }}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5
+                <button key={cat._id} onClick={() => { setSelectedCategory(cat._id); setSelectedTag(''); }}
+                  className={`shrink-0 px-4 py-2 rounded-lg text-xs font-mono font-medium uppercase tracking-wider transition-all flex items-center gap-1.5 border
                     ${selectedCategory === cat._id
-                      ? 'text-white shadow-sm'
-                      : 'bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700'
-                    }`}
-                  style={selectedCategory === cat._id ? { backgroundColor: cat.color } : {}}
-                >
-                  <span>{cat.icon}</span>
-                  {cat.name}
+                      ? 'text-white shadow-cyber'
+                      : 'bg-white/[0.03] border-white/[0.06] text-white/40 hover:text-white/60 hover:border-white/10'}`}
+                  style={selectedCategory === cat._id
+                    ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, boxShadow: `0 0 12px ${cat.color}33` }
+                    : {}}>
+                  <span>{cat.icon}</span>{cat.name}
                 </button>
               ))}
             </div>
@@ -147,17 +145,13 @@ export default function HomePage() {
       {trendingTags.length > 0 && (
         <section className="max-w-[2000px] mx-auto px-4 py-4">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-xs font-semibold text-surface-400 uppercase tracking-wider shrink-0">Trending:</span>
+            <span className="text-[10px] font-mono font-bold text-cyber-glow/40 uppercase tracking-[0.2em] shrink-0">&gt; TRENDING:</span>
             {trendingTags.slice(0, 10).map((t) => (
-              <button
-                key={t.tag}
-                onClick={() => { setSelectedTag(t.tag); setSelectedCategory(''); }}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all
+              <button key={t.tag} onClick={() => { setSelectedTag(t.tag); setSelectedCategory(''); }}
+                className={`shrink-0 px-3 py-1 rounded-md text-[11px] font-mono transition-all border
                   ${selectedTag === t.tag
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-surface-100 dark:bg-surface-800 text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700'
-                  }`}
-              >
+                    ? 'bg-cyber-glow/10 border-cyber-glow/30 text-cyber-glow shadow-cyber'
+                    : 'bg-white/[0.02] border-white/[0.05] text-white/30 hover:text-cyber-glow/60 hover:border-cyber-glow/15'}`}>
                 #{t.tag}
               </button>
             ))}
@@ -165,21 +159,16 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Sort tabs */}
+      {/* Sort */}
       <section className="max-w-[2000px] mx-auto px-4 pb-4">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {sortOptions.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setSort(opt.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all
+            <button key={opt.key} onClick={() => setSort(opt.key)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider transition-all border
                 ${sort === opt.key
-                  ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 shadow-sm'
-                  : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800'
-                }`}
-            >
-              {opt.icon}
-              {opt.label}
+                  ? 'bg-cyber-glow/10 border-cyber-glow/25 text-cyber-glow shadow-cyber'
+                  : 'bg-transparent border-transparent text-white/30 hover:text-white/50 hover:bg-white/[0.02]'}`}>
+              {opt.icon}{opt.label}
             </button>
           ))}
         </div>
@@ -192,16 +181,11 @@ export default function HomePage() {
         ) : posts.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold mb-2">No posts found</h3>
-            <p className="text-surface-400">Try changing your filters or check back later</p>
+            <h3 className="text-xl font-bold neon-text mb-2 font-mono">NO DATA FOUND</h3>
+            <p className="text-white/30 font-mono text-sm">&gt; Try changing your filters or check back later_</p>
           </div>
         ) : (
-          <MasonryFeed
-            posts={posts}
-            hasMore={hasMore}
-            onLoadMore={loadMore}
-            isLoading={isLoading}
-          />
+          <MasonryFeed posts={posts} hasMore={hasMore} onLoadMore={loadMore} isLoading={isLoading} />
         )}
       </section>
     </div>

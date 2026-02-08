@@ -7,12 +7,13 @@ import { postsAPI, commentsAPI } from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { PostDetailSkeleton } from '@/components/shared/Skeletons';
 import PostCard from '@/components/feed/PostCard';
+import MatrixText from '@/components/ui/MatrixText';
 import { Post, Comment } from '@/types';
 import { formatPrice, formatNumber, timeAgo } from '@/lib/utils';
 import {
   Heart, Bookmark, ExternalLink, Share2, MessageCircle, Send,
-  ArrowLeft, Flag, MoreHorizontal, Sparkles, Eye, MousePointerClick,
-  Calendar, Tag, Play, Video, Volume2, VolumeX,
+  ArrowLeft, MoreHorizontal, Sparkles, Eye, MousePointerClick,
+  Calendar, Tag, Play, Volume2, VolumeX, Terminal, Zap,
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import toast from 'react-hot-toast';
@@ -40,18 +41,14 @@ export default function PostDetailPage() {
       } catch (error) {
         toast.error('Post not found');
         router.push('/');
-      } finally {
-        setIsLoading(false);
-      }
+      } finally { setIsLoading(false); }
     };
-
     const fetchComments = async () => {
       try {
         const { data } = await commentsAPI.getComments(params.id as string);
         setComments(data.data);
-      } catch (e) { /* silent */ }
+      } catch { /* silent */ }
     };
-
     fetchPost();
     fetchComments();
   }, [params.id, router]);
@@ -97,46 +94,46 @@ export default function PostDetailPage() {
   if (isLoading || !post) return <PostDetailSkeleton />;
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Back button */}
-        <button onClick={() => router.back()} className="btn-ghost mb-4 gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Back
+        {/* Back */}
+        <button onClick={() => router.back()}
+          className="btn-ghost mb-4 gap-2 font-mono text-xs text-white/50 hover:text-cyber-glow">
+          <ArrowLeft className="w-4 h-4" />&lt; BACK
         </button>
 
-        {/* Main content */}
-        <div className="card overflow-hidden">
+        {/* Main card */}
+        <div className="cyber-glass-strong rounded-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Media */}
-            <div className="relative bg-surface-100 dark:bg-surface-800">
+            <div className="relative bg-cyber-black/50 overflow-hidden">
+              {/* Corner accents */}
+              <div className="absolute top-0 left-0 w-16 h-[1px] bg-gradient-to-r from-cyber-glow/40 to-transparent z-10" />
+              <div className="absolute top-0 left-0 h-16 w-[1px] bg-gradient-to-b from-cyber-glow/40 to-transparent z-10" />
+              <div className="absolute bottom-0 right-0 w-16 h-[1px] bg-gradient-to-l from-cyber-purple/40 to-transparent z-10" />
+              <div className="absolute bottom-0 right-0 h-16 w-[1px] bg-gradient-to-t from-cyber-purple/40 to-transparent z-10" />
+
               {post.mediaType === 'video' && post.video?.url ? (
                 <div className="relative">
                   <video
-                    src={post.video.url}
-                    controls
-                    playsInline
+                    src={post.video.url} controls playsInline
                     className="w-full max-h-[80vh] object-contain bg-black"
                     poster={post.video.thumbnailUrl || post.image?.url}
                   />
                   {post.video.duration && (
-                    <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/90 text-white text-sm font-medium backdrop-blur-sm">
-                      <Play className="w-4 h-4" fill="white" />
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm border border-cyber-glow/20 text-cyber-glow text-sm font-mono font-medium">
+                      <Play className="w-4 h-4" fill="currentColor" />
                       {Math.round(post.video.duration)}s
                     </div>
                   )}
                 </div>
               ) : (
-                <img
-                  src={post.image?.url}
-                  alt={post.title}
-                  className="w-full h-full object-contain max-h-[80vh]"
-                />
+                <img src={post.image?.url} alt={post.title}
+                  className="w-full h-full object-contain max-h-[80vh]" />
               )}
               {post.isAiGenerated && (
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/90 text-white text-sm font-medium backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4" />
-                  AI Generated
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyber-purple/80 backdrop-blur-sm border border-cyber-purple/40 text-white text-xs font-mono font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" /> AI_GENERATED
                 </div>
               )}
             </div>
@@ -144,21 +141,23 @@ export default function PostDetailPage() {
             {/* Details */}
             <div className="flex flex-col">
               {/* Actions bar */}
-              <div className="flex items-center justify-between p-4 border-b border-surface-100 dark:border-surface-800">
-                <div className="flex items-center gap-2">
-                  <button onClick={handleLike} className={`btn-ghost gap-1.5 ${isLiked ? 'text-red-500' : ''}`}>
-                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+              <div className="flex items-center justify-between p-4 border-b border-cyber-glow/8">
+                <div className="flex items-center gap-1.5">
+                  <button onClick={handleLike}
+                    className={`btn-ghost gap-1.5 font-mono text-xs ${isLiked ? 'text-cyber-pink' : 'text-white/50'}`}>
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                     {formatNumber(likesCount)}
                   </button>
-                  <button onClick={handleSave} className={`btn-ghost gap-1.5 ${isSaved ? 'text-brand-600' : ''}`}>
-                    <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
-                    Save
+                  <button onClick={handleSave}
+                    className={`btn-ghost gap-1.5 font-mono text-xs ${isSaved ? 'text-cyber-glow' : 'text-white/50'}`}>
+                    <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                    SAVE
                   </button>
-                  <button onClick={handleShare} className="btn-ghost gap-1.5">
+                  <button onClick={handleShare} className="btn-ghost gap-1.5 font-mono text-xs text-white/50">
                     <Share2 className="w-4 h-4" />
                   </button>
                 </div>
-                <button className="btn-ghost p-2">
+                <button className="btn-ghost p-2 text-white/30">
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
@@ -166,128 +165,106 @@ export default function PostDetailPage() {
               {/* Content */}
               <div className="flex-1 p-6 space-y-5 overflow-y-auto max-h-[60vh]">
                 <div>
-                  <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
+                  <h1 className="text-2xl font-bold mb-3 text-white leading-tight">{post.title}</h1>
                   {post.description && (
-                    <p className="text-surface-600 dark:text-surface-400 leading-relaxed">{post.description}</p>
+                    <p className="text-white/50 leading-relaxed text-sm">{post.description}</p>
                   )}
                 </div>
 
-                {/* Price & Product URL */}
+                {/* Product URL */}
                 {post.productUrl && (
-                  <a
-                    href={post.productUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a href={post.productUrl} target="_blank" rel="noopener noreferrer"
                     onClick={handleProductClick}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-brand-50 to-purple-50 dark:from-brand-950/30 dark:to-purple-950/30 border border-brand-100 dark:border-brand-900/50 hover:shadow-md transition-all group"
-                  >
+                    className="flex items-center gap-3 p-4 rounded-xl border border-cyber-glow/15 group transition-all hover:border-cyber-glow/30"
+                    style={{ background: 'linear-gradient(135deg, rgba(0,240,255,0.04), rgba(191,0,255,0.04))' }}>
                     <div className="flex-1">
                       {post.price?.amount && (
-                        <p className="text-2xl font-bold text-brand-600">{formatPrice(post.price.amount)}</p>
+                        <p className="text-2xl font-bold neon-text font-mono">{formatPrice(post.price.amount)}</p>
                       )}
-                      <p className="text-sm text-surface-500 truncate">{post.productUrl}</p>
+                      <p className="text-xs text-white/30 truncate font-mono">{post.productUrl}</p>
                     </div>
-                    <div className="btn-primary gap-1.5 group-hover:gap-2.5 transition-all">
-                      <ExternalLink className="w-4 h-4" />
-                      {post.price?.amount ? 'Buy Now' : 'Visit Product'}
+                    <div className="btn-primary gap-1.5 text-xs font-mono">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {post.price?.amount ? 'BUY' : 'VISIT'}
                     </div>
                   </a>
                 )}
 
-                {/* Meta info */}
-                <div className="flex flex-wrap gap-4 text-sm text-surface-500">
-                  <span className="flex items-center gap-1.5">
-                    <Eye className="w-4 h-4" />
-                    {formatNumber(post.viewsCount)} views
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MousePointerClick className="w-4 h-4" />
-                    {formatNumber(post.clicksCount)} clicks
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    {timeAgo(post.createdAt)}
-                  </span>
+                {/* Meta */}
+                <div className="flex flex-wrap gap-4 text-xs font-mono text-white/30">
+                  <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" />{formatNumber(post.viewsCount)} views</span>
+                  <span className="flex items-center gap-1.5"><MousePointerClick className="w-3.5 h-3.5" />{formatNumber(post.clicksCount)} clicks</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{timeAgo(post.createdAt)}</span>
                 </div>
 
                 {/* Tags */}
                 {post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag) => (
-                      <Link
-                        key={tag}
-                        href={`/search?tag=${tag}`}
-                        className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-800 text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
-                      >
-                        <Tag className="w-3 h-3" />
-                        {tag}
+                      <Link key={tag} href={`/search?tag=${tag}`}
+                        className="flex items-center gap-1 px-3 py-1 rounded-md bg-white/[0.03] border border-white/[0.06] text-xs font-mono text-white/40 hover:text-cyber-glow hover:border-cyber-glow/20 transition-all">
+                        <Tag className="w-3 h-3" />{tag}
                       </Link>
                     ))}
                   </div>
                 )}
 
                 {/* Author */}
-                <Link
-                  href={`/profile/${post.author?.username}`}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                >
+                <Link href={`/profile/${post.author?.username}`}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-cyber-glow/8 transition-all">
                   {post.author?.avatar ? (
-                    <img src={post.author.avatar} alt="" className="w-12 h-12 rounded-full object-cover" />
+                    <img src={post.author.avatar} alt="" className="w-11 h-11 rounded-lg object-cover ring-1 ring-cyber-glow/15" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-lg font-bold text-brand-600">
+                    <div className="w-11 h-11 rounded-lg bg-cyber-card border border-cyber-glow/15 flex items-center justify-center text-base font-bold text-cyber-glow font-mono">
                       {post.author?.displayName?.[0]?.toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="font-semibold">{post.author?.displayName}</p>
-                    <p className="text-sm text-surface-500">@{post.author?.username}</p>
+                    <p className="font-semibold text-sm text-white">{post.author?.displayName}</p>
+                    <p className="text-xs text-cyber-glow/50 font-mono">@{post.author?.username}</p>
                   </div>
                 </Link>
 
                 {/* Comments */}
-                <div className="border-t border-surface-100 dark:border-surface-800 pt-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Comments ({comments.length})
+                <div className="border-t border-cyber-glow/8 pt-5">
+                  <h3 className="font-bold mb-4 flex items-center gap-2 text-sm text-white/80">
+                    <MessageCircle className="w-4 h-4 text-cyber-glow/60" />
+                    <span className="font-mono">COMMENTS ({comments.length})</span>
                   </h3>
 
                   {isAuthenticated && (
                     <form onSubmit={handleComment} className="flex gap-2 mb-4">
-                      <input
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a comment..."
-                        className="input-field flex-1 py-2.5 text-sm"
-                      />
-                      <button type="submit" disabled={!newComment.trim()} className="btn-primary px-3">
+                      <input value={newComment} onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="> Add a comment..." className="input-field flex-1 py-2.5 text-xs font-mono" />
+                      <button type="submit" disabled={!newComment.trim()} className="btn-primary px-3 py-2">
                         <Send className="w-4 h-4" />
                       </button>
                     </form>
                   )}
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {comments.map((comment) => (
-                      <div key={comment._id} className="flex gap-3">
+                      <div key={comment._id} className="flex gap-3 p-3 rounded-lg hover:bg-white/[0.02] transition-colors">
                         <Link href={`/profile/${comment.user?.username}`}>
                           {comment.user?.avatar ? (
-                            <img src={comment.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            <img src={comment.user.avatar} alt="" className="w-7 h-7 rounded-md object-cover ring-1 ring-cyber-border" />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-bold text-brand-600">
+                            <div className="w-7 h-7 rounded-md bg-cyber-card border border-cyber-border flex items-center justify-center text-[10px] font-bold text-cyber-glow font-mono">
                               {comment.user?.displayName?.[0]?.toUpperCase()}
                             </div>
                           )}
                         </Link>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">{comment.user?.displayName}</span>
-                            <span className="text-xs text-surface-400">{timeAgo(comment.createdAt)}</span>
+                            <span className="text-xs font-semibold text-white/80">{comment.user?.displayName}</span>
+                            <span className="text-[10px] text-white/20 font-mono">{timeAgo(comment.createdAt)}</span>
                           </div>
-                          <p className="text-sm text-surface-600 dark:text-surface-400 mt-0.5">{comment.text}</p>
+                          <p className="text-xs text-white/50 mt-0.5">{comment.text}</p>
                         </div>
                       </div>
                     ))}
                     {comments.length === 0 && (
-                      <p className="text-center text-surface-400 text-sm py-4">No comments yet. Be the first!</p>
+                      <p className="text-center text-white/20 text-xs py-4 font-mono">&gt; No comments yet. Be the first_</p>
                     )}
                   </div>
                 </div>
@@ -296,10 +273,13 @@ export default function PostDetailPage() {
           </div>
         </div>
 
-        {/* Related Posts */}
+        {/* Related */}
         {post.relatedPosts && post.relatedPosts.length > 0 && (
           <section className="mt-12">
-            <h2 className="text-xl font-bold mb-6">More like this</h2>
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-cyber-glow" />
+              <span className="font-mono text-white/80">RELATED_POSTS</span>
+            </h2>
             <Masonry
               breakpointCols={{ default: 5, 1280: 4, 1024: 3, 768: 2, 475: 2 }}
               className="masonry-grid"

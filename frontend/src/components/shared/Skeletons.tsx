@@ -1,66 +1,65 @@
 'use client';
 
-export function PostCardSkeleton() {
-  const height = 200 + Math.random() * 200;
-
+export function FeedSkeleton() {
   return (
-    <div className="mb-3 break-inside-avoid">
-      <div className="rounded-2xl overflow-hidden">
-        <div className="skeleton shimmer" style={{ height: `${height}px` }} />
-        <div className="p-3 space-y-2">
-          <div className="skeleton h-4 w-3/4 rounded" />
-          <div className="flex items-center gap-2">
-            <div className="skeleton w-6 h-6 rounded-full" />
-            <div className="skeleton h-3 w-20 rounded" />
-          </div>
+    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-3">
+      {Array.from({ length: 18 }).map((_, i) => (
+        <div key={i} className="mb-3 break-inside-avoid rounded-xl overflow-hidden"
+          style={{
+            height: `${200 + Math.random() * 200}px`,
+            background: 'linear-gradient(135deg, rgba(14,14,30,0.5), rgba(20,20,42,0.3))',
+            border: '1px solid rgba(0,240,255,0.05)',
+          }}>
+          <div className="skeleton w-full h-full" />
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function FeedSkeleton({ count = 12 }: { count?: number }) {
-  return (
-    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-3 px-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <PostCardSkeleton key={i} />
       ))}
-    </div>
-  );
-}
-
-export function ProfileSkeleton() {
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-pulse">
-      <div className="flex flex-col items-center gap-4">
-        <div className="skeleton w-32 h-32 rounded-full" />
-        <div className="skeleton h-6 w-48 rounded" />
-        <div className="skeleton h-4 w-32 rounded" />
-        <div className="skeleton h-4 w-64 rounded" />
-        <div className="flex gap-6 mt-4">
-          <div className="skeleton h-8 w-20 rounded" />
-          <div className="skeleton h-8 w-20 rounded" />
-          <div className="skeleton h-8 w-20 rounded" />
-        </div>
-      </div>
     </div>
   );
 }
 
 export function PostDetailSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto p-4 animate-pulse">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="skeleton rounded-2xl h-[500px]" />
-        <div className="space-y-4">
-          <div className="skeleton h-8 w-3/4 rounded" />
-          <div className="skeleton h-4 w-full rounded" />
-          <div className="skeleton h-4 w-2/3 rounded" />
-          <div className="flex gap-2 mt-6">
-            <div className="skeleton h-10 w-24 rounded-full" />
-            <div className="skeleton h-10 w-24 rounded-full" />
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="skeleton h-8 w-24 rounded-lg mb-4" />
+      <div className="cyber-glass-strong rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2">
+          <div className="skeleton aspect-square" />
+          <div className="p-6 space-y-4">
+            <div className="skeleton h-6 w-3/4 rounded" />
+            <div className="skeleton h-4 w-full rounded" />
+            <div className="skeleton h-4 w-2/3 rounded" />
+            <div className="skeleton h-20 w-full rounded-xl" />
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileSkeleton() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="cyber-glass-strong rounded-2xl p-8">
+        <div className="flex items-center gap-6">
+          <div className="skeleton w-24 h-24 rounded-xl" />
+          <div className="flex-1 space-y-3">
+            <div className="skeleton h-7 w-48 rounded" />
+            <div className="skeleton h-4 w-32 rounded" />
+            <div className="skeleton h-4 w-64 rounded" />
+          </div>
+        </div>
+      </div>
+      <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="mb-3 break-inside-avoid rounded-xl overflow-hidden"
+            style={{
+              height: `${200 + Math.random() * 150}px`,
+              background: 'linear-gradient(135deg, rgba(14,14,30,0.5), rgba(20,20,42,0.3))',
+              border: '1px solid rgba(0,240,255,0.05)',
+            }}>
+            <div className="skeleton w-full h-full" />
+          </div>
+        ))}
       </div>
     </div>
   );
