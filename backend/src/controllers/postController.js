@@ -3,11 +3,9 @@ const User = require('../models/User');
 const { Like, Save } = require('../models/Interaction');
 const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
-const { uploadToCloudinary, uploadVideoToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
 
-const MAX_VIDEO_DURATION = 15; // seconds
-
-// Create post
+// Create post — files go to MongoDB GridFS
 exports.createPost = async (req, res, next) => {
   try {
     const { title, description, productUrl, tags, category, price, isAiGenerated, aiImageUrl, aiMetadata, mediaType, videoData } = req.body;
@@ -17,52 +15,44 @@ exports.createPost = async (req, res, next) => {
     let postMediaType = mediaType || 'image';
 
     if (postMediaType === 'video') {
-      // Video post
+      /* ── Video post ────────────────────────────── */
       if (req.file) {
-        // Upload video file
-        const result = await uploadVideoToCloudinary(req.file.buffer, {
-          folder: 'picup/videos',
-        });
-
-        if (result.duration && result.duration > MAX_VIDEO_DURATION) {
-          await deleteFromCloudinary(result.publicId).catch(() => {});
-          return ApiResponse.error(
-            res,
-            `Video is too long (${Math.round(result.duration)}s). Maximum is ${MAX_VIDEO_DURATION} seconds.`,
-            400
-          );
-        }
-
+        const result = await uploadVideoToGridFS(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
         videoDataResult = {
           url: result.url,
-          publicId: result.publicId,
-          thumbnailUrl: result.thumbnailUrl,
-          duration: result.duration,
-          width: result.width,
-          height: result.height,
-          format: result.format,
-          bytes: result.bytes,
+          fileId: result.fileId,
+          bytes: result.size,
         };
       } else if (videoData) {
-        // Already-uploaded video data passed as JSON
         videoDataResult = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
       } else {
         return ApiResponse.error(res, 'Video is required for video posts', 400);
       }
     } else {
-      // Image post (existing logic)
+      /* ── Image post ────────────────────────────── */
       if (isAiGenerated && aiImageUrl) {
         imageData = { url: aiImageUrl };
       } else if (req.file) {
-        const result = await uploadToCloudinary(
-          `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-          { folder: 'picup/posts' }
+        const result = await uploadImageToGridFS(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
+        // Also generate a thumbnail
+        const thumb = await uploadThumbnailToGridFS(
+          req.file.buffer,
+          req.file.originalname
         );
         imageData = {
           url: result.url,
-          publicId: result.publicId,
+          fileId: result.fileId,
           width: result.width,
           height: result.height,
+          thumbnailUrl: thumb.url,
         };
       } else {
         return ApiResponse.error(res, 'Image is required', 400);
@@ -75,9 +65,9 @@ exports.createPost = async (req, res, next) => {
       mediaType: postMediaType,
       image: imageData || undefined,
       video: videoDataResult || undefined,
-      productUrl,
+      productUrl: productUrl || undefined,
       tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
-      category,
+      category: category || undefined,
       price: price ? (typeof price === 'string' ? JSON.parse(price) : price) : undefined,
       author: req.user._id,
       isAiGenerated: !!isAiGenerated,

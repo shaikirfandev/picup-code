@@ -47,12 +47,11 @@ const validatePost = [
     .isLength({ max: 2000 })
     .withMessage('Description must be under 2000 characters'),
   body('productUrl')
+    .optional({ values: 'falsy' })
     .isURL()
     .withMessage('Please provide a valid product URL'),
   body('tags')
-    .optional()
-    .isArray({ max: 10 })
-    .withMessage('Maximum 10 tags allowed'),
+    .optional(),
   body('price.amount')
     .optional()
     .isFloat({ min: 0 })

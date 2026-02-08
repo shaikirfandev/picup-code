@@ -26,6 +26,8 @@ const postSchema = new mongoose.Schema(
     image: {
       url: { type: String },
       publicId: String,
+      fileId: String,
+      thumbnailUrl: String,
       width: Number,
       height: Number,
       blurHash: String,
@@ -34,6 +36,7 @@ const postSchema = new mongoose.Schema(
     video: {
       url: { type: String },
       publicId: String,
+      fileId: String,
       thumbnailUrl: String,
       duration: Number,        // seconds
       width: Number,
@@ -48,7 +51,7 @@ const postSchema = new mongoose.Schema(
     },
     productUrl: {
       type: String,
-      required: [true, 'Product URL is required'],
+      default: '',
     },
     price: {
       amount: { type: Number, min: 0 },

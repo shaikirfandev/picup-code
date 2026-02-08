@@ -7,6 +7,7 @@ const compression = require('compression');
 const passport = require('passport');
 
 const connectDB = require('./config/db');
+const { initGridFS } = require('./config/gridfs');
 const configurePassport = require('./config/passport');
 const { globalLimiter } = require('./middleware/rateLimiter');
 
@@ -21,11 +22,14 @@ const aiRoutes = require('./routes/ai');
 const searchRoutes = require('./routes/search');
 const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
+const fileRoutes = require('./routes/files');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB, then init GridFS buckets
+connectDB().then(() => {
+  initGridFS();
+});
 
 // Configure Passport
 configurePassport(passport);
@@ -40,8 +44,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(morgan('dev'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(passport.initialize());
 app.use(globalLimiter);
 
@@ -56,6 +60,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/files', fileRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
