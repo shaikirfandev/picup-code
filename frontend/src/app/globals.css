@@ -152,4 +152,16 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* 3D perspective container */
+  .perspective-container {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+}
+
+/* === HOVER MODAL CONNECTOR LINE === */
+@keyframes dashFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -16; }
 }

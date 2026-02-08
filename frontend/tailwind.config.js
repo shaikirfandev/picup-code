@@ -34,6 +34,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -41,6 +42,9 @@ module.exports = {
         'scale-in': 'scaleIn 0.2s ease-out',
         'shimmer': 'shimmer 2s linear infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'scan-line': 'scanLine 3s linear infinite',
+        'dash-flow': 'dashFlow 1.2s linear infinite',
+        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -59,6 +63,22 @@ module.exports = {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        scanLine: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+        dashFlow: {
+          '0%': { strokeDashoffset: '0' },
+          '100%': { strokeDashoffset: '-16' },
+        },
+        glowPulse: {
+          '0%, 100%': { boxShadow: '0 0 5px rgba(0,240,255,0.3), 0 0 15px rgba(0,240,255,0.1)' },
+          '50%': { boxShadow: '0 0 15px rgba(0,240,255,0.5), 0 0 40px rgba(0,240,255,0.2)' },
+        },
+      },
+      boxShadow: {
+        cyber: '0 0 15px rgba(0,240,255,0.15), 0 0 30px rgba(0,240,255,0.05)',
+        'cyber-lg': '0 0 30px rgba(0,240,255,0.2), 0 0 60px rgba(0,240,255,0.1)',
       },
       screens: {
         'xs': '475px',
