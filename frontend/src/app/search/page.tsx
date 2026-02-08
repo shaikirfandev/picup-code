@@ -28,22 +28,29 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [category, setCategory] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
+  const [sortBy, setSortBy] = useState('newest');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
 
   useEffect(() => {
     categoriesAPI.getAll().then(({ data }: any) => setCategories(data.data || [])).catch(() => {});
-    searchAPI.getTrendingTags().then(({ data }: any) => setTrending(data.data?.tags || [])).catch(() => {});
+    searchAPI.getTrendingTags().then(({ data }: any) =>
+      setTrending((data.data || []).map((t: any) => t.tag || t))
+    ).catch(() => {});
   }, []);
 
-  const doSearch = async (pageNum = 1) => {
-    if (!query.trim() && !tag) return;
+  const doSearch = async (
+    pageNum = 1,
+    overrides?: { q?: string; t?: string }
+  ) => {
+    const searchQuery = overrides?.q ?? query;
+    const searchTag = overrides?.t ?? tag;
+    if (!searchQuery.trim() && !searchTag) return;
     setIsLoading(true);
     try {
       const params: any = { page: pageNum, limit: 30, sort: sortBy };
-      if (query.trim()) params.q = query.trim();
-      if (tag) params.tag = tag;
+      if (searchQuery.trim()) params.q = searchQuery.trim();
+      if (searchTag) params.tag = searchTag;
       if (category) params.category = category;
       if (priceMin) params.priceMin = priceMin;
       if (priceMax) params.priceMax = priceMax;
@@ -58,21 +65,21 @@ export default function SearchPage() {
   };
 
   useEffect(() => {
-    if (initialQuery || initialTag) doSearch(1);
+    if (initialQuery || initialTag) doSearch(1, { q: initialQuery, t: initialTag });
   }, [initialQuery, initialTag]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTag('');
     setPosts([]);
-    doSearch(1);
+    doSearch(1, { q: query, t: '' });
   };
 
   const handleTagClick = (t: string) => {
     setTag(t);
     setQuery('');
     setPosts([]);
-    doSearch(1);
+    doSearch(1, { q: '', t });
   };
 
   const loadMoreRef = useInfiniteScroll(() => {
@@ -147,15 +154,16 @@ export default function SearchPage() {
                 ))}
               </select>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="input-field text-[11px]">
-                <option value="recent">MOST RECENT</option>
+                <option value="newest">MOST RECENT</option>
                 <option value="popular">MOST POPULAR</option>
-                <option value="price-low">PRICE: LOW → HIGH</option>
-                <option value="price-high">PRICE: HIGH → LOW</option>
+                <option value="relevance">MOST RELEVANT</option>
+                <option value="price_asc">PRICE: LOW → HIGH</option>
+                <option value="price_desc">PRICE: HIGH → LOW</option>
               </select>
               <input value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="MIN PRICE" type="number" className="input-field text-[11px]" />
               <input value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="MAX PRICE" type="number" className="input-field text-[11px]" />
             </div>
-            <button onClick={() => doSearch(1)} className="btn-primary mt-4 text-[10px] py-2 px-4">
+            <button onClick={() => { setPosts([]); doSearch(1); }} className="btn-primary mt-4 text-[10px] py-2 px-4">
               APPLY FILTERS
             </button>
           </div>
