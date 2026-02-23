@@ -33,7 +33,7 @@ export default function RegisterPage() {
     }
   };
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api';
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex">
