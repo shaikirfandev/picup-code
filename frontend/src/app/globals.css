@@ -7,36 +7,156 @@
 /* ═══════════════════════════════════════════════════
    E.D.I.T.H  —  Even Dead I'm The Hero
    Tony Stark Holographic HUD Theme
+   Dual-mode: Dark (HUD) + Light (Stark Industries)
    ═══════════════════════════════════════════════════ */
 
+/* ── Dark Mode (default) ────────────────────────── */
 :root {
   --edith-bg: #050510;
   --edith-surface: #0a0a1a;
   --edith-panel: #0d0d20;
+  --edith-elevated: #111128;
   --edith-border: rgba(0, 200, 255, 0.12);
+  --edith-border-strong: rgba(0, 200, 255, 0.25);
+
+  /* Accents — full neon for dark */
   --edith-cyan: #00d4ff;
   --edith-blue: #0088ff;
   --edith-red: #ff3333;
   --edith-amber: #ffaa00;
   --edith-green: #00ff88;
   --edith-purple: #bf00ff;
+
+  /* Light-adapted accents (same as neon in dark) */
+  --edith-accent: #00d4ff;
+  --edith-accent-hover: #00bbee;
+  --edith-accent-active: #009fd4;
+  --edith-accent-muted: rgba(0, 200, 255, 0.12);
+  --edith-accent-subtle: rgba(0, 200, 255, 0.06);
+
+  /* Semantic text — WCAG AAA on dark */
+  --edith-text: rgba(200, 230, 255, 0.92);
+  --edith-text-secondary: rgba(170, 200, 230, 0.7);
+  --edith-text-dim: rgba(140, 170, 200, 0.5);
+  --edith-text-muted: rgba(120, 150, 180, 0.35);
+  --edith-text-on-accent: #ffffff;
+
+  /* Semantic states */
+  --edith-error: #ff4d4d;
+  --edith-error-bg: rgba(255, 51, 51, 0.1);
+  --edith-success: #00e676;
+  --edith-success-bg: rgba(0, 230, 118, 0.1);
+  --edith-warning: #ffaa00;
+  --edith-warning-bg: rgba(255, 170, 0, 0.1);
+
+  /* Glow & shadows */
   --edith-glow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 60px rgba(0, 200, 255, 0.05);
-  --edith-text: rgba(200, 230, 255, 0.9);
-  --edith-text-dim: rgba(150, 190, 220, 0.5);
+  --edith-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --edith-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --edith-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --edith-shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7);
+
+  /* Component tokens */
+  --edith-card-bg: linear-gradient(135deg, rgba(10,10,30,0.9), rgba(15,15,35,0.8));
+  --edith-glass-bg: rgba(10, 10, 30, 0.85);
+  --edith-input-bg: rgba(0, 200, 255, 0.03);
+  --edith-input-border: rgba(0, 200, 255, 0.1);
+  --edith-input-focus-bg: rgba(0, 200, 255, 0.05);
+  --edith-input-focus-border: rgba(0, 200, 255, 0.35);
+  --edith-header-bg: linear-gradient(180deg, rgba(5,5,16,0.95), rgba(5,5,16,0.85));
+  --edith-header-border: rgba(0, 212, 255, 0.1);
+  --edith-header-shadow: 0 1px 30px rgba(0,0,0,0.5), 0 0 60px rgba(0,212,255,0.03);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(10,10,26,0.97), rgba(15,15,35,0.95));
+  --edith-dropdown-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,255,0.05);
+  --edith-overlay-from: rgba(5,5,16,0.2);
+  --edith-overlay-to: rgba(5,5,16,0.9);
+  --edith-skeleton-from: rgba(0,200,255,0.03);
+  --edith-skeleton-via: rgba(0,200,255,0.08);
+  --edith-btn-secondary-bg: rgba(255,255,255,0.03);
+  --edith-btn-secondary-border: rgba(255,255,255,0.08);
+  --edith-tag-bg: rgba(255,255,255,0.02);
+  --edith-tag-border: rgba(255,255,255,0.06);
+  --edith-tag-text: rgba(255,255,255,0.3);
+  --edith-tag-hover-text: rgba(255,255,255,0.5);
+  --edith-radial-hero: rgba(0,212,255,0.08);
+  --edith-gradient-text: rgba(255,255,255,0.9);
+
+  /* Typography */
   --edith-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --edith-display: 'Orbitron', sans-serif;
   --edith-body: 'Rajdhani', 'Inter', sans-serif;
 }
 
-/* ── Light Mode ── */
+/* ── Light Mode — Stark Industries Clean UI ────── */
 .light {
-  --edith-bg: #f5f7fa;
+  --edith-bg: #f4f6f9;
   --edith-surface: #ffffff;
-  --edith-panel: #f0f2f5;
-  --edith-border: rgba(0, 100, 180, 0.15);
-  --edith-glow: 0 2px 12px rgba(0, 100, 180, 0.08), 0 0 30px rgba(0, 100, 180, 0.03);
-  --edith-text: rgba(15, 23, 42, 0.9);
-  --edith-text-dim: rgba(71, 85, 105, 0.7);
+  --edith-panel: #f0f2f6;
+  --edith-elevated: #ffffff;
+  --edith-border: rgba(15, 30, 60, 0.1);
+  --edith-border-strong: rgba(15, 30, 60, 0.2);
+
+  /* Accents — deepened for contrast on white (WCAG AA) */
+  --edith-cyan: #0091b3;
+  --edith-blue: #0064cc;
+  --edith-red: #d92d20;
+  --edith-amber: #b87500;
+  --edith-green: #059652;
+  --edith-purple: #8a14cc;
+
+  --edith-accent: #0091b3;
+  --edith-accent-hover: #007a99;
+  --edith-accent-active: #006680;
+  --edith-accent-muted: rgba(0, 145, 179, 0.1);
+  --edith-accent-subtle: rgba(0, 145, 179, 0.05);
+
+  /* Text — soft dark grays, NOT #000 */
+  --edith-text: #1a2233;
+  --edith-text-secondary: #3d4f66;
+  --edith-text-dim: #6b7d99;
+  --edith-text-muted: #94a3b8;
+  --edith-text-on-accent: #ffffff;
+
+  /* Semantic states (darkened for light bg) */
+  --edith-error: #d92d20;
+  --edith-error-bg: rgba(217, 45, 32, 0.08);
+  --edith-success: #059652;
+  --edith-success-bg: rgba(5, 150, 82, 0.08);
+  --edith-warning: #b87500;
+  --edith-warning-bg: rgba(184, 117, 0, 0.08);
+
+  /* Shadows — elevation instead of glow */
+  --edith-glow: 0 1px 3px rgba(15, 30, 60, 0.06), 0 2px 8px rgba(15, 30, 60, 0.04);
+  --edith-shadow-sm: 0 1px 2px rgba(15, 30, 60, 0.06), 0 1px 3px rgba(15, 30, 60, 0.04);
+  --edith-shadow-md: 0 2px 6px rgba(15, 30, 60, 0.06), 0 6px 16px rgba(15, 30, 60, 0.05);
+  --edith-shadow-lg: 0 4px 12px rgba(15, 30, 60, 0.06), 0 12px 32px rgba(15, 30, 60, 0.06);
+  --edith-shadow-xl: 0 8px 24px rgba(15, 30, 60, 0.08), 0 24px 48px rgba(15, 30, 60, 0.06);
+
+  /* Component tokens */
+  --edith-card-bg: linear-gradient(135deg, #ffffff, #fafbfd);
+  --edith-glass-bg: rgba(255, 255, 255, 0.82);
+  --edith-input-bg: rgba(15, 30, 60, 0.03);
+  --edith-input-border: rgba(15, 30, 60, 0.12);
+  --edith-input-focus-bg: rgba(0, 145, 179, 0.04);
+  --edith-input-focus-border: rgba(0, 145, 179, 0.45);
+  --edith-header-bg: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.88));
+  --edith-header-border: rgba(15, 30, 60, 0.08);
+  --edith-header-shadow: 0 1px 3px rgba(15,30,60,0.05), 0 4px 20px rgba(15,30,60,0.04);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+  --edith-dropdown-shadow: 0 10px 40px rgba(15,30,60,0.12), 0 2px 10px rgba(15,30,60,0.06);
+  --edith-overlay-from: rgba(255,255,255,0.15);
+  --edith-overlay-to: rgba(15,20,35,0.8);
+  --edith-skeleton-from: rgba(15,30,60,0.04);
+  --edith-skeleton-via: rgba(15,30,60,0.08);
+  --edith-btn-secondary-bg: rgba(15,30,60,0.04);
+  --edith-btn-secondary-border: rgba(15,30,60,0.1);
+  --edith-tag-bg: rgba(15,30,60,0.04);
+  --edith-tag-border: rgba(15,30,60,0.1);
+  --edith-tag-text: #6b7d99;
+  --edith-tag-hover-text: #3d4f66;
+  --edith-radial-hero: rgba(0,145,179,0.06);
+  --edith-gradient-text: #1a2233;
+
   color-scheme: light;
 }
 
@@ -75,7 +195,10 @@
     background-size: 60px 60px;
   }
   .light body::before {
-    background: none;
+    /* Light: a very subtle dot-grid for "tech blueprint" feel */
+    background:
+      radial-gradient(circle, rgba(0,80,140,0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
   /* CRT scan-line overlay (dark only) */
@@ -97,7 +220,7 @@
     background: none;
   }
 
-  /* Scrollbar — EDITH style thin cyan rail */
+  /* Scrollbar — theme-adaptive */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
@@ -106,9 +229,28 @@
   }
   ::-webkit-scrollbar-thumb:hover { background: var(--edith-cyan); }
 
+  .light ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: var(--edith-accent);
+  }
+
   ::selection {
     background: rgba(0, 200, 255, 0.25);
     color: #fff;
+  }
+  .light ::selection {
+    background: rgba(0, 145, 179, 0.2);
+    color: #1a2233;
+  }
+
+  /* ── Typography hierarchy ── */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--edith-text);
+  }
+  p, li, span {
+    color: var(--edith-text-secondary, var(--edith-text));
   }
 }
 
@@ -117,33 +259,43 @@
   .btn-primary {
     @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300;
     font-family: var(--edith-mono);
-    background: linear-gradient(135deg, rgba(0,200,255,0.15), rgba(0,136,255,0.1));
-    border: 1px solid rgba(0,200,255,0.3);
-    color: var(--edith-cyan);
+    background: linear-gradient(135deg, var(--edith-accent-muted), rgba(0,136,255,0.1));
+    border: 1px solid var(--edith-accent);
+    color: var(--edith-accent);
     border-radius: 4px;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-    text-shadow: 0 0 10px rgba(0,200,255,0.5);
-    box-shadow: 0 0 15px rgba(0,200,255,0.1), inset 0 0 15px rgba(0,200,255,0.05);
+    box-shadow: var(--edith-shadow-sm);
   }
   .btn-primary:hover {
-    background: linear-gradient(135deg, rgba(0,200,255,0.25), rgba(0,136,255,0.2));
-    box-shadow: 0 0 30px rgba(0,200,255,0.2), inset 0 0 20px rgba(0,200,255,0.1);
+    background: var(--edith-accent);
+    color: var(--edith-text-on-accent);
+    box-shadow: var(--edith-shadow-md);
     transform: translateY(-1px);
   }
-  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-primary:active {
+    background: var(--edith-accent-active);
+    color: var(--edith-text-on-accent);
+    transform: translateY(0);
+  }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  /* Dark-only: neon text-shadow on primary */
+  :root .btn-primary { text-shadow: 0 0 10px rgba(0,200,255,0.5); }
+  :root .btn-primary:hover { box-shadow: 0 0 30px rgba(0,200,255,0.2), inset 0 0 20px rgba(0,200,255,0.1); }
+  .light .btn-primary { text-shadow: none; }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium transition-all duration-200;
     font-family: var(--edith-mono);
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--edith-btn-secondary-bg);
+    border: 1px solid var(--edith-btn-secondary-border);
     color: var(--edith-text-dim);
     border-radius: 4px;
   }
   .btn-secondary:hover {
-    background: rgba(0,200,255,0.08);
-    border-color: rgba(0,200,255,0.2);
-    color: var(--edith-cyan);
+    background: var(--edith-accent-muted);
+    border-color: var(--edith-accent);
+    color: var(--edith-accent);
   }
 
   .btn-ghost {
@@ -153,69 +305,88 @@
     background: transparent;
   }
   .btn-ghost:hover {
-    background: rgba(0,200,255,0.06);
-    color: var(--edith-cyan);
-    text-shadow: 0 0 10px rgba(0,200,255,0.3);
+    background: var(--edith-accent-subtle);
+    color: var(--edith-accent);
   }
+  :root .btn-ghost:hover { text-shadow: 0 0 10px rgba(0,200,255,0.3); }
+  .light .btn-ghost:hover { text-shadow: none; }
 
   .btn-danger {
     @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200;
     font-family: var(--edith-mono);
-    background: rgba(255,51,51,0.1);
-    border: 1px solid rgba(255,51,51,0.3);
-    color: var(--edith-red);
+    background: var(--edith-error-bg);
+    border: 1px solid var(--edith-error);
+    color: var(--edith-error);
     border-radius: 4px;
   }
   .btn-danger:hover {
-    background: rgba(255,51,51,0.2);
-    box-shadow: 0 0 20px rgba(255,51,51,0.15);
+    background: var(--edith-error);
+    color: white;
+    box-shadow: var(--edith-shadow-md);
   }
 
   /* ── EDITH Input ── */
   .input-field {
     @apply w-full px-4 py-3 text-sm transition-all duration-200;
     font-family: var(--edith-mono);
-    background: rgba(0,200,255,0.03);
-    border: 1px solid rgba(0,200,255,0.1);
+    background: var(--edith-input-bg);
+    border: 1px solid var(--edith-input-border);
     border-radius: 4px;
     color: var(--edith-text);
     outline: none;
   }
-  .input-field::placeholder { color: var(--edith-text-dim); font-size: 12px; }
+  .input-field::placeholder { color: var(--edith-text-muted); font-size: 12px; }
   .input-field:focus {
-    border-color: rgba(0,200,255,0.35);
-    background: rgba(0,200,255,0.05);
+    border-color: var(--edith-input-focus-border);
+    background: var(--edith-input-focus-bg);
+    box-shadow: 0 0 0 3px var(--edith-accent-subtle);
+  }
+  /* Dark: neon inner glow on focus */
+  :root .input-field:focus {
     box-shadow: 0 0 20px rgba(0,200,255,0.08), inset 0 0 20px rgba(0,200,255,0.03);
   }
 
   /* ── EDITH Cards ── */
   .card {
-    background: linear-gradient(135deg, rgba(10,10,30,0.9), rgba(15,15,35,0.8));
-    border: 1px solid rgba(0,200,255,0.08);
+    background: var(--edith-card-bg);
+    border: 1px solid var(--edith-border);
     border-radius: 8px;
     backdrop-filter: blur(20px);
     box-shadow: var(--edith-glow);
   }
+  .light .card {
+    backdrop-filter: none;
+    box-shadow: var(--edith-shadow-sm);
+  }
+  .light .card:hover {
+    box-shadow: var(--edith-shadow-md);
+  }
 
   .glass-card {
-    background: rgba(10,10,30,0.85);
+    background: var(--edith-glass-bg);
     backdrop-filter: blur(30px) saturate(1.3);
     -webkit-backdrop-filter: blur(30px) saturate(1.3);
-    border: 1px solid rgba(0,200,255,0.12);
+    border: 1px solid var(--edith-border);
     border-radius: 8px;
     box-shadow: var(--edith-glow);
+  }
+  .light .glass-card {
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    box-shadow: var(--edith-shadow-md);
+    border-color: var(--edith-border);
   }
 
   .skeleton {
     @apply animate-pulse rounded;
-    background: linear-gradient(90deg, rgba(0,200,255,0.03), rgba(0,200,255,0.08), rgba(0,200,255,0.03));
+    background: linear-gradient(90deg, var(--edith-skeleton-from), var(--edith-skeleton-via), var(--edith-skeleton-from));
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
   }
 
   .shimmer {
     @apply relative overflow-hidden;
-    background: linear-gradient(90deg, transparent, rgba(0,200,255,0.06), transparent);
+    background: linear-gradient(90deg, transparent, var(--edith-accent-subtle), transparent);
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
   }
@@ -238,17 +409,25 @@
     overflow: visible;
     border-radius: 6px;
     background: var(--edith-surface);
-    border: 1px solid rgba(0,200,255,0.06);
+    border: 1px solid var(--edith-border);
     margin-bottom: 10px;
     break-inside: avoid;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .pin-card:hover {
-    border-color: rgba(0,200,255,0.2);
+    border-color: var(--edith-border-strong);
+  }
+  /* Dark: neon glow on card hover */
+  :root .pin-card:hover {
     box-shadow:
       0 0 0 1px rgba(0,200,255,0.08),
       0 4px 30px rgba(0,0,0,0.4),
       0 0 40px rgba(0,200,255,0.06);
+  }
+  /* Light: clean elevation on hover */
+  .light .pin-card:hover {
+    box-shadow: var(--edith-shadow-lg);
+    border-color: var(--edith-accent);
   }
 
   .pin-card img {
@@ -259,10 +438,10 @@
   .pin-overlay {
     @apply absolute inset-0 flex flex-col justify-between p-3 transition-all duration-400;
     background: linear-gradient(180deg,
-      rgba(5,5,16,0.2) 0%,
+      var(--edith-overlay-from) 0%,
       transparent 30%,
       transparent 50%,
-      rgba(5,5,16,0.9) 85%
+      var(--edith-overlay-to) 85%
     );
     opacity: 0;
   }
@@ -300,6 +479,11 @@
     border-bottom: 1px solid var(--edith-cyan);
     border-right: 1px solid var(--edith-cyan);
   }
+  /* Light: soften HUD corners */
+  .light .hud-corners::before,
+  .light .hud-corners::after {
+    opacity: 0.4;
+  }
 }
 
 @layer utilities {
@@ -313,6 +497,15 @@
   .text-edith-glow {
     text-shadow: 0 0 10px rgba(0,200,255,0.5), 0 0 30px rgba(0,200,255,0.2);
   }
+  .light .text-edith-glow {
+    text-shadow: none;
+  }
+
+  /* Theme-aware text helpers */
+  .text-heading { color: var(--edith-text); }
+  .text-body { color: var(--edith-text-secondary); }
+  .text-caption { color: var(--edith-text-dim); }
+  .text-label { color: var(--edith-text-muted); }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -344,6 +537,15 @@
       0 0 20px rgba(0,200,255,0.05),
       inset 0 0 20px rgba(0,200,255,0.02);
   }
+  .light .edith-border-glow {
+    box-shadow: var(--edith-shadow-md);
+  }
+
+  /* Elevation utilities for light mode */
+  .shadow-theme-sm { box-shadow: var(--edith-shadow-sm); }
+  .shadow-theme-md { box-shadow: var(--edith-shadow-md); }
+  .shadow-theme-lg { box-shadow: var(--edith-shadow-lg); }
+  .shadow-theme-xl { box-shadow: var(--edith-shadow-xl); }
 }
 
 /* ── Keyframes ── */

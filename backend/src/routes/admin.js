@@ -22,6 +22,9 @@ router.put('/posts/:id/moderate', isModeratorOrAdmin, adminController.moderatePo
 
 // Reports
 router.get('/reports', isModeratorOrAdmin, adminController.getReports);
+router.get('/reports/post/:postId', isModeratorOrAdmin, adminController.getReportsByPost);
+router.get('/reports/blog/:blogPostId', isModeratorOrAdmin, adminController.getReportsByBlogPost);
+router.get('/reports/:id', isModeratorOrAdmin, adminController.getReportDetail);
 router.put('/reports/:id', isModeratorOrAdmin, adminController.resolveReport);
 
 // Categories (with image upload support)

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { boardsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { fetchBoard, deleteBoard } from '@/store/slices/boardSlice';
 import PostCard from '@/components/feed/PostCard';
 import { Board, Post } from '@/types';
 import { ArrowLeft, Lock, Globe, MoreHorizontal, Edit2, Trash2, Share2 } from 'lucide-react';
@@ -13,37 +13,30 @@ import toast from 'react-hot-toast';
 export default function BoardDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((s) => s.auth);
-  const [board, setBoard] = useState<Board | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentBoard: board, currentBoardLoading: isLoading } = useAppSelector((s) => s.boards);
   const [showMenu, setShowMenu] = useState(false);
 
+  const posts = board?.posts || [];
+
   useEffect(() => {
-    const fetchBoard = async () => {
-      try {
-        const { data } = await boardsAPI.getBoard(params.id as string);
-        setBoard(data.data);
-        setPosts(data.data.posts || []);
-      } catch {
-        toast.error('Board not found');
-        router.push('/boards');
-      }
-      setIsLoading(false);
-    };
-    fetchBoard();
-  }, [params.id, router]);
+    dispatch(fetchBoard(params.id as string)).unwrap().catch(() => {
+      toast.error('Board not found');
+      router.push('/boards');
+    });
+  }, [params.id, router, dispatch]);
 
   const handleDelete = async () => {
     if (!confirm('Delete this board?')) return;
     try {
-      await boardsAPI.deleteBoard(board!._id);
+      await dispatch(deleteBoard(board!._id)).unwrap();
       toast.success('Board deleted');
       router.push('/boards');
     } catch { toast.error('Failed'); }
   };
 
-  const isOwner = user?._id === board?.user;
+  const isOwner = user?._id === (typeof board?.user === 'string' ? board.user : board?.user?._id);
 
   if (isLoading || !board) {
     return (

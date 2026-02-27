@@ -6,13 +6,15 @@ import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
 import {
   LayoutDashboard, Users, FileImage, Flag, FolderTree, Sparkles,
-  Shield, ChevronRight,
+  Shield, ChevronRight, BookOpen, BarChart3,
 } from 'lucide-react';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/posts', label: 'Posts', icon: FileImage },
+  { href: '/admin/blogs', label: 'Blog Posts', icon: BookOpen },
   { href: '/admin/reports', label: 'Reports', icon: Flag },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/ai', label: 'AI Logs', icon: Sparkles },
@@ -48,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href;
+            const isActive = href === '/admin' ? pathname === href : pathname.startsWith(href);
             return (
               <Link
                 key={href}

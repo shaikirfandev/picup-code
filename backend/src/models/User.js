@@ -80,6 +80,10 @@ const userSchema = new mongoose.Schema(
     passwordResetExpires: Date,
     lastLogin: Date,
     loginCount: { type: Number, default: 0 },
+    lastLoginIP: String,
+    lastLoginDevice: String,
+    lastLoginCountry: String,
+    isActiveToday: { type: Boolean, default: false },
     // Account type: free or paid (for ad account features)
     accountType: {
       type: String,

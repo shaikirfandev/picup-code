@@ -87,6 +87,12 @@ export interface Post {
   isLiked?: boolean;
   isSaved?: boolean;
   relatedPosts?: Post[];
+  // Soft-delete fields
+  isDeleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: User;
+  deleteReason?: string;
+  deleteStatus?: 'active' | 'deleted';
   createdAt: string;
   updatedAt: string;
 }
@@ -133,14 +139,20 @@ export interface Report {
   _id: string;
   reporter: User;
   post?: Post;
+  blogPost?: BlogPost;
   reportedUser?: User;
-  reason: string;
+  reason: 'spam' | 'nsfw' | 'nudity' | 'violence' | 'harassment' | 'hate_speech' | 'abuse' | 'misinformation' | 'copyright' | 'other';
   description?: string;
   status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  severity: number;
+  autoFlagged: boolean;
   reviewedBy?: User;
+  reviewedAt?: string;
   reviewNotes?: string;
-  actionTaken?: string;
+  actionTaken?: 'none' | 'removed' | 'warned' | 'banned' | 'hidden';
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AIGeneration {
@@ -173,10 +185,17 @@ export interface Notification {
   _id: string;
   recipient: string;
   sender: User;
-  type: 'like' | 'comment' | 'follow' | 'save' | 'mention' | 'system';
-  post?: Post;
+  type: 'like' | 'comment' | 'reply' | 'follow' | 'save' | 'mention' | 'report_resolved' | 'system';
+  post?: {
+    _id: string;
+    title: string;
+    slug?: string;
+    image?: { url: string };
+  };
+  comment?: string;
   message?: string;
   isRead: boolean;
+  metadata?: Record<string, any>;
   createdAt: string;
 }
 
@@ -240,6 +259,12 @@ export interface BlogPost {
   sharesCount: number;
   isFeatured: boolean;
   readTime: number;
+  // Soft-delete fields
+  isDeleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: User;
+  deleteReason?: string;
+  deleteStatus?: 'active' | 'deleted';
   createdAt: string;
   updatedAt: string;
 }
@@ -316,4 +341,131 @@ export interface LoginAnalytics {
   totalLogins: number;
   uniqueUsersCount: number;
   loginsByMethod: { _id: string; count: number }[];
+}
+
+// Analytics Overview
+export interface AnalyticsOverview {
+  totalUsers: number;
+  newUsersToday: number;
+  totalPosts: number;
+  totalViews: number;
+  totalLikes: number;
+  totalSaves: number;
+  activeReports: number;
+  totalAIGenerations: number;
+  activeUsersLast24h: number;
+  weeklyActiveUsers: number;
+  monthlyActiveUsers: number;
+  todayLogins: number;
+}
+
+// Analytics Login Stats
+export interface AnalyticsLoginStats {
+  dailyStats: {
+    date: string;
+    logins: number;
+    uniqueLogins: number;
+    newUsers?: number;
+    posts?: number;
+    likes?: number;
+    saves?: number;
+    loginsByMethod?: { email: number; google: number; github: number };
+    loginsByDevice?: { desktop: number; mobile: number; tablet: number; unknown: number };
+    topCountries?: { country: string; count: number }[];
+  }[];
+  summary: {
+    activeToday: number;
+    weeklyActive: number;
+    monthlyActive: number;
+  };
+  loginsByMethod: Record<string, number>;
+  topCountries: { country: string; count: number }[];
+}
+
+// Analytics User Row
+export interface AnalyticsUser {
+  _id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  avatar: string;
+  role: 'user' | 'moderator' | 'admin';
+  status: 'active' | 'suspended' | 'banned';
+  isVerified: boolean;
+  lastLogin: string | null;
+  loginCount: number;
+  lastLoginDevice: string;
+  lastLoginCountry: string;
+  lastLoginIP: string;
+  postsCount: number;
+  accountType: string;
+  createdAt: string;
+}
+
+// Top User
+export interface TopUser {
+  _id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  postsCount?: number;
+  loginCount?: number;
+  totalLikes?: number;
+  totalViews?: number;
+  postCount?: number;
+  engagementScore?: number;
+}
+
+// Recent Activity
+export interface RecentActivity {
+  recentLogins: {
+    _id: string;
+    user: { _id: string; username: string; displayName: string; avatar: string };
+    browser: string;
+    os: string;
+    deviceType: string;
+    country: string;
+    method: string;
+    createdAt: string;
+  }[];
+  recentPosts: {
+    _id: string;
+    title: string;
+    image?: { url: string };
+    viewsCount: number;
+    likesCount: number;
+    author: { _id: string; username: string; displayName: string; avatar: string };
+    createdAt: string;
+  }[];
+  recentReports: {
+    _id: string;
+    reporter: { _id: string; username: string; displayName: string; avatar: string };
+    post?: { _id: string; title: string };
+    blogPost?: { _id: string; title: string };
+    reason: string;
+    status: string;
+    priority: string;
+    createdAt: string;
+  }[];
+  recentAI: {
+    _id: string;
+    user: { _id: string; username: string; displayName: string; avatar: string };
+    prompt: string;
+    style: string;
+    status: string;
+    createdAt: string;
+  }[];
+}
+
+// Audit log
+export interface AuditLog {
+  _id: string;
+  actionType: string;
+  performedBy: User;
+  targetId: string;
+  targetModel: string;
+  metadata: Record<string, any>;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
 }

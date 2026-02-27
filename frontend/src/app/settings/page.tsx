@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchUser } from '@/store/slices/authSlice';
-import { usersAPI } from '@/lib/api';
+import { updateProfile } from '@/store/slices/userSlice';
+import { authAPI } from '@/lib/api';
 import { User, Save, Camera, Shield, Bell, Palette, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -38,10 +39,10 @@ export default function SettingsPage() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await usersAPI.updateProfile({ displayName, bio, location, website });
+      await dispatch(updateProfile({ displayName, bio, location, website })).unwrap();
       await dispatch(fetchUser());
       toast.success('Profile updated!');
-    } catch (err: any) { toast.error(err.response?.data?.message || 'Failed'); }
+    } catch (err: any) { toast.error(err?.message || 'Failed'); }
     setIsSaving(false);
   };
 
@@ -51,7 +52,7 @@ export default function SettingsPage() {
     if (newPassword.length < 8) { toast.error('Minimum 8 characters'); return; }
     setIsChangingPassword(true);
     try {
-      await usersAPI.changePassword({ currentPassword, newPassword });
+      await authAPI.changePassword({ currentPassword, newPassword });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');

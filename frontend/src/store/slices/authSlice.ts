@@ -1,39 +1,50 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '@/types';
 import { authAPI } from '@/lib/api';
+import { withRetry, serializeError, SerializedError } from '../utils/retry';
 
 interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: SerializedError | null;
 }
 
 const initialState: AuthState = {
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  error: null,
 };
 
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }) => {
-    const { data } = await authAPI.login({ email, password });
-    const { user, accessToken, refreshToken } = data.data;
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    return user;
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const { data } = await withRetry(() => authAPI.login({ email, password }), { maxRetries: 2 });
+      const { user, accessToken, refreshToken } = data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      return user;
+    } catch (err) {
+      return rejectWithValue(serializeError(err));
+    }
   }
 );
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (registerData: { username: string; email: string; password: string; displayName?: string }) => {
-    const { data } = await authAPI.register(registerData);
-    const { user, accessToken, refreshToken } = data.data;
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    return user;
+  async (registerData: { username: string; email: string; password: string; displayName?: string }, { rejectWithValue }) => {
+    try {
+      const { data } = await withRetry(() => authAPI.register(registerData), { maxRetries: 1 });
+      const { user, accessToken, refreshToken } = data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      return user;
+    } catch (err) {
+      return rejectWithValue(serializeError(err));
+    }
   }
 );
 
@@ -66,28 +77,43 @@ const authSlice = createSlice({
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
+    clearAuthError(state) {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     // login
     builder
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(login.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.isLoading = false;
+        state.error = null;
       })
-      .addCase(login.rejected, (state) => {
+      .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = (action.payload as SerializedError) || { message: 'Login failed' };
       });
 
     // register
     builder
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(register.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.isLoading = false;
+        state.error = null;
       })
-      .addCase(register.rejected, (state) => {
+      .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = (action.payload as SerializedError) || { message: 'Registration failed' };
       });
 
     // logout
@@ -114,5 +140,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setTokens } = authSlice.actions;
+export const { setUser, setTokens, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

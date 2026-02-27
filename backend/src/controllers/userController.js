@@ -3,6 +3,7 @@ const Post = require('../models/Post');
 const { Follow } = require('../models/Interaction');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const notificationService = require('../services/notificationService');
 
 // Get user profile by username
 exports.getUserProfile = async (req, res, next) => {
@@ -141,6 +142,14 @@ exports.followUser = async (req, res, next) => {
       User.findByIdAndUpdate(req.user._id, { $inc: { followingCount: 1 } }),
       User.findByIdAndUpdate(targetUser._id, { $inc: { followersCount: 1 } }),
     ]);
+
+    // Notify the followed user
+    notificationService.createNotification({
+      recipient: targetUser._id,
+      sender: req.user._id,
+      type: 'follow',
+      message: `${req.user.displayName || req.user.username} started following you`,
+    }).catch((err) => console.error('Follow notification error:', err));
 
     ApiResponse.success(res, { isFollowing: true }, 'User followed');
   } catch (error) {

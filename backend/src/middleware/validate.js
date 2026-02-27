@@ -94,7 +94,7 @@ const validateSearch = [
 // Report validation
 const validateReport = [
   body('reason')
-    .isIn(['spam', 'nsfw', 'harassment', 'misinformation', 'copyright', 'other'])
+    .isIn(['spam', 'nsfw', 'nudity', 'violence', 'harassment', 'hate_speech', 'abuse', 'misinformation', 'copyright', 'other'])
     .withMessage('Invalid report reason'),
   body('description')
     .optional()

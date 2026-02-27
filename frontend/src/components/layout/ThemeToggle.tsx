@@ -28,7 +28,8 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 rounded transition-all duration-300 text-white/40 hover:text-edith-cyan hover:bg-edith-cyan/5"
+      className="p-2 rounded transition-all duration-300 hover:text-edith-cyan hover:bg-edith-cyan/5"
+      style={{ color: 'var(--edith-text-dim)' }}
       title={`Theme: ${theme}`}
       aria-label="Toggle theme"
     >

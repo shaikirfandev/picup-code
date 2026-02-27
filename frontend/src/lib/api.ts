@@ -140,6 +140,8 @@ export const blogAPI = {
   getMyPosts: (params?: { page?: number; limit?: number }) =>
     api.get('/blog/user/my-posts', { params }),
   getCategories: () => api.get('/blog/categories'),
+  reportPost: (id: string, data: { reason: string; description?: string }) =>
+    api.post(`/blog/${id}/report`, data),
 };
 
 // Comments API
@@ -211,6 +213,16 @@ export const downloadAPI = {
     api.get(`/files/download/image/${fileId}`, { responseType: 'blob' }),
 };
 
+export const notificationsAPI = {
+  getNotifications: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
+    api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+  deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
+  clearAll: () => api.delete('/notifications/clear-all'),
+};
+
 // Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
@@ -222,7 +234,21 @@ export const adminAPI = {
   getPosts: (params?: { page?: number; status?: string; reported?: string }) =>
     api.get('/admin/posts', { params }),
   moderatePost: (id: string, action: string) => api.put(`/admin/posts/${id}/moderate`, { action }),
-  getReports: (params?: { page?: number; status?: string }) => api.get('/admin/reports', { params }),
+  // Enhanced post management
+  getAdminPosts: (params?: { page?: number; limit?: number; status?: string; reported?: string; includeDeleted?: string; search?: string; sort?: string }) =>
+    api.get('/admin/posts-manage', { params }),
+  deleteAdminPost: (id: string, data: { reason?: string; hardDelete?: boolean }) =>
+    api.delete(`/admin/posts-manage/${id}`, { data }),
+  bulkDeletePosts: (data: { postIds: string[]; reason?: string; hardDelete?: boolean }) =>
+    api.post('/admin/posts-manage/bulk-delete', data),
+  restorePost: (id: string) =>
+    api.patch(`/admin/posts-manage/${id}/restore`),
+  getAuditLogs: (params?: { page?: number; limit?: number; actionType?: string }) =>
+    api.get('/admin/posts-manage/audit-logs', { params }),
+  getReports: (params?: { page?: number; status?: string; priority?: string; reason?: string; search?: string }) => api.get('/admin/reports', { params }),
+  getReportDetail: (id: string) => api.get(`/admin/reports/${id}`),
+  getReportsByPost: (postId: string) => api.get(`/admin/reports/post/${postId}`),
+  getReportsByBlogPost: (blogPostId: string) => api.get(`/admin/reports/blog/${blogPostId}`),
   resolveReport: (id: string, data: { status: string; actionTaken?: string; reviewNotes?: string }) =>
     api.put(`/admin/reports/${id}`, data),
   createCategory: (formData: FormData) =>
@@ -233,11 +259,25 @@ export const adminAPI = {
   getAiLogs: (params?: { page?: number; status?: string; userId?: string }) =>
     api.get('/admin/ai/logs', { params }),
   setUserAiLimit: (id: string, limit: number) => api.put(`/admin/ai/users/${id}/limit`, { limit }),
-  // Login analytics
+  // Login analytics (legacy)
   getLoginAnalytics: (params?: { days?: number }) =>
     api.get('/admin/analytics/logins', { params }),
   getUserEmails: (params?: { page?: number; limit?: number; search?: string }) =>
     api.get('/admin/analytics/emails', { params }),
+  // Analytics — new production-grade endpoints
+  getAnalyticsOverview: () => api.get('/admin/analytics/stats/overview'),
+  getAnalyticsLogins: (params?: { days?: number }) =>
+    api.get('/admin/analytics/stats/logins', { params }),
+  getAnalyticsUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; role?: string; status?: string }) =>
+    api.get('/admin/analytics/users', { params }),
+  exportUsersCSV: () =>
+    api.get('/admin/analytics/users/export', { responseType: 'blob' }),
+  getTopUsers: (params?: { metric?: string; limit?: number }) =>
+    api.get('/admin/analytics/users/top', { params }),
+  getRecentActivity: (params?: { limit?: number }) =>
+    api.get('/admin/analytics/activity/recent', { params }),
+  triggerStatsCompute: (data?: { date?: string; backfill?: number }) =>
+    api.post('/admin/analytics/stats/compute', data),
   // Ads management
   getAllAds: (params?: { page?: number; status?: string }) =>
     api.get('/ads/admin/all', { params }),
@@ -246,6 +286,17 @@ export const adminAPI = {
   // Payments
   getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
     api.get('/payments/admin/all', { params }),
+  // Enhanced blog post management
+  getAdminBlogPosts: (params?: { page?: number; limit?: number; status?: string; category?: string; includeDeleted?: string; search?: string; sort?: string }) =>
+    api.get('/admin/blogs-manage', { params }),
+  deleteAdminBlogPost: (id: string, data: { reason?: string; hardDelete?: boolean }) =>
+    api.delete(`/admin/blogs-manage/${id}`, { data }),
+  bulkDeleteBlogPosts: (data: { postIds: string[]; reason?: string; hardDelete?: boolean }) =>
+    api.post('/admin/blogs-manage/bulk-delete', data),
+  restoreBlogPost: (id: string) =>
+    api.patch(`/admin/blogs-manage/${id}/restore`),
+  getBlogAuditLogs: (params?: { page?: number; limit?: number; actionType?: string }) =>
+    api.get('/admin/blogs-manage/audit-logs', { params }),
 };
 
 export default api;

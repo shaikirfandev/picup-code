@@ -12,6 +12,7 @@ const loginLogSchema = new mongoose.Schema(
       required: true,
     },
     ip: String,
+    ipMasked: String, // Privacy-compliant masked IP (e.g., 192.168.xxx.xxx)
     userAgent: String,
     method: {
       type: String,
@@ -22,6 +23,14 @@ const loginLogSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Device info parsed from user-agent
+    browser: String,
+    os: String,
+    deviceType: { type: String, enum: ['desktop', 'mobile', 'tablet', 'unknown'], default: 'unknown' },
+    // Geo info from IP
+    country: String,
+    city: String,
+    region: String,
   },
   {
     timestamps: true,
@@ -31,5 +40,7 @@ const loginLogSchema = new mongoose.Schema(
 loginLogSchema.index({ user: 1, createdAt: -1 });
 loginLogSchema.index({ createdAt: -1 });
 loginLogSchema.index({ email: 1 });
+loginLogSchema.index({ country: 1 });
+loginLogSchema.index({ success: 1, createdAt: -1 });
 
 module.exports = mongoose.model('LoginLog', loginLogSchema);

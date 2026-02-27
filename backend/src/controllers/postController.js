@@ -4,6 +4,7 @@ const { Like, Save } = require('../models/Interaction');
 const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
+const notificationService = require('../services/notificationService');
 
 // Create post — files go to MongoDB GridFS
 exports.createPost = async (req, res, next) => {
@@ -206,6 +207,19 @@ exports.toggleLike = async (req, res, next) => {
 
     await Like.create({ user: req.user._id, post: postId });
     await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
+
+    // Notify post author about the like
+    const likedPost = await Post.findById(postId).select('author title');
+    if (likedPost) {
+      notificationService.createNotification({
+        recipient: likedPost.author,
+        sender: req.user._id,
+        type: 'like',
+        post: postId,
+        message: `${req.user.displayName || req.user.username} liked your post`,
+      }).catch((err) => console.error('Like notification error:', err));
+    }
+
     ApiResponse.success(res, { isLiked: true }, 'Post liked');
   } catch (error) {
     next(error);
@@ -231,6 +245,19 @@ exports.toggleSave = async (req, res, next) => {
       board: boardId || undefined,
     });
     await Post.findByIdAndUpdate(postId, { $inc: { savesCount: 1 } });
+
+    // Notify post author about the save
+    const savedPost = await Post.findById(postId).select('author title');
+    if (savedPost) {
+      notificationService.createNotification({
+        recipient: savedPost.author,
+        sender: req.user._id,
+        type: 'save',
+        post: postId,
+        message: `${req.user.displayName || req.user.username} saved your post`,
+      }).catch((err) => console.error('Save notification error:', err));
+    }
+
     ApiResponse.success(res, { isSaved: true }, 'Post saved');
   } catch (error) {
     next(error);
@@ -264,6 +291,11 @@ exports.reportPost = async (req, res, next) => {
     const post = await Post.findById(req.params.id);
     if (!post) return ApiResponse.notFound(res, 'Post not found');
 
+    // Self-report prevention
+    if (post.author.toString() === req.user._id.toString()) {
+      return ApiResponse.error(res, 'You cannot report your own post', 400);
+    }
+
     const existingReport = await Report.findOne({
       reporter: req.user._id,
       post: post._id,
@@ -282,7 +314,20 @@ exports.reportPost = async (req, res, next) => {
       description,
     });
 
-    await Post.findByIdAndUpdate(post._id, { $inc: { reportCount: 1 } });
+    const newReportCount = (post.reportCount || 0) + 1;
+    const updateFields = { $inc: { reportCount: 1 } };
+
+    // Auto-flag: hide post when report count exceeds threshold
+    if (newReportCount >= Report.AUTO_FLAG_THRESHOLD && post.status === 'published') {
+      updateFields.$set = { status: 'pending' };
+      // Also mark all pending reports as auto-flagged
+      await Report.updateMany(
+        { post: post._id, status: 'pending' },
+        { autoFlagged: true }
+      );
+    }
+
+    await Post.findByIdAndUpdate(post._id, updateFields);
 
     ApiResponse.success(res, null, 'Post reported. We will review it shortly.');
   } catch (error) {

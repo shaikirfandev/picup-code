@@ -6,7 +6,7 @@ const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&!?><{}[]';
 
 interface MatrixTextProps {
   /** The final resolved text */
-  text: string;
+  text: string | undefined | null;
   /** Whether to trigger the decode animation */
   trigger: boolean;
   /** ms per iteration step — lower = faster */
@@ -22,13 +22,14 @@ interface MatrixTextProps {
  * Characters randomize then resolve one-by-one like the Matrix movie.
  */
 export default function MatrixText({
-  text,
+  text: rawText,
   trigger,
   speed = 25,
   scramblePasses = 2,
   className = '',
   style,
 }: MatrixTextProps) {
+  const text = rawText ?? '';
   const [display, setDisplay] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const prevTrigger = useRef(false);

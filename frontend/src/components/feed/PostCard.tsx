@@ -5,16 +5,17 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Heart, Bookmark, ExternalLink, Share2, Sparkles,
-  Play, Volume2, VolumeX, Eye,
+  Play, Volume2, VolumeX, Eye, MoreHorizontal, Flag,
 } from 'lucide-react';
 import { Post } from '@/types';
 import { formatNumber, formatPrice, timeAgo } from '@/lib/utils';
-import { postsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { likePost, savePost, sharePost as sharePostThunk, trackClick } from '@/store/slices/postSlice';
 import toast from 'react-hot-toast';
 import GlassTilt from '@/components/ui/GlassTilt';
 import MatrixText from '@/components/ui/MatrixText';
 import CyberHoverModal from '@/components/ui/CyberHoverModal';
+import ReportModal from '@/components/shared/ReportModal';
 
 interface PostCardProps {
   post: Post;
@@ -23,9 +24,13 @@ interface PostCardProps {
 
 export default function PostCard({ post, index = 0 }: PostCardProps) {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  const [isLiked, setIsLiked] = useState(post.isLiked || false);
-  const [isSaved, setIsSaved] = useState(post.isSaved || false);
-  const [likesCount, setLikesCount] = useState(post.likesCount);
+  const dispatch = useAppDispatch();
+
+  // Read like/save/count directly from props (which come from normalised Redux entities)
+  const isLiked = post.isLiked || false;
+  const isSaved = post.isSaved || false;
+  const likesCount = post.likesCount;
+
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -38,6 +43,9 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isModalHovered, setIsModalHovered] = useState(false);
   const isModalHoveredRef = useRef(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
 
@@ -123,36 +131,54 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (!isAuthenticated) { toast.error('Please login to like posts'); return; }
-    try {
-      const { data } = await postsAPI.toggleLike(post._id);
-      setIsLiked(data.data.isLiked);
-      setLikesCount((prev) => prev + (data.data.isLiked ? 1 : -1));
-    } catch { toast.error('Failed to like post'); }
+    dispatch(likePost(post._id));
   };
 
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (!isAuthenticated) { toast.error('Please login to save posts'); return; }
-    try {
-      const { data } = await postsAPI.toggleSave(post._id);
-      setIsSaved(data.data.isSaved);
-      toast.success(data.data.isSaved ? 'Saved to collection' : 'Removed from saved');
-    } catch { toast.error('Failed to save post'); }
+    dispatch(savePost({ id: post._id }));
   };
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
-      await postsAPI.sharePost(post._id);
+      dispatch(sharePostThunk(post._id));
       toast.success('Link copied!');
     } catch { toast.error('Failed to copy link'); }
   };
 
   const handleProductClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    try { await postsAPI.trackClick(post._id); } catch { /* silent */ }
+    dispatch(trackClick(post._id));
   };
+
+  const handleReport = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!isAuthenticated) { toast.error('Please login to report posts'); return; }
+    setShowContextMenu(false);
+    dismissAll();
+    setShowReportModal(true);
+  };
+
+  const toggleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    setShowContextMenu((prev) => !prev);
+    setShowReportModal(false);
+  };
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!showContextMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setShowContextMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showContextMenu]);
 
   const formatDuration = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -187,7 +213,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
             className="relative overflow-hidden rounded-xl"
             style={{
               paddingBottom: `${Math.min(aspectRatio * 100, 180)}%`,
-              background: 'linear-gradient(135deg, #0e0e1e, #14142a)',
+              background: 'var(--edith-card-bg)',
             }}
           >
             {/* Skeleton */}
@@ -271,13 +297,31 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
                     </span>
                   )}
                 </div>
-                <button onClick={handleSave}
-                  className={`p-2 rounded-lg backdrop-blur-md transition-all border
-                    ${isSaved
-                      ? 'bg-cyan-400/20 border-cyan-400/40 text-cyan-400 shadow-cyber'
-                      : 'bg-black/30 border-white/10 text-white/80 hover:text-cyan-400 hover:border-cyan-400/30'}`}>
-                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={handleSave}
+                    className={`p-2 rounded-lg backdrop-blur-md transition-all border
+                      ${isSaved
+                        ? 'bg-cyan-400/20 border-cyan-400/40 text-cyan-400 shadow-cyber'
+                        : 'bg-black/30 border-white/10 text-white/80 hover:text-cyan-400 hover:border-cyan-400/30'}`}>
+                    <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                  </button>
+                  {/* Context menu (3-dot) */}
+                  <div className="relative" ref={contextMenuRef}>
+                    <button onClick={toggleContextMenu}
+                      className="p-2 rounded-lg backdrop-blur-md transition-all border bg-black/30 border-white/10 text-white/80 hover:text-cyan-400 hover:border-cyan-400/30">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                    {showContextMenu && (
+                      <div className="absolute right-0 top-full mt-1 w-40 rounded-xl overflow-hidden shadow-lg z-50 backdrop-blur-xl"
+                        style={{ background: 'var(--edith-card-bg)', border: '1px solid var(--edith-border)' }}>
+                        <button onClick={handleReport}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-left text-xs font-medium transition-colors hover:bg-red-500/10 text-red-400">
+                          <Flag className="w-3.5 h-3.5" /> Report Post
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Bottom row: matrix-decoded info + actions */}
@@ -285,7 +329,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
                 {/* Matrix-decoded title */}
                 <div className="font-mono text-xs text-cyan-400 leading-tight tracking-wide"
                   style={{ textShadow: '0 0 8px rgba(0,240,255,0.5)' }}>
-                  <MatrixText text={post.title.slice(0, 40)} trigger={isHovering} speed={20} scramblePasses={2} />
+                  <MatrixText text={(post.title || '').slice(0, 40)} trigger={isHovering} speed={20} scramblePasses={2} />
                 </div>
                 {/* Matrix-decoded author */}
                 <div className="font-mono text-[10px] text-emerald-400/70 tracking-widest uppercase"
@@ -343,7 +387,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
 
           {/* Info below media */}
           <div className="p-2.5 space-y-1.5">
-            <h3 className="text-[13px] font-medium line-clamp-2 text-white/85 leading-snug group-hover:text-cyan-400/90 transition-colors">
+            <h3 className="text-[13px] font-medium line-clamp-2 leading-snug group-hover:text-cyan-400/90 transition-colors" style={{ color: 'var(--edith-text)' }}>
               {post.title}
             </h3>
             <div className="flex items-center justify-between">
@@ -353,15 +397,15 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
                   <img src={post.author.avatar} alt={post.author.displayName}
                     className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-700" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-bold text-cyan-400">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-cyan-400" style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' }}>
                     {post.author?.displayName?.[0]?.toUpperCase()}
                   </div>
                 )}
-                <span className="text-[11px] text-white/40 group-hover/author:text-cyan-400/60 transition-colors truncate max-w-[90px] font-mono">
+                <span className="text-[11px] group-hover/author:text-cyan-400/60 transition-colors truncate max-w-[90px] font-mono" style={{ color: 'var(--edith-text-dim)' }}>
                   {post.author?.displayName}
                 </span>
               </Link>
-              <div className="flex items-center gap-2 text-[11px] text-white/30 font-mono">
+              <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
                 {likesCount > 0 && (
                   <span className="flex items-center gap-0.5">
                     <Heart className="w-3 h-3" />{formatNumber(likesCount)}
@@ -380,6 +424,14 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
         isVisible={showModal}
         onModalMouseEnter={handleModalMouseEnter}
         onModalMouseLeave={handleModalMouseLeave}
+      />
+
+      {/* Report Modal */}
+      <ReportModal
+        postId={post._id}
+        postTitle={post.title}
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
       />
     </motion.div>
   );

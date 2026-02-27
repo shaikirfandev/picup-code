@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { postsAPI, categoriesAPI, searchAPI } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  fetchFeed, fetchCategories, fetchTrendingTags, clearFeed,
+} from '@/store/slices/postSlice';
+import { selectFeedPosts, selectFeedMeta, selectFeedLoading, selectCategories, selectTrendingTags } from '@/store/selectors';
 import MasonryFeed from '@/components/feed/MasonryFeed';
 import { FeedSkeleton } from '@/components/shared/Skeletons';
-import { Post, Category } from '@/types';
 import {
   TrendingUp, Flame, Clock, Star,
   Crosshair, Zap, Hash, ChevronRight,
@@ -13,70 +16,38 @@ import {
 type SortOption = 'recent' | 'popular' | 'trending' | 'featured';
 
 export default function HomePage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [trendingTags, setTrendingTags] = useState<{ tag: string; count: number }[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [sort, setSort] = useState<SortOption>('recent');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
+  const dispatch = useAppDispatch();
+  const posts = useAppSelector(selectFeedPosts);
+  const categories = useAppSelector(selectCategories);
+  const trendingTags = useAppSelector(selectTrendingTags);
+  const feedMeta = useAppSelector(selectFeedMeta);
+  const isLoading = useAppSelector(selectFeedLoading);
 
-  const fetchPosts = useCallback(
-    async (pageNum: number, reset = false) => {
-      try {
-        setIsLoading(true);
-        const { data } = await postsAPI.getFeed({
-          page: pageNum,
-          limit: 30,
-          sort,
-          category: selectedCategory || undefined,
-          tag: selectedTag || undefined,
-        });
-        if (reset) {
-          setPosts(data.data);
-        } else {
-          setPosts((prev) => [...prev, ...data.data]);
-        }
-        setHasMore(data.pagination.hasMore);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [sort, selectedCategory, selectedTag]
-  );
+  const [sort, setSort] = useState<SortOption>((feedMeta.sort as SortOption) || 'recent');
+  const [selectedCategory, setSelectedCategory] = useState(feedMeta.category || '');
+  const [selectedTag, setSelectedTag] = useState(feedMeta.tag || '');
 
+  // Load reference data (cached)
   useEffect(() => {
-    const loadInitial = async () => {
-      try {
-        const [catRes, tagsRes] = await Promise.all([
-          categoriesAPI.getAll(),
-          searchAPI.getTrendingTags(),
-        ]);
-        setCategories(catRes.data.data);
-        setTrendingTags(tagsRes.data.data);
-      } catch (e) {
-        console.error('Failed to load categories/tags:', e);
-      }
-    };
-    loadInitial();
-  }, []);
+    dispatch(fetchCategories());
+    dispatch(fetchTrendingTags());
+  }, [dispatch]);
 
+  // Fetch feed when filters change
   useEffect(() => {
-    setPage(1);
-    fetchPosts(1, true);
-  }, [fetchPosts]);
+    dispatch(fetchFeed({ page: 1, sort, category: selectedCategory, tag: selectedTag, reset: true }));
+  }, [dispatch, sort, selectedCategory, selectedTag]);
 
   const loadMore = useCallback(() => {
-    if (!isLoading && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchPosts(nextPage);
+    if (!isLoading && feedMeta.hasMore) {
+      dispatch(fetchFeed({
+        page: feedMeta.page + 1,
+        sort,
+        category: selectedCategory,
+        tag: selectedTag,
+      }));
     }
-  }, [isLoading, hasMore, page, fetchPosts]);
+  }, [dispatch, isLoading, feedMeta, sort, selectedCategory, selectedTag]);
 
   const sortOptions: { key: SortOption; label: string; icon: React.ReactNode }[] = [
     { key: 'recent', label: 'LATEST', icon: <Clock className="w-3 h-3" /> },
@@ -95,7 +66,7 @@ export default function HomePage() {
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
             style={{
               background:
-                'radial-gradient(circle, rgba(0,212,255,0.08) 0%, rgba(0,136,255,0.04) 40%, transparent 70%)',
+                'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)',
             }}
           />
           <div
@@ -111,32 +82,32 @@ export default function HomePage() {
           {/* HUD badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded mb-6"
             style={{
-              background: 'rgba(0,212,255,0.05)',
-              border: '1px solid rgba(0,212,255,0.15)',
+              background: 'var(--edith-accent-subtle)',
+              border: '1px solid var(--edith-border)',
             }}
           >
             <Crosshair className="w-3.5 h-3.5 text-edith-cyan" />
-            <span className="text-[11px] font-mono font-medium tracking-wider text-edith-cyan/70 uppercase">
+            <span className="text-[11px] font-mono font-medium tracking-wider uppercase" style={{ color: 'var(--edith-text-dim)' }}>
               Visual Target Discovery System
             </span>
             <div className="w-1 h-1 rounded-full bg-edith-green animate-pulse" />
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 tracking-tight">
-            <span className="text-white/90">Acquire </span>
+            <span style={{ color: 'var(--edith-gradient-text)' }}>Acquire </span>
             <span className="text-gradient">Targets</span>
           </h1>
 
-          <p className="text-sm md:text-base font-mono text-white/30 max-w-2xl mx-auto tracking-wide">
+          <p className="text-sm md:text-base font-mono max-w-2xl mx-auto tracking-wide" style={{ color: 'var(--edith-text-muted)' }}>
             // Scanning visual database... Discover products, AI-generated art,
             and creative assets. Analyze. Collect. Deploy.
           </p>
 
           {/* HUD decorative line */}
           <div className="mt-8 flex items-center justify-center gap-4">
-            <div className="h-[1px] w-20" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.3))' }} />
-            <Zap className="w-3 h-3 text-edith-cyan/30" />
-            <div className="h-[1px] w-20" style={{ background: 'linear-gradient(90deg, rgba(0,212,255,0.3), transparent)' }} />
+            <div className="h-[1px] w-20" style={{ background: 'linear-gradient(90deg, transparent, var(--edith-border-strong))' }} />
+            <Zap className="w-3 h-3" style={{ color: 'var(--edith-text-muted)' }} />
+            <div className="h-[1px] w-20" style={{ background: 'linear-gradient(90deg, var(--edith-border-strong), transparent)' }} />
           </div>
         </div>
       </section>
@@ -146,9 +117,9 @@ export default function HomePage() {
         <section
           className="sticky top-14 z-30"
           style={{
-            background: 'rgba(5,5,16,0.9)',
+            background: 'var(--edith-header-bg)',
             backdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(0,212,255,0.06)',
+            borderBottom: '1px solid var(--edith-border)',
           }}
         >
           <div className="max-w-[2000px] mx-auto">
@@ -158,13 +129,13 @@ export default function HomePage() {
                 className={`shrink-0 px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                   !selectedCategory && !selectedTag
                     ? 'text-edith-cyan border border-edith-cyan/30'
-                    : 'text-white/30 border border-white/[0.06] hover:border-edith-cyan/15 hover:text-white/50'
+                    : 'border hover:border-edith-cyan/15'
                 }`}
-                style={
-                  !selectedCategory && !selectedTag
-                    ? { background: 'rgba(0,212,255,0.08)', boxShadow: '0 0 15px rgba(0,212,255,0.08)' }
-                    : { background: 'rgba(255,255,255,0.02)' }
-                }
+                style={{
+                  ...((!selectedCategory && !selectedTag)
+                    ? { background: 'var(--edith-accent-muted)', boxShadow: 'var(--edith-shadow-sm)' }
+                    : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' })
+                }}
               >
                 ALL
               </button>
@@ -175,7 +146,7 @@ export default function HomePage() {
                   className={`shrink-0 px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 ${
                     selectedCategory === cat._id
                       ? 'text-white border'
-                      : 'text-white/30 border border-white/[0.06] hover:border-edith-cyan/15 hover:text-white/50'
+                      : 'border hover:border-edith-cyan/15'
                   }`}
                   style={
                     selectedCategory === cat._id
@@ -183,9 +154,9 @@ export default function HomePage() {
                           backgroundColor: `${cat.color}22`,
                           borderColor: `${cat.color}66`,
                           color: cat.color,
-                          boxShadow: `0 0 15px ${cat.color}22`,
+                          boxShadow: `var(--edith-shadow-sm)`,
                         }
-                      : { background: 'rgba(255,255,255,0.02)' }
+                      : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }
                   }
                 >
                   <span>{cat.icon}</span>
@@ -201,11 +172,11 @@ export default function HomePage() {
       {trendingTags.length > 0 && (
         <section className="max-w-[2000px] mx-auto px-4 py-4">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-[9px] font-mono font-bold text-edith-cyan/30 uppercase tracking-[0.2em] shrink-0 flex items-center gap-1.5">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.2em] shrink-0 flex items-center gap-1.5" style={{ color: 'var(--edith-text-muted)' }}>
               <TrendingUp className="w-3 h-3" />
               TRENDING
             </span>
-            <ChevronRight className="w-3 h-3 text-white/10 shrink-0" />
+            <ChevronRight className="w-3 h-3 shrink-0" style={{ color: 'var(--edith-text-muted)' }} />
             {trendingTags.slice(0, 10).map((t) => (
               <button
                 key={t.tag}
@@ -213,12 +184,12 @@ export default function HomePage() {
                 className={`shrink-0 px-2.5 py-1 rounded text-[10px] font-mono tracking-wider transition-all duration-300 flex items-center gap-1 ${
                   selectedTag === t.tag
                     ? 'text-edith-cyan border border-edith-cyan/30'
-                    : 'text-white/25 border border-white/[0.05] hover:text-white/40 hover:border-edith-cyan/10'
+                    : 'border hover:text-edith-cyan/60 hover:border-edith-cyan/10'
                 }`}
                 style={
                   selectedTag === t.tag
-                    ? { background: 'rgba(0,212,255,0.08)' }
-                    : { background: 'rgba(255,255,255,0.01)' }
+                    ? { background: 'var(--edith-accent-muted)' }
+                    : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }
                 }
               >
                 <Hash className="w-2.5 h-2.5" />
@@ -239,18 +210,19 @@ export default function HomePage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono font-medium tracking-wider transition-all duration-300 ${
                 sort === opt.key
                   ? 'text-edith-cyan'
-                  : 'text-white/25 hover:text-white/40'
+                  : ''
               }`}
               style={
                 sort === opt.key
                   ? {
-                      background: 'rgba(0,212,255,0.08)',
-                      border: '1px solid rgba(0,212,255,0.2)',
-                      boxShadow: '0 0 12px rgba(0,212,255,0.06)',
+                      background: 'var(--edith-accent-muted)',
+                      border: '1px solid var(--edith-border-strong)',
+                      boxShadow: 'var(--edith-shadow-sm)',
                     }
                   : {
                       background: 'transparent',
                       border: '1px solid transparent',
+                      color: 'var(--edith-tag-text)',
                     }
               }
             >
@@ -270,17 +242,17 @@ export default function HomePage() {
             <div className="text-5xl mb-4 opacity-30">
               <Crosshair className="w-16 h-16 mx-auto text-edith-cyan/30" />
             </div>
-            <h3 className="text-lg font-display font-semibold mb-2 text-white/60 tracking-wider">
+            <h3 className="text-lg font-display font-semibold mb-2 tracking-wider" style={{ color: 'var(--edith-text-secondary)' }}>
               NO TARGETS FOUND
             </h3>
-            <p className="text-sm font-mono text-white/20">
+            <p className="text-sm font-mono" style={{ color: 'var(--edith-text-muted)' }}>
               // Adjust scan parameters or check back later
             </p>
           </div>
         ) : (
           <MasonryFeed
             posts={posts}
-            hasMore={hasMore}
+            hasMore={feedMeta.hasMore}
             onLoadMore={loadMore}
             isLoading={isLoading}
           />

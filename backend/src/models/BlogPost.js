@@ -53,6 +53,13 @@ const blogPostSchema = new mongoose.Schema(
     sharesCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     readTime: { type: Number, default: 1 }, // minutes
+    reportCount: { type: Number, default: 0 },
+
+    // Soft-delete fields
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, index: true },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    deleteReason: { type: String, maxlength: 500 },
   },
   {
     timestamps: true,

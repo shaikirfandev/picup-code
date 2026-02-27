@@ -1,45 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { categoriesAPI, postsAPI } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchCategories, fetchExplore } from '@/store/slices/postSlice';
+import { selectExplorePosts, selectCategories } from '@/store/selectors';
 import PostCard from '@/components/feed/PostCard';
-import { Category, Post } from '@/types';
 import { Crosshair, TrendingUp, Radar, Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
 export default function ExplorePage() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(selectCategories);
+  const posts = useAppSelector(selectExplorePosts);
+  const isLoading = useAppSelector((s) => s.posts.exploreLoading);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [catRes, featRes] = await Promise.all([
-          categoriesAPI.getAll(),
-          postsAPI.getFeed({ sort: 'popular', limit: 30 }),
-        ]);
-        setCategories(catRes.data.data || []);
-        setPosts(featRes.data.data || []);
-      } catch { /* silent */ }
-      setIsLoading(false);
-    };
-    fetchData();
-  }, []);
+    dispatch(fetchCategories());
+    dispatch(fetchExplore({ sort: 'popular', limit: 30 }));
+  }, [dispatch]);
 
-  const handleCategorySelect = async (catId: string) => {
+  const handleCategorySelect = (catId: string) => {
     setSelectedCategory(catId);
-    setIsLoading(true);
-    try {
-      const { data } = await postsAPI.getFeed({
-        category: catId || undefined,
-        sort: 'popular',
-        limit: 30,
-      });
-      setPosts(data.data || []);
-    } catch { /* silent */ }
-    setIsLoading(false);
+    dispatch(fetchExplore({ category: catId, sort: 'popular', limit: 30 }));
   };
 
   return (
@@ -50,24 +33,24 @@ export default function ExplorePage() {
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
             style={{
-              background: 'radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)',
             }}
           />
         </div>
         <div className="relative max-w-4xl mx-auto px-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded mb-4"
-            style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.12)' }}
+            style={{ background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}
           >
             <Radar className="w-3 h-3 text-edith-cyan" />
-            <span className="text-[10px] font-mono text-edith-cyan/60 tracking-wider uppercase">
+            <span className="text-[10px] font-mono tracking-wider uppercase" style={{ color: 'var(--edith-text-dim)' }}>
               Scanning Visual Database
             </span>
           </div>
           <h1 className="text-3xl md:text-4xl font-display font-bold mb-3 tracking-tight">
-            <span className="text-white/90">Explore </span>
+            <span style={{ color: 'var(--edith-gradient-text)' }}>Explore </span>
             <span className="text-gradient">Targets</span>
           </h1>
-          <p className="text-sm font-mono text-white/25 max-w-lg mx-auto">
+          <p className="text-sm font-mono max-w-lg mx-auto" style={{ color: 'var(--edith-text-muted)' }}>
             // Discover trending products, creative pins, and AI-generated assets
           </p>
         </div>
@@ -81,9 +64,9 @@ export default function ExplorePage() {
             className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
               !selectedCategory
                 ? 'text-edith-cyan border border-edith-cyan/30'
-                : 'text-white/30 border border-white/[0.06] hover:text-white/50 hover:border-edith-cyan/15'
+                : 'border hover:border-edith-cyan/15'
             }`}
-            style={!selectedCategory ? { background: 'rgba(0,212,255,0.08)', boxShadow: '0 0 15px rgba(0,212,255,0.08)' } : { background: 'rgba(255,255,255,0.02)' }}
+            style={!selectedCategory ? { background: 'var(--edith-accent-muted)', boxShadow: 'var(--edith-shadow-sm)' } : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }}
           >
             <TrendingUp className="w-3 h-3 inline mr-1 -mt-0.5" />
             ALL
@@ -95,12 +78,12 @@ export default function ExplorePage() {
               className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                 selectedCategory === cat._id
                   ? 'text-white border'
-                  : 'text-white/30 border border-white/[0.06] hover:text-white/50 hover:border-edith-cyan/15'
+                  : 'border hover:border-edith-cyan/15'
               }`}
               style={
                 selectedCategory === cat._id
-                  ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, color: cat.color, boxShadow: `0 0 15px ${cat.color}22` }
-                  : { background: 'rgba(255,255,255,0.02)' }
+                  ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, color: cat.color, boxShadow: 'var(--edith-shadow-sm)' }
+                  : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }
               }
             >
               {cat.icon} {cat.name}
@@ -129,10 +112,10 @@ export default function ExplorePage() {
         ) : (
           <div className="text-center py-20">
             <Crosshair className="w-12 h-12 text-edith-cyan/20 mx-auto mb-3" />
-            <p className="text-sm font-display font-medium text-white/40 tracking-wider">
+            <p className="text-sm font-display font-medium tracking-wider" style={{ color: 'var(--edith-text-secondary)' }}>
               NO TARGETS DETECTED
             </p>
-            <p className="text-[11px] font-mono text-white/15 mt-1">
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
               // Adjust scan parameters or check back later
             </p>
           </div>

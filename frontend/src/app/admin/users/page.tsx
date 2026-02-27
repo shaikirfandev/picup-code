@@ -19,7 +19,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data } = await adminAPI.getUsers({ page, search, limit: 20 });
+      const { data } = await adminAPI.getUsers({ page, search, limit: 20 } as any);
       setUsers(data.data || []);
       setTotalPages(data.pagination?.pages || 1);
     } catch { /* silent */ }
@@ -30,7 +30,7 @@ export default function AdminUsersPage() {
 
   const handleBan = async (userId: string, isBanned: boolean) => {
     try {
-      await adminAPI.updateUser(userId, { isActive: isBanned });
+      await adminAPI.updateUserStatus(userId, isBanned ? 'active' : 'banned');
       toast.success(isBanned ? 'User unbanned' : 'User banned');
       fetchUsers();
     } catch { toast.error('Failed'); }
@@ -38,7 +38,7 @@ export default function AdminUsersPage() {
 
   const handleRoleChange = async (userId: string, role: string) => {
     try {
-      await adminAPI.updateUser(userId, { role });
+      await adminAPI.updateUserRole(userId, role);
       toast.success('Role updated');
       fetchUsers();
     } catch { toast.error('Failed'); }

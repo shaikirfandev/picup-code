@@ -2,44 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { boardsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { fetchMyBoards, createBoard } from '@/store/slices/boardSlice';
 import { Board } from '@/types';
 import { Plus, FolderOpen, Lock, Globe, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function BoardsPage() {
+  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { boards, boardsLoading: isLoading } = useAppSelector((s) => s.boards);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
 
   useEffect(() => {
-    const fetchBoards = async () => {
-      try {
-        const { data } = await boardsAPI.getBoards();
-        setBoards(data.data || []);
-      } catch { /* silent */ }
-      setIsLoading(false);
-    };
-    if (isAuthenticated) fetchBoards();
-    else setIsLoading(false);
-  }, [isAuthenticated]);
+    if (isAuthenticated) dispatch(fetchMyBoards());
+  }, [isAuthenticated, dispatch]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     try {
-      const { data } = await boardsAPI.createBoard({ name, description, isPrivate });
-      setBoards([data.data, ...boards]);
+      await dispatch(createBoard({ name, description, isPrivate })).unwrap();
       setShowCreate(false);
       setName('');
       setDescription('');
       toast.success('Board created!');
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed'); }
+    } catch (e: any) { toast.error(e?.message || 'Failed'); }
   };
 
   if (!isAuthenticated) {
@@ -106,12 +97,12 @@ export default function BoardsPage() {
               >
                 {/* Thumbnail grid */}
                 <div className="aspect-[4/3] bg-surface-100 dark:bg-surface-800 grid grid-cols-2 grid-rows-2 gap-0.5 p-0.5 rounded-t-xl overflow-hidden">
-                  {(board.coverImages || []).slice(0, 4).map((img, i) => (
+                  {((board as any).coverImages || []).slice(0, 4).map((img: string, i: number) => (
                     <div key={i} className="bg-surface-200 dark:bg-surface-700 overflow-hidden">
                       <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     </div>
                   ))}
-                  {Array.from({ length: Math.max(0, 4 - (board.coverImages?.length || 0)) }).map((_, i) => (
+                  {Array.from({ length: Math.max(0, 4 - ((board as any).coverImages?.length || 0)) }).map((_, i) => (
                     <div key={`empty-${i}`} className="bg-surface-200 dark:bg-surface-700 flex items-center justify-center">
                       <Image className="w-6 h-6 text-surface-400" />
                     </div>

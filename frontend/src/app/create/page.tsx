@@ -2,9 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/store/hooks';
-import { postsAPI, categoriesAPI, aiAPI, uploadAPI } from '@/lib/api';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { aiAPI, uploadAPI, postsAPI } from '@/lib/api';
 import { Category, AIStyle } from '@/types';
+import { fetchCategories } from '@/store/slices/postSlice';
+import { selectCategories } from '@/store/selectors';
 import {
   Upload, X, ImagePlus, Sparkles, Tag, DollarSign, ExternalLink,
   Loader2, Wand2, ChevronRight, AlertCircle, FileImage, Palette,
@@ -15,7 +17,9 @@ import toast from 'react-hot-toast';
 
 export default function CreatePostPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+  const categories = useAppSelector(selectCategories);
   const [activeTab, setActiveTab] = useState<'upload' | 'video' | 'ai'>('upload');
 
   // Form state
@@ -51,7 +55,6 @@ export default function CreatePostPage() {
   const [generatedImage, setGeneratedImage] = useState('');
 
   // Data
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -59,18 +62,15 @@ export default function CreatePostPage() {
       router.push('/login');
       return;
     }
-    const fetchData = async () => {
+    dispatch(fetchCategories());
+    const fetchStyles = async () => {
       try {
-        const [catRes, styleRes] = await Promise.all([
-          categoriesAPI.getAll(),
-          aiAPI.getStyles(),
-        ]);
-        setCategories(catRes.data.data || []);
+        const styleRes = await aiAPI.getStyles();
         setAiStyles(styleRes.data.data || []);
       } catch { /* silent */ }
     };
-    fetchData();
-  }, [isAuthenticated, router]);
+    fetchStyles();
+  }, [isAuthenticated, router, dispatch]);
 
   // Image Dropzone — allows up to 6 images
   const onDrop = useCallback((acceptedFiles: File[]) => {

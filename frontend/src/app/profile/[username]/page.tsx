@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usersAPI, postsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { fetchProfile, followUser, unfollowUser } from '@/store/slices/userSlice';
+import { fetchUserPosts, fetchSavedPosts } from '@/store/slices/postSlice';
+import { selectProfile, selectProfileLoading } from '@/store/selectors';
+import { selectUserPosts, selectSavedPosts } from '@/store/selectors';
 import { ProfileSkeleton } from '@/components/shared/Skeletons';
 import PostCard from '@/components/feed/PostCard';
-import { Post, User } from '@/types';
 import { formatNumber } from '@/lib/utils';
 import {
   MapPin, LinkIcon, Calendar, Settings, UserPlus, UserMinus,
@@ -22,67 +24,42 @@ type Tab = 'posts' | 'saved' | 'liked';
 export default function ProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { user: currentUser, isAuthenticated } = useAppSelector((s) => s.auth);
-  const [profile, setProfile] = useState<User | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [savedPosts, setSavedPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(0);
+  const profileData = useAppSelector((s) => selectProfile(s, params.username as string));
+  const profileLoading = useAppSelector(selectProfileLoading);
+  const userPosts = useAppSelector((s) => selectUserPosts(s, params.username as string));
+  const savedPosts = useAppSelector(selectSavedPosts);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
 
+  const profile = profileData?.user || null;
+  const isFollowing = profileData?.isFollowing || false;
+  const followersCount = profileData?.followersCount || 0;
   const isOwnProfile = currentUser?.username === params.username;
+  const isLoading = profileLoading && !profile;
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data } = await usersAPI.getProfile(params.username as string);
-        setProfile(data.data);
-        setIsFollowing(data.data.isFollowing || false);
-        setFollowersCount(data.data.followersCount || 0);
-      } catch {
-        toast.error('User not found');
-        router.push('/');
-        return;
-      }
-
-      try {
-        const { data } = await usersAPI.getUserPosts(params.username as string);
-        setPosts(data.data || []);
-      } catch { /* silent */ }
-
-      setIsLoading(false);
-    };
-    fetchProfile();
-  }, [params.username, router]);
+    dispatch(fetchProfile(params.username as string)).unwrap().catch(() => {
+      toast.error('User not found');
+      router.push('/');
+    });
+    dispatch(fetchUserPosts({ username: params.username as string }));
+  }, [params.username, dispatch, router]);
 
   useEffect(() => {
     if (activeTab === 'saved' && isOwnProfile && savedPosts.length === 0) {
-      const fetchSaved = async () => {
-        try {
-          const { data } = await postsAPI.getSavedPosts();
-          setSavedPosts(data.data || []);
-        } catch { /* silent */ }
-      };
-      fetchSaved();
+      dispatch(fetchSavedPosts());
     }
-  }, [activeTab, isOwnProfile, savedPosts.length]);
+  }, [activeTab, isOwnProfile, savedPosts.length, dispatch]);
 
   const handleFollow = async () => {
     if (!isAuthenticated) { toast.error('Please login'); return; }
-    try {
-      if (isFollowing) {
-        await usersAPI.unfollowUser(profile!._id);
-        setIsFollowing(false);
-        setFollowersCount((c) => c - 1);
-        toast.success('Unfollowed');
-      } else {
-        await usersAPI.followUser(profile!._id);
-        setIsFollowing(true);
-        setFollowersCount((c) => c + 1);
-        toast.success('Following!');
-      }
-    } catch { toast.error('Action failed'); }
+    if (!profile) return;
+    if (isFollowing) {
+      dispatch(unfollowUser({ userId: profile._id, username: profile.username }));
+    } else {
+      dispatch(followUser({ userId: profile._id, username: profile.username }));
+    }
   };
 
   const handleShare = async () => {
@@ -92,7 +69,7 @@ export default function ProfilePage() {
 
   if (isLoading || !profile) return <ProfileSkeleton />;
 
-  const displayPosts = activeTab === 'saved' ? savedPosts : posts;
+  const displayPosts = activeTab === 'saved' ? savedPosts : userPosts;
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
@@ -154,7 +131,7 @@ export default function ProfilePage() {
             {/* Stats */}
             <div className="flex items-center gap-8 mt-5">
               <div className="text-center">
-                <p className="text-xl font-bold">{formatNumber(posts.length)}</p>
+                <p className="text-xl font-bold">{formatNumber(userPosts.length)}</p>
                 <p className="text-sm text-surface-500">Pins</p>
               </div>
               <Link href={`/profile/${profile.username}/followers`} className="text-center hover:text-brand-600">

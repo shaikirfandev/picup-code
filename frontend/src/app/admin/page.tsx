@@ -1,27 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { adminAPI } from '@/lib/api';
-import { DashboardStats } from '@/types';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchDashboardStats } from '@/store/slices/analyticsSlice';
+import { selectDashboardStats, selectDashboardLoading } from '@/store/selectors';
 import {
   Users, FileImage, Eye, TrendingUp, Heart, Bookmark,
   Flag, Sparkles, ArrowUpRight, ArrowDownRight, Activity,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const stats = useAppSelector(selectDashboardStats) as any;
+  const isLoading = useAppSelector(selectDashboardLoading);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data } = await adminAPI.getDashboard();
-        setStats(data.data);
-      } catch { /* silent */ }
-      setIsLoading(false);
-    };
-    fetchStats();
-  }, []);
+    dispatch(fetchDashboardStats());
+    // Auto-refresh every 5 minutes (silent background refetch)
+    const interval = setInterval(() => dispatch(fetchDashboardStats({ force: true })), 300_000);
+    return () => clearInterval(interval);
+  }, [dispatch]);
 
   const statCards = stats
     ? [

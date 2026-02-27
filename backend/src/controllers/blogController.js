@@ -1,5 +1,6 @@
 const BlogPost = require('../models/BlogPost');
 const User = require('../models/User');
+const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS, uploadThumbnailToGridFS } = require('../config/gridfs');
 
@@ -9,7 +10,7 @@ exports.getBlogPosts = async (req, res, next) => {
     const { page = 1, limit = 12, category, tag, sort = 'recent', search } = req.query;
     const { skip } = paginate(null, page, limit);
 
-    const filter = { status: 'published' };
+    const filter = { status: 'published', isDeleted: { $ne: true } };
     if (category) filter.category = category;
     if (tag) filter.tags = tag.toLowerCase();
     if (search) {
@@ -46,7 +47,7 @@ exports.getBlogPosts = async (req, res, next) => {
 // Get single blog post
 exports.getBlogPost = async (req, res, next) => {
   try {
-    const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' })
+    const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published', isDeleted: { $ne: true } })
       .populate('author', 'username displayName avatar bio');
 
     if (!post) return ApiResponse.notFound(res, 'Blog post not found');
@@ -179,6 +180,58 @@ exports.getBlogCategories = async (req, res, next) => {
       { id: 'other', name: 'Other', icon: '📌' },
     ];
     ApiResponse.success(res, categories);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Report blog post
+exports.reportBlogPost = async (req, res, next) => {
+  try {
+    const { reason, description } = req.body;
+    const blogPost = await BlogPost.findById(req.params.id);
+    if (!blogPost) return ApiResponse.notFound(res, 'Blog post not found');
+
+    // Self-report prevention
+    if (blogPost.author.toString() === req.user._id.toString()) {
+      return ApiResponse.error(res, 'You cannot report your own article', 400);
+    }
+
+    // Duplicate check
+    const existingReport = await Report.findOne({
+      reporter: req.user._id,
+      blogPost: blogPost._id,
+      status: 'pending',
+    });
+
+    if (existingReport) {
+      return ApiResponse.error(res, 'You have already reported this article', 400);
+    }
+
+    await Report.create({
+      reporter: req.user._id,
+      blogPost: blogPost._id,
+      reportedUser: blogPost.author,
+      reason,
+      description,
+    });
+
+    const newReportCount = (blogPost.reportCount || 0) + 1;
+    const updateFields = { $inc: { reportCount: 1 } };
+
+    // Auto-flag: hide blog post when report count exceeds threshold
+    if (newReportCount >= Report.AUTO_FLAG_THRESHOLD && blogPost.status === 'published') {
+      updateFields.$set = { status: 'archived' };
+      // Also mark all pending reports as auto-flagged
+      await Report.updateMany(
+        { blogPost: blogPost._id, status: 'pending' },
+        { autoFlagged: true }
+      );
+    }
+
+    await BlogPost.findByIdAndUpdate(blogPost._id, updateFields);
+
+    ApiResponse.success(res, null, 'Article reported. We will review it shortly.');
   } catch (error) {
     next(error);
   }
