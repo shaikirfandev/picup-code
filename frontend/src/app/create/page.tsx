@@ -29,8 +29,8 @@ export default function CreatePostPage() {
   const [currency, setCurrency] = useState('USD');
 
   // Image state
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [uploadedPublicId, setUploadedPublicId] = useState('');
 
@@ -72,22 +72,26 @@ export default function CreatePostPage() {
     fetchData();
   }, [isAuthenticated, router]);
 
-  // Image Dropzone
+  // Image Dropzone — allows up to 6 images
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-      setGeneratedImage('');
-    }
-  }, []);
+    const newFiles = [...imageFiles, ...acceptedFiles].slice(0, 6);
+    setImageFiles(newFiles);
+    const previews = newFiles.map((f) => URL.createObjectURL(f));
+    setImagePreviews(previews);
+    setGeneratedImage('');
+  }, [imageFiles]);
+
+  const removeImage = (idx: number) => {
+    const newFiles = imageFiles.filter((_, i) => i !== idx);
+    const newPreviews = imagePreviews.filter((_, i) => i !== idx);
+    setImageFiles(newFiles);
+    setImagePreviews(newPreviews);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif'] },
-    maxFiles: 1,
+    maxFiles: 6,
     maxSize: 10 * 1024 * 1024,
   });
 
@@ -156,8 +160,8 @@ export default function CreatePostPage() {
       const { data } = await aiAPI.generateImage({ prompt: aiPrompt, style: aiStyle || undefined });
       setGeneratedImage(data.data.imageUrl);
       setUploadedImageUrl(data.data.imageUrl);
-      setImagePreview('');
-      setImageFile(null);
+      setImagePreviews([]);
+      setImageFiles([]);
       toast.success('Image generated!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Generation failed');
@@ -177,24 +181,41 @@ export default function CreatePostPage() {
       if (!videoFile && !uploadedVideoData) { toast.error('Video required'); return; }
       if (videoError) { toast.error(videoError); return; }
     } else {
-      if (!imageFile && !generatedImage && !uploadedImageUrl) { toast.error('Image required'); return; }
+      if (imageFiles.length === 0 && !generatedImage && !uploadedImageUrl) { toast.error('At least one image required'); return; }
     }
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('title', title.trim());
-      if (description.trim()) formData.append('description', description.trim());
-      if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
-      if (categoryId) formData.append('category', categoryId);
-      if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
-      if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
+      // Helper to build form data for a single post
+      const buildFormData = (mediaFile?: File, aiUrl?: string) => {
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        if (description.trim()) formData.append('description', description.trim());
+        if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
+        if (categoryId) formData.append('category', categoryId);
+        if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+        if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
+        formData.append('mediaType', 'image');
+        if (aiUrl) {
+          formData.append('isAiGenerated', String(!!generatedImage));
+          formData.append('aiImageUrl', aiUrl);
+        } else if (mediaFile) {
+          formData.append('media', mediaFile);
+        }
+        return formData;
+      };
 
       if (isVideoPost) {
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        if (description.trim()) formData.append('description', description.trim());
+        if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
+        if (categoryId) formData.append('category', categoryId);
+        if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+        if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
         formData.append('mediaType', 'video');
 
         if (videoFile && !uploadedVideoData) {
-          // Upload video first via the dedicated endpoint
           setIsUploadingVideo(true);
           const videoFormData = new FormData();
           videoFormData.append('video', videoFile);
@@ -213,20 +234,42 @@ export default function CreatePostPage() {
         } else if (uploadedVideoData) {
           formData.append('videoData', JSON.stringify(uploadedVideoData));
         }
+
+        const { data } = await postsAPI.createPost(formData);
+        toast.success('Post created!');
+        router.push(`/post/${data.data._id}`);
+      } else if (generatedImage || uploadedImageUrl) {
+        // Single AI-generated image post
+        const formData = buildFormData(undefined, generatedImage || uploadedImageUrl);
+        const { data } = await postsAPI.createPost(formData);
+        toast.success('Post created!');
+        router.push(`/post/${data.data._id}`);
+      } else if (imageFiles.length === 1) {
+        // Single image upload
+        const formData = buildFormData(imageFiles[0]);
+        const { data } = await postsAPI.createPost(formData);
+        toast.success('Post created!');
+        router.push(`/post/${data.data._id}`);
       } else {
-        formData.append('mediaType', 'image');
-
-        if (generatedImage || uploadedImageUrl) {
-          formData.append('isAiGenerated', String(!!generatedImage));
-          formData.append('aiImageUrl', generatedImage || uploadedImageUrl);
-        } else if (imageFile) {
-          formData.append('media', imageFile);
+        // Multi-image batch upload — create a post per image
+        let lastId = '';
+        for (let i = 0; i < imageFiles.length; i++) {
+          const t = imageFiles.length > 1 ? `${title.trim()} (${i + 1}/${imageFiles.length})` : title.trim();
+          const formData = new FormData();
+          formData.append('title', t);
+          if (description.trim()) formData.append('description', description.trim());
+          if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
+          if (categoryId) formData.append('category', categoryId);
+          if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+          if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
+          formData.append('mediaType', 'image');
+          formData.append('media', imageFiles[i]);
+          const { data } = await postsAPI.createPost(formData);
+          lastId = data.data._id;
         }
+        toast.success(`${imageFiles.length} posts created!`);
+        router.push(`/post/${lastId}`);
       }
-
-      const { data } = await postsAPI.createPost(formData);
-      toast.success('Post created!');
-      router.push(`/post/${data.data._id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create post');
     } finally {
@@ -288,16 +331,30 @@ export default function CreatePostPage() {
                 }`}
               >
                 <input {...getInputProps()} />
-                {imagePreview ? (
-                  <div className="relative w-full h-full">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setImageFile(null); setImagePreview(''); }}
-                      className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                {imagePreviews.length > 0 ? (
+                  <div className="relative w-full h-full p-2">
+                    <div className={`grid gap-1.5 h-full ${
+                      imagePreviews.length === 1 ? 'grid-cols-1' :
+                      imagePreviews.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'
+                    }`}>
+                      {imagePreviews.map((src, idx) => (
+                        <div key={idx} className="relative rounded-lg overflow-hidden">
+                          <img src={src} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
+                            className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {imagePreviews.length < 6 && (
+                      <div className="absolute bottom-3 left-3 text-[10px] font-mono px-2 py-1 rounded-full bg-black/60 text-white backdrop-blur-sm">
+                        {imagePreviews.length}/6 images
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center p-8">
@@ -305,7 +362,7 @@ export default function CreatePostPage() {
                       <Upload className="w-7 h-7 text-surface-400" />
                     </div>
                     <p className="font-medium mb-1">Drag & drop or click to upload</p>
-                    <p className="text-sm text-surface-400">PNG, JPG, WEBP • Max 10 MB</p>
+                    <p className="text-sm text-surface-400">PNG, JPG, WEBP • Up to 6 images • Max 10 MB each</p>
                   </div>
                 )}
               </div>
@@ -577,7 +634,7 @@ export default function CreatePostPage() {
                 !title.trim() ||
                 (activeTab === 'video'
                   ? (!videoFile && !uploadedVideoData) || !!videoError
-                  : !imageFile && !generatedImage && !uploadedImageUrl)
+                  : imageFiles.length === 0 && !generatedImage && !uploadedImageUrl)
               }
               className="btn-primary w-full py-3.5 text-base gap-2"
             >

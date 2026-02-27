@@ -10,8 +10,9 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Bell, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Shield, Zap, Crosshair,
+  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3,
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const router = useRouter();
@@ -62,6 +63,8 @@ export default function Header() {
   const navItems = [
     { href: '/', label: 'HOME', icon: Home },
     { href: '/explore', label: 'EXPLORE', icon: Zap },
+    { href: '/tools', label: 'TOOLS', icon: Wrench },
+    { href: '/blog', label: 'BLOG', icon: FileText },
     ...(isAuthenticated ? [{ href: '/create', label: 'CREATE', icon: Plus }] : []),
   ];
 
@@ -69,6 +72,8 @@ export default function Header() {
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
     { href: '/saved', label: 'Saved Intel', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
+    { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
+    { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
     ...(user?.role === 'admin'
       ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
       : []),
@@ -176,6 +181,8 @@ export default function Header() {
           >
             <Search className="w-4 h-4" />
           </button>
+
+          <ThemeToggle />
 
           {isAuthenticated ? (
             <>

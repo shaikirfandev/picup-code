@@ -18,6 +18,13 @@ export interface User {
   aiGenerationsTotal: number;
   aiDailyLimit: number;
   isFollowing?: boolean;
+  accountType: 'free' | 'paid';
+  subscription?: {
+    plan: 'none' | 'basic' | 'pro' | 'enterprise';
+    startDate?: string;
+    endDate?: string;
+    isActive: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -209,4 +216,104 @@ export interface DashboardStats {
     userGrowth: { _id: string; count: number }[];
     postGrowth: { _id: string; count: number }[];
   };
+}
+
+// Blog types
+export interface BlogPost {
+  _id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  coverImage?: {
+    url: string;
+    publicId?: string;
+    fileId?: string;
+  };
+  tags: string[];
+  category: string;
+  author: User;
+  status: 'draft' | 'published' | 'archived';
+  viewsCount: number;
+  likesCount: number;
+  commentsCount: number;
+  sharesCount: number;
+  isFeatured: boolean;
+  readTime: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Advertisement types
+export interface Advertisement {
+  _id: string;
+  title: string;
+  description: string;
+  image?: {
+    url: string;
+    width?: number;
+    height?: number;
+  };
+  redirectUrl: string;
+  advertiser: User;
+  campaign: {
+    name: string;
+    startDate: string;
+    endDate?: string;
+    budget: number;
+    spent: number;
+    currency: 'USD' | 'INR';
+  };
+  placement: 'feed' | 'sidebar' | 'banner' | 'search';
+  status: 'draft' | 'pending' | 'active' | 'paused' | 'completed' | 'rejected';
+  isPaid: boolean;
+  impressions: number;
+  clicks: number;
+  likes: number;
+  shares: number;
+  views: number;
+  ctr: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Payment types
+export interface PaymentRecord {
+  _id: string;
+  user: User;
+  type: 'ad_payment' | 'subscription' | 'wallet_topup' | 'refund';
+  amount: number;
+  currency: 'USD' | 'INR';
+  gateway: 'stripe' | 'razorpay' | 'manual';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
+  advertisement?: Advertisement;
+  description: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
+// Wallet types
+export interface WalletData {
+  balance: number;
+  currency: string;
+  totalCredits: number;
+  totalDebits: number;
+  transactions: WalletTransaction[];
+}
+
+export interface WalletTransaction {
+  type: 'credit' | 'debit' | 'refund' | 'bonus';
+  amount: number;
+  description: string;
+  reference: string;
+  balanceAfter: number;
+  createdAt: string;
+}
+
+// Login analytics
+export interface LoginAnalytics {
+  dailyLogins: { _id: string; count: number; uniqueUsers: number }[];
+  totalLogins: number;
+  uniqueUsersCount: number;
+  loginsByMethod: { _id: string; count: number }[];
 }

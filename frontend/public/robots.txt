@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /admin
+Disallow: /ad-manager
+Disallow: /wallet
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+Allow: /blog
+Allow: /explore
+Allow: /post/
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: /sitemap.xml

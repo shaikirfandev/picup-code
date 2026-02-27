@@ -23,6 +23,9 @@ const searchRoutes = require('./routes/search');
 const categoryRoutes = require('./routes/categories');
 const uploadRoutes = require('./routes/upload');
 const fileRoutes = require('./routes/files');
+const blogRoutes = require('./routes/blog');
+const adRoutes = require('./routes/ads');
+const paymentRoutes = require('./routes/payments');
 
 const app = express();
 
@@ -64,6 +67,9 @@ app.use('/api/search', searchRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/ads', adRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

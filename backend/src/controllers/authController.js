@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const LoginLog = require('../models/LoginLog');
 const { generateTokens } = require('../middleware/auth');
 const { ApiResponse } = require('../utils/apiResponse');
 
@@ -75,6 +76,16 @@ exports.login = async (req, res, next) => {
     delete userResponse.password;
     delete userResponse.refreshToken;
 
+    // Log the login
+    LoginLog.create({
+      user: user._id,
+      email: user.email,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+      method: 'email',
+      success: true,
+    }).catch(() => {});
+
     ApiResponse.success(res, {
       user: userResponse,
       accessToken,
@@ -95,6 +106,16 @@ exports.oauthCallback = async (req, res, next) => {
     user.lastLogin = new Date();
     user.loginCount += 1;
     await user.save();
+
+    // Log the OAuth login
+    LoginLog.create({
+      user: user._id,
+      email: user.email,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+      method: user.googleId ? 'google' : 'github',
+      success: true,
+    }).catch(() => {});
 
     // Redirect to frontend with tokens
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

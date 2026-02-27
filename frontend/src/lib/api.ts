@@ -127,6 +127,21 @@ export const categoriesAPI = {
   getBySlug: (slug: string) => api.get(`/categories/${slug}`),
 };
 
+// Blog API
+export const blogAPI = {
+  getPosts: (params?: { page?: number; limit?: number; category?: string; tag?: string; sort?: string; search?: string }) =>
+    api.get('/blog', { params }),
+  getPost: (slug: string) => api.get(`/blog/${slug}`),
+  createPost: (formData: FormData) =>
+    api.post('/blog', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updatePost: (id: string, formData: FormData) =>
+    api.put(`/blog/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deletePost: (id: string) => api.delete(`/blog/${id}`),
+  getMyPosts: (params?: { page?: number; limit?: number }) =>
+    api.get('/blog/user/my-posts', { params }),
+  getCategories: () => api.get('/blog/categories'),
+};
+
 // Comments API
 export const commentsAPI = {
   getComments: (postId: string, params?: { page?: number }) =>
@@ -151,11 +166,49 @@ export const aiAPI = {
 export const uploadAPI = {
   uploadImage: (formData: FormData) =>
     api.post('/upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadImages: (formData: FormData) =>
+    api.post('/upload/images', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   uploadVideo: (formData: FormData) =>
     api.post('/upload/video', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000, // 2 min timeout for video uploads
     }),
+};
+
+// Ads API
+export const adsAPI = {
+  getActiveAds: (params?: { placement?: string; limit?: number }) =>
+    api.get('/ads/active', { params }),
+  createAd: (formData: FormData) =>
+    api.post('/ads', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getMyAds: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/ads/my', { params }),
+  getAd: (id: string) => api.get(`/ads/${id}`),
+  updateAd: (id: string, formData: FormData) =>
+    api.put(`/ads/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteAd: (id: string) => api.delete(`/ads/${id}`),
+  trackClick: (id: string) => api.post(`/ads/${id}/click`),
+  trackImpression: (id: string) => api.post(`/ads/${id}/impression`),
+  getAnalytics: (id: string) => api.get(`/ads/${id}/analytics`),
+};
+
+// Payment API
+export const paymentAPI = {
+  createPayment: (data: { amount: number; currency: string; type: string; advertisementId?: string; description?: string }) =>
+    api.post('/payments/create', data),
+  confirmPayment: (data: { paymentId: string; gatewayPaymentId?: string; gatewaySignature?: string }) =>
+    api.post('/payments/confirm', data),
+  getMyPayments: (params?: { page?: number; limit?: number; type?: string; status?: string }) =>
+    api.get('/payments/my', { params }),
+  getWallet: () => api.get('/payments/wallet'),
+  topUpWallet: (data: { amount: number; currency: string }) =>
+    api.post('/payments/wallet/topup', data),
+};
+
+// Download API (for authenticated image downloads)
+export const downloadAPI = {
+  downloadImage: (fileId: string) =>
+    api.get(`/files/download/image/${fileId}`, { responseType: 'blob' }),
 };
 
 // Admin API
@@ -172,12 +225,27 @@ export const adminAPI = {
   getReports: (params?: { page?: number; status?: string }) => api.get('/admin/reports', { params }),
   resolveReport: (id: string, data: { status: string; actionTaken?: string; reviewNotes?: string }) =>
     api.put(`/admin/reports/${id}`, data),
-  createCategory: (data: any) => api.post('/admin/categories', data),
-  updateCategory: (id: string, data: any) => api.put(`/admin/categories/${id}`, data),
+  createCategory: (formData: FormData) =>
+    api.post('/admin/categories', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateCategory: (id: string, formData: FormData) =>
+    api.put(`/admin/categories/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteCategory: (id: string) => api.delete(`/admin/categories/${id}`),
   getAiLogs: (params?: { page?: number; status?: string; userId?: string }) =>
     api.get('/admin/ai/logs', { params }),
   setUserAiLimit: (id: string, limit: number) => api.put(`/admin/ai/users/${id}/limit`, { limit }),
+  // Login analytics
+  getLoginAnalytics: (params?: { days?: number }) =>
+    api.get('/admin/analytics/logins', { params }),
+  getUserEmails: (params?: { page?: number; limit?: number; search?: string }) =>
+    api.get('/admin/analytics/emails', { params }),
+  // Ads management
+  getAllAds: (params?: { page?: number; status?: string }) =>
+    api.get('/ads/admin/all', { params }),
+  moderateAd: (id: string, action: string) =>
+    api.put(`/ads/admin/${id}/moderate`, { action }),
+  // Payments
+  getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
+    api.get('/payments/admin/all', { params }),
 };
 
 export default api;

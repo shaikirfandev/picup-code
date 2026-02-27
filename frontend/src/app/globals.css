@@ -28,6 +28,18 @@
   --edith-body: 'Rajdhani', 'Inter', sans-serif;
 }
 
+/* ── Light Mode ── */
+.light {
+  --edith-bg: #f5f7fa;
+  --edith-surface: #ffffff;
+  --edith-panel: #f0f2f5;
+  --edith-border: rgba(0, 100, 180, 0.15);
+  --edith-glow: 0 2px 12px rgba(0, 100, 180, 0.08), 0 0 30px rgba(0, 100, 180, 0.03);
+  --edith-text: rgba(15, 23, 42, 0.9);
+  --edith-text-dim: rgba(71, 85, 105, 0.7);
+  color-scheme: light;
+}
+
 @layer base {
   * {
     border-color: var(--edith-border);
@@ -35,6 +47,9 @@
 
   html {
     background: var(--edith-bg);
+  }
+
+  .dark html, html:not(.light) {
     color-scheme: dark;
   }
 
@@ -47,7 +62,7 @@
     overflow-x: hidden;
   }
 
-  /* Subtle grid background — Stark HUD grid */
+  /* Subtle grid background — Stark HUD grid (dark only) */
   body::before {
     content: '';
     position: fixed;
@@ -59,8 +74,11 @@
       linear-gradient(90deg, rgba(0,200,255,0.018) 1px, transparent 1px);
     background-size: 60px 60px;
   }
+  .light body::before {
+    background: none;
+  }
 
-  /* CRT scan-line overlay */
+  /* CRT scan-line overlay (dark only) */
   body::after {
     content: '';
     position: fixed;
@@ -74,6 +92,9 @@
       rgba(0, 200, 255, 0.008) 2px,
       rgba(0, 200, 255, 0.008) 4px
     );
+  }
+  .light body::after {
+    background: none;
   }
 
   /* Scrollbar — EDITH style thin cyan rail */

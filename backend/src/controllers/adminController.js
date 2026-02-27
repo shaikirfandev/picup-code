@@ -4,8 +4,12 @@ const Report = require('../models/Report');
 const Category = require('../models/Category');
 const AIGeneration = require('../models/AIGeneration');
 const Comment = require('../models/Comment');
+const LoginLog = require('../models/LoginLog');
+const Advertisement = require('../models/Advertisement');
+const Payment = require('../models/Payment');
 const { Like, Save } = require('../models/Interaction');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
+const { uploadImageToGridFS } = require('../config/gridfs');
 const slugify = require('slugify');
 
 // Dashboard analytics
@@ -296,7 +300,16 @@ exports.createCategory = async (req, res, next) => {
     const { name, description, icon, color } = req.body;
     const slug = slugify(name, { lower: true, strict: true });
 
-    const category = await Category.create({ name, slug, description, icon, color });
+    let imageUrl;
+    if (req.file) {
+      const result = await uploadImageToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      imageUrl = result.url;
+    }
+
+    const category = await Category.create({
+      name, slug, description, icon, color,
+      image: imageUrl || undefined,
+    });
     ApiResponse.created(res, category, 'Category created');
   } catch (error) {
     next(error);
@@ -305,9 +318,14 @@ exports.createCategory = async (req, res, next) => {
 
 exports.updateCategory = async (req, res, next) => {
   try {
-    const updates = req.body;
+    const updates = { ...req.body };
     if (updates.name) {
       updates.slug = slugify(updates.name, { lower: true, strict: true });
+    }
+
+    if (req.file) {
+      const result = await uploadImageToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      updates.image = result.url;
     }
 
     const category = await Category.findByIdAndUpdate(req.params.id, updates, { new: true });
@@ -366,6 +384,83 @@ exports.setUserAiLimit = async (req, res, next) => {
 
     if (!user) return ApiResponse.notFound(res, 'User not found');
     ApiResponse.success(res, user, 'AI limit updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Login Analytics ──
+
+// Get daily login statistics
+exports.getLoginAnalytics = async (req, res, next) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const [dailyLogins, totalLogins, uniqueUsers, loginsByMethod] = await Promise.all([
+      LoginLog.aggregate([
+        { $match: { createdAt: { $gte: startDate }, success: true } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$user' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            uniqueUsers: { $size: '$uniqueUsers' },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      LoginLog.countDocuments({ createdAt: { $gte: startDate }, success: true }),
+      LoginLog.distinct('user', { createdAt: { $gte: startDate }, success: true }),
+      LoginLog.aggregate([
+        { $match: { createdAt: { $gte: startDate }, success: true } },
+        { $group: { _id: '$method', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    ApiResponse.success(res, {
+      dailyLogins,
+      totalLogins,
+      uniqueUsersCount: uniqueUsers.length,
+      loginsByMethod,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get registered users with emails
+exports.getUserEmails = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 50, search } = req.query;
+    const { skip } = paginate(null, page, limit);
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } },
+        { displayName: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .select('username email displayName avatar role status lastLogin createdAt accountType'),
+      User.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(res, users, getPaginationMeta(total, page, limit));
   } catch (error) {
     next(error);
   }

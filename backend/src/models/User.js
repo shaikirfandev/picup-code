@@ -80,6 +80,19 @@ const userSchema = new mongoose.Schema(
     passwordResetExpires: Date,
     lastLogin: Date,
     loginCount: { type: Number, default: 0 },
+    // Account type: free or paid (for ad account features)
+    accountType: {
+      type: String,
+      enum: ['free', 'paid'],
+      default: 'free',
+    },
+    // Subscription details for paid accounts
+    subscription: {
+      plan: { type: String, enum: ['none', 'basic', 'pro', 'enterprise'], default: 'none' },
+      startDate: Date,
+      endDate: Date,
+      isActive: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true,

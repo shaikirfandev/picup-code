@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { postsAPI, commentsAPI } from '@/lib/api';
+import { postsAPI, commentsAPI, downloadAPI } from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { PostDetailSkeleton } from '@/components/shared/Skeletons';
 import PostCard from '@/components/feed/PostCard';
@@ -12,7 +12,7 @@ import { formatPrice, formatNumber, timeAgo } from '@/lib/utils';
 import {
   Heart, Bookmark, ExternalLink, Share2, MessageCircle, Send,
   ArrowLeft, Flag, MoreHorizontal, Sparkles, Eye, MousePointerClick,
-  Calendar, Tag, Play, Video, Volume2, VolumeX,
+  Calendar, Tag, Play, Video, Volume2, VolumeX, Download,
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import toast from 'react-hot-toast';
@@ -90,6 +90,36 @@ export default function PostDetailPage() {
     toast.success('Link copied!');
   };
 
+  const handleDownload = async () => {
+    if (!isAuthenticated) { toast.error('Please login to download'); return; }
+    if (!post?.image?.fileId && !post?.image?.url) { toast.error('No image to download'); return; }
+    try {
+      if (post.image?.fileId) {
+        const { data: blob } = await downloadAPI.downloadImage(post.image.fileId);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${post.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'image'}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else if (post.image?.url) {
+        const res = await fetch(post.image.url);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${post.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'image'}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+      toast.success('Download started!');
+    } catch { toast.error('Download failed'); }
+  };
+
   const handleProductClick = async () => {
     if (post) await postsAPI.trackClick(post._id);
   };
@@ -156,6 +186,9 @@ export default function PostDetailPage() {
                   </button>
                   <button onClick={handleShare} className="btn-ghost gap-1.5">
                     <Share2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={handleDownload} className="btn-ghost gap-1.5" title="Download image">
+                    <Download className="w-4 h-4" />
                   </button>
                 </div>
                 <button className="btn-ghost p-2">
