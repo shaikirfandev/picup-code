@@ -60,9 +60,13 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 
 export const fetchUser = createAsyncThunk('auth/fetchUser', async (_, { rejectWithValue }) => {
   const token = localStorage.getItem('accessToken');
-  if (!token) return rejectWithValue('No token');
-  const { data } = await authAPI.getMe();
-  return data.data as User;
+  if (!token) return rejectWithValue({ message: 'No token' });
+  try {
+    const { data } = await authAPI.getMe();
+    return data.data as User;
+  } catch (err) {
+    return rejectWithValue(serializeError(err));
+  }
 });
 
 const authSlice = createSlice({

@@ -10,7 +10,7 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3,
+  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3, Activity,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -18,7 +18,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 export default function Header() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -73,6 +73,7 @@ export default function Header() {
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
     { href: '/saved', label: 'Saved Intel', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
+    { href: '/analytics', label: 'Creator Analytics', icon: Activity },
     { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
     { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
     ...(user?.role === 'admin'
@@ -294,6 +295,12 @@ export default function Header() {
                 )}
               </div>
             </>
+          ) : authLoading ? (
+            /* Skeleton placeholder while checking auth — prevents login button flash */
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-7 rounded animate-pulse" style={{ background: 'var(--edith-accent-muted)' }} />
+              <div className="w-7 h-7 rounded animate-pulse" style={{ background: 'var(--edith-accent-muted)' }} />
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link

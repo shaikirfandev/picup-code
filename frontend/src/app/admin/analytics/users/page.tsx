@@ -1,29 +1,85 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { adminAPI } from '@/lib/api';
 import { AnalyticsUser } from '@/types';
 import { timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 import {
-  Users, Search, Download, ChevronLeft, ChevronRight, ArrowUpDown,
-  Shield, Mail, Globe, Monitor, Clock, Filter, X, CheckCircle,
-  AlertTriangle, Ban, BarChart3,
+  Users, Search, Download, ChevronLeft, ChevronRight,
+  Filter, X, CheckCircle, Globe, Ban, AlertTriangle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AgGridReact } from 'ag-grid-react';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import type { ColDef, ICellRendererParams, GridReadyEvent } from 'ag-grid-community';
+import { useEdithGridTheme } from '@/lib/agGridTheme';
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; icon: any }> = {
-  active: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', icon: CheckCircle },
-  suspended: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', icon: AlertTriangle },
-  banned: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: Ban },
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+const STATUS_STYLES: Record<string, { cls: string }> = {
+  active: { cls: 'bg-green-500/15 dark:bg-green-500/10 text-green-600 dark:text-green-400' },
+  suspended: { cls: 'bg-amber-500/15 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+  banned: { cls: 'bg-red-500/15 dark:bg-red-500/10 text-red-600 dark:text-red-400' },
 };
 
 const ROLE_STYLES: Record<string, string> = {
-  admin: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400',
-  moderator: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-  user: 'bg-surface-100 dark:bg-surface-800 text-surface-500',
+  admin: 'bg-purple-500/15 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  moderator: 'bg-blue-500/15 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  user: '',
 };
 
+/* ── Cell Renderers ── */
+function UserCellRenderer(params: ICellRendererParams) {
+  const u = params.data as AnalyticsUser;
+  if (!u) return null;
+  const roleStyle = ROLE_STYLES[u.role] || '';
+  return (
+    <div className="flex items-center gap-3 py-1">
+      {u.avatar ? (
+        <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+      ) : (
+        <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)] flex items-center justify-center text-xs font-bold text-[var(--edith-accent)] flex-shrink-0">
+          {u.displayName?.[0] || '?'}
+        </div>
+      )}
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium truncate leading-tight" style={{ color: 'var(--edith-text)' }}>{u.displayName || u.username}</p>
+          {u.isVerified && <CheckCircle className="w-3 h-3 text-blue-500 flex-shrink-0" />}
+          {u.role !== 'user' && roleStyle && (
+            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${roleStyle}`}>{u.role}</span>
+          )}
+        </div>
+        <p className="text-[10px] leading-tight" style={{ color: 'var(--edith-text-muted)' }}>@{u.username}</p>
+      </div>
+    </div>
+  );
+}
+
+function CountryCellRenderer(params: ICellRendererParams) {
+  const u = params.data as AnalyticsUser;
+  if (!u) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      <Globe className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--edith-text-muted)' }} />
+      <span className="text-xs" style={{ color: 'var(--edith-text-dim)' }}>{u.lastLoginCountry || '—'}</span>
+    </div>
+  );
+}
+
+function StatusCellRenderer(params: ICellRendererParams) {
+  const u = params.data as AnalyticsUser;
+  if (!u) return null;
+  const s = STATUS_STYLES[u.status] || STATUS_STYLES.active;
+  return (
+    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${s.cls}`}>
+      {u.status}
+    </span>
+  );
+}
+
+/* ── Main Page ── */
 export default function AnalyticsUsersPage() {
   const [users, setUsers] = useState<AnalyticsUser[]>([]);
   const [page, setPage] = useState(1);
@@ -31,15 +87,16 @@ export default function AnalyticsUsersPage() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState('-createdAt');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const gridRef = useRef<AgGridReact>(null);
+  const edithTheme = useEdithGridTheme();
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params: any = { page, limit: 25, sort: sortField };
+      const params: any = { page, limit: 25, sort: '-createdAt' };
       if (search) params.search = search;
       if (roleFilter) params.role = roleFilter;
       if (statusFilter) params.status = statusFilter;
@@ -51,20 +108,9 @@ export default function AnalyticsUsersPage() {
       toast.error('Failed to load users');
     }
     setIsLoading(false);
-  }, [page, sortField, search, roleFilter, statusFilter]);
+  }, [page, search, roleFilter, statusFilter]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortField(`-${field}`);
-    } else if (sortField === `-${field}`) {
-      setSortField(field);
-    } else {
-      setSortField(`-${field}`);
-    }
-    setPage(1);
-  };
 
   const handleExport = async () => {
     try {
@@ -84,20 +130,75 @@ export default function AnalyticsUsersPage() {
     }
   };
 
-  const SortButton = ({ field, label }: { field: string; label: string }) => {
-    const isActive = sortField === field || sortField === `-${field}`;
-    const isDesc = sortField === `-${field}`;
-    return (
-      <button
-        onClick={() => handleSort(field)}
-        className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-brand-500' : ''}`}
-        style={!isActive ? { color: 'var(--edith-text-muted)' } : {}}
-      >
-        {label}
-        <ArrowUpDown className={`w-3 h-3 ${isActive ? 'opacity-100' : 'opacity-40'} ${isDesc ? 'rotate-180' : ''}`} />
-      </button>
-    );
-  };
+  const rowData = useMemo(() => {
+    if (!users) return [];
+    return users.map((u) => ({ ...u }));
+  }, [users]);
+
+  const columnDefs = useMemo<ColDef[]>(() => [
+    {
+      headerName: 'User',
+      field: 'displayName',
+      cellRenderer: UserCellRenderer,
+      flex: 2,
+      minWidth: 220,
+      sortable: true,
+    },
+    {
+      headerName: 'Email',
+      field: 'email',
+      flex: 1.5,
+      minWidth: 180,
+      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' } as any,
+    },
+    {
+      headerName: 'Country',
+      field: 'lastLoginCountry',
+      cellRenderer: CountryCellRenderer,
+      width: 120,
+      sortable: true,
+    },
+    {
+      headerName: 'Last Login',
+      field: 'lastLogin',
+      width: 120,
+      valueFormatter: (p) => p.value ? timeAgo(p.value) : 'Never',
+      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '12px' } as any,
+      sortable: true,
+    },
+    {
+      headerName: 'Logins',
+      field: 'loginCount',
+      width: 90,
+      type: 'numericColumn',
+      valueFormatter: (p) => (p.value || 0).toLocaleString(),
+      sortable: true,
+    },
+    {
+      headerName: 'Device',
+      field: 'lastLoginDevice',
+      width: 140,
+      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '11px' } as any,
+      valueFormatter: (p) => p.value || '—',
+    },
+    {
+      headerName: 'Status',
+      field: 'status',
+      cellRenderer: StatusCellRenderer,
+      width: 100,
+      sortable: false,
+    },
+  ], []);
+
+  const defaultColDef = useMemo<ColDef>(() => ({
+    sortable: true,
+    resizable: true,
+    suppressMovable: true,
+  }), []);
+
+  const onGridReady = useCallback((params: GridReadyEvent) => {
+    params.api.sizeColumnsToFit();
+  }, []);
 
   return (
     <div className="p-6 lg:p-8">
@@ -122,8 +223,8 @@ export default function AnalyticsUsersPage() {
         </button>
       </div>
 
-      {/* Search + Filters */}
-      <div className="flex flex-col md:flex-row gap-3 mb-6">
+      {/* Search + Filter toggle */}
+      <div className="flex flex-col md:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
           <input
@@ -131,8 +232,7 @@ export default function AnalyticsUsersPage() {
             placeholder="Search by name, email, username..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm"
-            style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+            className="input-field pl-10"
           />
         </div>
         <button
@@ -145,7 +245,7 @@ export default function AnalyticsUsersPage() {
 
       {/* Advanced Filters */}
       {showFilters && (
-        <div className="card p-4 mb-6 flex flex-wrap items-center gap-4">
+        <div className="card p-4 mb-4 flex flex-wrap items-center gap-4">
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--edith-text-dim)' }}>Role</label>
             <select
@@ -183,165 +283,80 @@ export default function AnalyticsUsersPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--edith-border)' }}>
-                <th className="text-left px-4 py-3"><SortButton field="displayName" label="User" /></th>
-                <th className="text-left px-4 py-3 hidden lg:table-cell">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Email</span>
-                </th>
-                <th className="text-left px-4 py-3 hidden md:table-cell"><SortButton field="lastLoginCountry" label="Country" /></th>
-                <th className="text-left px-4 py-3"><SortButton field="lastLogin" label="Last Login" /></th>
-                <th className="text-left px-4 py-3"><SortButton field="loginCount" label="Logins" /></th>
-                <th className="text-left px-4 py-3 hidden md:table-cell">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Device</span>
-                </th>
-                <th className="text-left px-4 py-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Status</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading
-                ? Array.from({ length: 10 }).map((_, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--edith-border)' }}>
-                      {Array.from({ length: 7 }).map((_, j) => (
-                        <td key={j} className="px-4 py-3">
-                          <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded animate-pulse" style={{ width: `${40 + Math.random() * 60}%` }} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                : users.map((u) => {
-                    const statusStyle = STATUS_STYLES[u.status] || STATUS_STYLES.active;
-                    const roleStyle = ROLE_STYLES[u.role] || ROLE_STYLES.user;
-
-                    return (
-                      <tr key={u._id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors" style={{ borderBottom: '1px solid var(--edith-border)' }}>
-                        {/* User */}
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            {u.avatar ? (
-                              <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                            ) : (
-                              <div className="w-9 h-9 rounded-full bg-brand-500/10 flex items-center justify-center text-xs font-bold text-brand-500 flex-shrink-0">
-                                {u.displayName?.[0] || '?'}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <p className="text-sm font-medium truncate" style={{ color: 'var(--edith-text)' }}>{u.displayName || u.username}</p>
-                                {u.isVerified && <CheckCircle className="w-3 h-3 text-blue-500 flex-shrink-0" />}
-                                {u.role !== 'user' && (
-                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${roleStyle}`}>{u.role}</span>
-                                )}
-                              </div>
-                              <p className="text-[10px]" style={{ color: 'var(--edith-text-muted)' }}>@{u.username}</p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Email */}
-                        <td className="px-4 py-3 hidden lg:table-cell">
-                          <p className="text-xs font-mono truncate max-w-[200px]" style={{ color: 'var(--edith-text-dim)' }}>{u.email}</p>
-                        </td>
-
-                        {/* Country */}
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          <div className="flex items-center gap-1.5">
-                            <Globe className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--edith-text-muted)' }} />
-                            <span className="text-xs" style={{ color: 'var(--edith-text-dim)' }}>{u.lastLoginCountry || '—'}</span>
-                          </div>
-                        </td>
-
-                        {/* Last Login */}
-                        <td className="px-4 py-3">
-                          <span className="text-xs" style={{ color: 'var(--edith-text-dim)' }}>
-                            {u.lastLogin ? timeAgo(u.lastLogin) : 'Never'}
-                          </span>
-                        </td>
-
-                        {/* Login Count */}
-                        <td className="px-4 py-3">
-                          <span className="text-xs font-bold" style={{ color: 'var(--edith-text)' }}>
-                            {(u.loginCount || 0).toLocaleString()}
-                          </span>
-                        </td>
-
-                        {/* Device */}
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          <p className="text-xs truncate max-w-[140px]" style={{ color: 'var(--edith-text-dim)' }}>
-                            {u.lastLoginDevice || '—'}
-                          </p>
-                        </td>
-
-                        {/* Status */}
-                        <td className="px-4 py-3">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${statusStyle.bg} ${statusStyle.text}`}>
-                            {u.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-              {!isLoading && users.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
-                    <Users className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--edith-text-muted)', opacity: 0.3 }} />
-                    <p className="text-sm" style={{ color: 'var(--edith-text-dim)' }}>No users found</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: '1px solid var(--edith-border)' }}>
-            <p className="text-xs" style={{ color: 'var(--edith-text-muted)' }}>
-              Page {page} of {totalPages} · {total.toLocaleString()} users
-            </p>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="btn-ghost p-1.5 rounded-lg disabled:opacity-40"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              {/* Page numbers */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-                const p = start + i;
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
-                      page === p ? 'bg-brand-600 text-white' : 'btn-ghost'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="btn-ghost p-1.5 rounded-lg disabled:opacity-40"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+      {/* AG Grid */}
+      <div className="card overflow-hidden" style={{ height: isLoading ? 520 : Math.min(rowData.length * 52 + 56, 680) }}>
+        {isLoading ? (
+          <div className="space-y-2 p-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 animate-pulse">
+                <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)]" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 rounded bg-[var(--edith-accent-muted)]" style={{ width: `${40 + Math.random() * 60}%` }} />
+                  <div className="h-2 w-24 rounded bg-[var(--edith-accent-muted)]" />
+                </div>
+                <div className="h-3 w-16 rounded bg-[var(--edith-accent-muted)]" />
+              </div>
+            ))}
           </div>
+        ) : (
+          <AgGridReact
+            ref={gridRef}
+            theme={edithTheme}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            rowHeight={52}
+            headerHeight={44}
+            animateRows={true}
+            suppressCellFocus={true}
+            onGridReady={onGridReady}
+            overlayNoRowsTemplate='<span style="color: var(--edith-text-muted)">No users found</span>'
+          />
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-3 px-4 py-2.5 rounded-lg"
+          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+        >
+          <p className="text-xs font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+            Page {page} of {totalPages} · {total.toLocaleString()} users
+          </p>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="btn-ghost p-1.5 rounded-lg disabled:opacity-40"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              if (p > totalPages) return null;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                    page === p ? 'bg-brand-600 text-white' : 'btn-ghost'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="btn-ghost p-1.5 rounded-lg disabled:opacity-40"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -469,3 +469,154 @@ export interface AuditLog {
   userAgent?: string;
   createdAt: string;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Creator Analytics Types
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface MetricWithGrowth {
+  value: number;
+  previous: number;
+  growth: number;
+}
+
+export interface CreatorOverview {
+  totalPosts: number;
+  impressions: MetricWithGrowth;
+  uniqueViews: MetricWithGrowth;
+  likes: MetricWithGrowth;
+  shares: MetricWithGrowth;
+  saves: MetricWithGrowth;
+  comments: MetricWithGrowth;
+  clicks: MetricWithGrowth;
+  affiliateClicks: MetricWithGrowth;
+  ctr: number;
+  engagementRate: number;
+  estimatedRevenue: MetricWithGrowth;
+  realtimeCounters: RealtimeCounters;
+}
+
+export interface RealtimeCounters {
+  views: number;
+  likes: number;
+  shares: number;
+  clicks: number;
+  saves: number;
+  comments: number;
+  total: number;
+}
+
+export interface EngagementTimelinePoint {
+  date: string;
+  impressions: number;
+  uniqueViews: number;
+  likes: number;
+  shares: number;
+  saves: number;
+  comments: number;
+  clicks: number;
+  engagements: number;
+}
+
+export interface FollowerGrowthPoint {
+  date: string;
+  followersCount: number;
+  followersGained: number;
+  followersLost: number;
+  netFollowerGrowth: number;
+}
+
+export interface PostPerformanceRow {
+  postId: string;
+  post: {
+    title: string;
+    slug?: string;
+    mediaType: string;
+    image?: { url: string };
+    video?: { thumbnailUrl?: string };
+    productUrl?: string;
+    tags?: string[];
+    createdAt?: string;
+  };
+  impressions: number;
+  uniqueViews: number;
+  likes: number;
+  shares: number;
+  saves: number;
+  comments: number;
+  clicks: number;
+  ctr: number;
+  engagementRate: number;
+}
+
+export interface PostDetailedAnalytics {
+  post: {
+    title: string;
+    mediaType: string;
+    image?: { url: string };
+    video?: { url: string; thumbnailUrl?: string; duration?: number };
+    productUrl?: string;
+    tags: string[];
+  };
+  totals: {
+    impressions: number;
+    uniqueViews: number;
+    likes: number;
+    shares: number;
+    saves: number;
+    comments: number;
+    clicks: number;
+    ctr: number;
+    engagementRate: number;
+    avgWatchDuration: number;
+    avgCompletionRate: number;
+  };
+  timeline: EngagementTimelinePoint[];
+  deviceBreakdown: Record<string, number>;
+  trafficSources: Record<string, number>;
+  geoDistribution: { country: string; count: number }[];
+  hourlyHeatmap: number[];
+  liveViewers: number;
+  realtimeCounters: RealtimeCounters;
+}
+
+export interface AffiliateAnalytics {
+  totalClicks: number;
+  uniqueClicks: number;
+  suspiciousClicks: number;
+  conversionEstimate: number;
+  revenueEstimate: number;
+  geoDistribution: { country: string; count: number }[];
+  deviceBreakdown: Record<string, number>;
+  timeDistribution: number[];
+  dailyClicks: { date: string; clicks: number; uniqueClicks: number }[];
+  urlPerformance: { url: string; clicks: number; uniqueClicks: number; postsCount: number }[];
+}
+
+export interface AudienceInsights {
+  locationDistribution: { country: string; count: number }[];
+  deviceUsage: Record<string, number>;
+  browserDistribution: { browser: string; count: number }[];
+  osDistribution: { os: string; count: number }[];
+  activeTimeHeatmap: number[][]; // 7×24 matrix
+  viewerBreakdown: { total: number; returning: number; new: number };
+  followerEngagement: { fromFollowers: number; fromNonFollowers: number };
+}
+
+export interface AIInsights {
+  bestPostingTimes: { hour: number; label: string; engagementScore: number }[];
+  postTypePerformance: { type: string; avgImpressions: number; avgEngagementRate: number; totalPosts: number }[];
+  topTags: { tag: string; avgImpressions: number; avgEngagementRate: number; postCount: number }[];
+  performanceTrend: {
+    current: { avgEngagement: number; avgImpressions: number; avgPerformanceScore: number };
+    previous: { avgEngagement: number; avgImpressions: number; avgPerformanceScore: number };
+  };
+}
+
+export interface CreatorAccessCheck {
+  hasAccess: boolean;
+  accountType: string;
+  plan: string;
+  isActive: boolean;
+}
+

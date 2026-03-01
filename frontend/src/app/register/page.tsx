@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { register } from '@/store/slices/authSlice';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Crosshair, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,6 +11,14 @@ import toast from 'react-hot-toast';
 export default function RegisterPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
+
+  // Redirect authenticated users away from register page
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, authLoading, router]);
   const [form, setForm] = useState({ username: '', email: '', password: '', displayName: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,11 +41,19 @@ export default function RegisterPage() {
     }
   };
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api';
+
+  // Don't render register form if already authenticated or still checking
+  if (isAuthenticated || authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full border-2 border-edith-cyan/30 border-t-edith-cyan animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] flex">
-      {/* Left – EDITH display */}
+    <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #050510 0%, #0a0a2e 50%, #050510 100%)' }} />
         <div className="absolute inset-0 pointer-events-none">

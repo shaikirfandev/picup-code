@@ -34,6 +34,7 @@ const notificationRoutes = require('./routes/notifications');
 const adminPostRoutes = require('./routes/adminPosts');
 const adminBlogRoutes = require('./routes/adminBlogs');
 const analyticsRoutes = require('./routes/analytics');
+const creatorAnalyticsRoutes = require('./routes/creatorAnalytics');
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +77,10 @@ io.on('connection', (socket) => {
     console.log(`🔌 Socket disconnected: user ${userId}`);
   });
 });
+
+// Setup analytics WebSocket namespace
+const { setupAnalyticsSocket } = require('./services/analyticsSocketService');
+setupAnalyticsSocket(io);
 
 // Connect to MongoDB, then init GridFS buckets
 connectDB().then(() => {
@@ -122,6 +127,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/creator-analytics', creatorAnalyticsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -149,6 +155,18 @@ server.listen(PORT, () => {
   console.log(`🚀 PicUp API running on port ${PORT}`);
   console.log(`📌 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔌 Socket.io ready`);
+
+  // Initialize Redis for analytics
+  try {
+    const { getRedisClient } = require('./config/redis');
+    getRedisClient();
+  } catch (err) {
+    console.warn('⚠️ Redis not available — analytics will use direct DB writes');
+  }
+
+  // Start analytics background workers
+  const { startAnalyticsWorkers } = require('./workers/analyticsWorker');
+  startAnalyticsWorkers();
 
   // Schedule daily stats computation — runs every hour, computes yesterday's stats
   const { computeDailyStats, resetDailyActiveFlags } = require('./utils/dailyStatsComputer');

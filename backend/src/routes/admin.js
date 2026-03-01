@@ -40,4 +40,7 @@ router.put('/ai/users/:id/limit', isAdmin, adminController.setUserAiLimit);
 router.get('/analytics/logins', isAdmin, adminController.getLoginAnalytics);
 router.get('/analytics/emails', isAdmin, adminController.getUserEmails);
 
+// Paid users
+router.get('/paid-users', isAdmin, adminController.getPaidUsers);
+
 module.exports = router;

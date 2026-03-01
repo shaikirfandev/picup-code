@@ -572,3 +572,46 @@
   0% { background-position: 0% 0%; }
   100% { background-position: 0% 100%; }
 }
+
+/* ═══════════════════════════════════════════════════
+   AG Grid — EDITH Theme Overrides
+   ═══════════════════════════════════════════════════ */
+.ag-theme-quartz,
+.ag-root-wrapper {
+  --ag-background-color: transparent !important;
+  --ag-header-background-color: rgba(0, 200, 255, 0.04) !important;
+  --ag-border-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-row-hover-color: rgba(0, 200, 255, 0.06) !important;
+  --ag-selected-row-background-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-odd-row-background-color: rgba(0, 200, 255, 0.02) !important;
+  font-family: var(--edith-body) !important;
+  border: none !important;
+}
+
+.ag-header-cell-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500 !important;
+}
+
+.ag-row {
+  transition: background-color 0.15s ease !important;
+}
+
+.ag-cell {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Light mode overrides */
+.light .ag-theme-quartz,
+.light .ag-root-wrapper {
+  --ag-background-color: transparent !important;
+  --ag-header-background-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-foreground-color: #1a2233 !important;
+  --ag-header-foreground-color: #6b7d99 !important;
+  --ag-border-color: rgba(15, 30, 60, 0.08) !important;
+  --ag-row-hover-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-selected-row-background-color: rgba(0, 145, 179, 0.06) !important;
+  --ag-odd-row-background-color: rgba(15, 30, 60, 0.02) !important;
+}

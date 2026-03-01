@@ -7,26 +7,38 @@
 import { Middleware, isRejectedWithValue, isRejected } from '@reduxjs/toolkit';
 import toast from 'react-hot-toast';
 
+// Thunk prefixes that should never show error toasts
+const SILENT_PREFIXES = [
+  'auth/fetchUser',           // Initial auth check — expected to fail when not logged in
+  'notifications/fetchUnread', // Background polling — transient failures are fine
+];
+
+function isSilenced(type: string): boolean {
+  return SILENT_PREFIXES.some((prefix) => type.startsWith(prefix));
+}
+
 // ---- Error notification middleware ----
 export const errorToastMiddleware: Middleware = () => (next) => (action: any) => {
-  // Show toast for rejected thunks (skip auth/fetchUser to avoid noise on page load)
-  if (isRejected(action) && !isRejectedWithValue(action)) {
+  if (isRejected(action) || isRejectedWithValue(action)) {
     const type: string = action.type || '';
-    const silent = ['auth/fetchUser', 'notifications/fetchUnreadCount'];
-    if (!silent.some((s) => type.startsWith(s))) {
-      const msg = action.error?.message || 'Something went wrong';
+
+    // Dev-only: always log rejected thunks for debugging
+    if (process.env.NODE_ENV === 'development') {
+      const source = isRejectedWithValue(action) ? 'rejectWithValue' : 'rejected';
+      const detail = isRejectedWithValue(action)
+        ? (action.payload as any)?.message
+        : action.error?.message;
+      console.warn(`[Redux] ${type} (${source})`, detail);
+    }
+
+    if (!isSilenced(type)) {
+      const msg = isRejectedWithValue(action)
+        ? ((action.payload as any)?.message || 'Something went wrong')
+        : (action.error?.message || 'Something went wrong');
       toast.error(msg, { id: `thunk-error-${type}` });
     }
   }
-  if (isRejectedWithValue(action)) {
-    const payload = action.payload as any;
-    const type: string = action.type || '';
-    const silent = ['auth/fetchUser', 'notifications/fetchUnreadCount'];
-    if (!silent.some((s) => type.startsWith(s))) {
-      const msg = payload?.message || 'Something went wrong';
-      toast.error(msg, { id: `thunk-error-${type}` });
-    }
-  }
+
   return next(action);
 };
 

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Crosshair, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,6 +11,14 @@ import toast from 'react-hot-toast';
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
+
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, authLoading, router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +38,16 @@ export default function LoginPage() {
     }
   };
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api';
+
+  // Don't render login form if already authenticated or still checking
+  if (isAuthenticated || authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full border-2 border-edith-cyan/30 border-t-edith-cyan animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex">

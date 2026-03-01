@@ -19,30 +19,77 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor for token refresh
+// ── Token refresh queue ─────────────────────────────────────────────────────
+// Prevents multiple concurrent 401s from racing to refresh the token.
+// Only the first 401 refreshes; others wait for the same promise.
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onTokenRefreshed(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function onRefreshFailed() {
+  refreshSubscribers.forEach(() => {}); // let queued requests reject naturally
+  refreshSubscribers = [];
+}
+
+// Response interceptor for token refresh (with queue)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
+    // Only handle 401 that hasn't already been retried
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // If a refresh is already in-flight, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken: string) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      isRefreshing = true;
+
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const { data } = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
-          localStorage.setItem('accessToken', data.data.accessToken);
-          localStorage.setItem('refreshToken', data.data.refreshToken);
-          originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
-          return api(originalRequest);
-        }
+        if (!refreshToken) throw new Error('No refresh token');
+
+        const { data } = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+        const newAccessToken = data.data.accessToken;
+        const newRefreshToken = data.data.refreshToken;
+
+        localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
+
+        // Retry the original request
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        // Unblock all queued requests
+        onTokenRefreshed(newAccessToken);
+        isRefreshing = false;
+
+        return api(originalRequest);
       } catch (refreshError) {
+        onRefreshFailed();
+        isRefreshing = false;
+
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
+        return Promise.reject(refreshError);
       }
     }
 
@@ -207,6 +254,35 @@ export const paymentAPI = {
     api.post('/payments/wallet/topup', data),
 };
 
+// Creator Analytics API
+export const creatorAnalyticsAPI = {
+  checkAccess: () => api.get('/creator-analytics/access'),
+  getOverview: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/overview', { params }),
+  getTimeline: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/timeline', { params }),
+  getFollowerGrowth: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/followers', { params }),
+  getPostsPerformance: (params?: {
+    period?: string; startDate?: string; endDate?: string;
+    sort?: string; order?: string; page?: number; limit?: number;
+    mediaType?: string; tag?: string; minImpressions?: number;
+  }) => api.get('/creator-analytics/posts', { params }),
+  getPostAnalytics: (postId: string, params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get(`/creator-analytics/posts/${postId}`, { params }),
+  getAffiliateAnalytics: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/affiliate', { params }),
+  getAudienceInsights: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/audience', { params }),
+  getAIInsights: () => api.get('/creator-analytics/ai-insights'),
+  getRealtimeStats: () => api.get('/creator-analytics/realtime'),
+  getRealtimePostStats: (postId: string) => api.get(`/creator-analytics/realtime/${postId}`),
+  trackEvent: (data: { postId: string; eventType: string; referrer?: string; watchDuration?: number; completionRate?: number; sessionId?: string }) =>
+    api.post('/creator-analytics/track', data),
+  exportCSV: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/export/csv', { params, responseType: 'blob' }),
+};
+
 // Download API (for authenticated image downloads)
 export const downloadAPI = {
   downloadImage: (fileId: string) =>
@@ -286,6 +362,9 @@ export const adminAPI = {
   // Payments
   getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
     api.get('/payments/admin/all', { params }),
+  // Paid users
+  getPaidUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; type?: string; minSpent?: number }) =>
+    api.get('/admin/paid-users', { params }),
   // Enhanced blog post management
   getAdminBlogPosts: (params?: { page?: number; limit?: number; status?: string; category?: string; includeDeleted?: string; search?: string; sort?: string }) =>
     api.get('/admin/blogs-manage', { params }),

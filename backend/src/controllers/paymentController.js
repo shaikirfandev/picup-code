@@ -150,7 +150,11 @@ exports.topUpWallet = async (req, res, next) => {
       return ApiResponse.error(res, 'Only USD and INR currencies are supported', 400);
     }
 
-    // Create a payment for wallet top-up
+    if (!amount || amount < 1) {
+      return ApiResponse.error(res, 'Minimum top-up amount is 1', 400);
+    }
+
+    // Create a completed payment for wallet top-up (mock gateway auto-confirms)
     const payment = await Payment.create({
       user: req.user._id,
       type: 'wallet_topup',
@@ -158,16 +162,26 @@ exports.topUpWallet = async (req, res, next) => {
       currency,
       gateway: currency === 'INR' ? 'razorpay' : 'stripe',
       description: `Wallet top-up: ${amount} ${currency}`,
-      status: 'pending',
+      status: 'completed',
+      gatewayPaymentId: `mock_${Date.now()}`,
+      gatewaySignature: `sig_${Date.now()}`,
+      paidAt: new Date(),
     });
+
+    // Add credits to wallet
+    let wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) {
+      wallet = await Wallet.create({ user: req.user._id, currency });
+    }
+    await wallet.addCredit(amount, 'Wallet top-up', payment._id.toString());
 
     ApiResponse.created(res, {
       paymentId: payment._id,
       amount,
       currency,
       gateway: payment.gateway,
-      clientSecret: `mock_secret_${payment._id}`,
-    }, 'Wallet top-up payment initiated');
+      newBalance: wallet.balance,
+    }, 'Wallet topped up successfully');
   } catch (error) {
     next(error);
   }

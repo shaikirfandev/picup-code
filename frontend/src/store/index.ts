@@ -5,6 +5,7 @@ import notificationReducer from './slices/notificationSlice';
 import postReducer from './slices/postSlice';
 import userReducer from './slices/userSlice';
 import analyticsReducer from './slices/analyticsSlice';
+import creatorAnalyticsReducer from './slices/creatorAnalyticsSlice';
 import boardReducer from './slices/boardSlice';
 import { errorToastMiddleware, attachOnlineListeners } from './middleware';
 
@@ -16,6 +17,7 @@ export const store = configureStore({
     posts: postReducer,
     users: userReducer,
     analytics: analyticsReducer,
+    creatorAnalytics: creatorAnalyticsReducer,
     boards: boardReducer,
   },
   middleware: (getDefaultMiddleware) =>

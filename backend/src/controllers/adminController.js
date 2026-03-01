@@ -8,6 +8,7 @@ const Comment = require('../models/Comment');
 const LoginLog = require('../models/LoginLog');
 const Advertisement = require('../models/Advertisement');
 const Payment = require('../models/Payment');
+const Wallet = require('../models/Wallet');
 const { Like, Save } = require('../models/Interaction');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS } = require('../config/gridfs');
@@ -616,6 +617,144 @@ exports.getUserEmails = async (req, res, next) => {
     ]);
 
     ApiResponse.paginated(res, users, getPaginationMeta(total, page, limit));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Paid users (admin) ──────────────────────────────────────────────────────
+// Returns users who have at least one completed payment, with aggregated stats.
+exports.getPaidUsers = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, search, sort = 'totalSpent', order = 'desc', type, minSpent } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // --- Build the aggregation pipeline ---
+    const pipeline = [];
+
+    // Stage 1: Only completed payments
+    const matchStage = { status: 'completed' };
+    if (type) matchStage.type = type;
+    pipeline.push({ $match: matchStage });
+
+    // Stage 2: Group by user
+    pipeline.push({
+      $group: {
+        _id: '$user',
+        totalSpent: { $sum: '$amount' },
+        paymentCount: { $sum: 1 },
+        lastPaymentAt: { $max: '$paidAt' },
+        firstPaymentAt: { $min: '$paidAt' },
+        currencies: { $addToSet: '$currency' },
+        paymentTypes: { $addToSet: '$type' },
+        avgPayment: { $avg: '$amount' },
+      },
+    });
+
+    // Stage 3: Optional minimum spend filter
+    if (minSpent) {
+      pipeline.push({ $match: { totalSpent: { $gte: parseFloat(minSpent) } } });
+    }
+
+    // Stage 4: Populate user details
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user',
+        pipeline: [
+          { $project: { password: 0, refreshToken: 0, passwordResetToken: 0, passwordResetExpires: 0 } },
+        ],
+      },
+    });
+    pipeline.push({ $unwind: '$user' });
+
+    // Stage 5: Optional search filter (on populated user)
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'user.username': { $regex: search, $options: 'i' } },
+            { 'user.email': { $regex: search, $options: 'i' } },
+            { 'user.displayName': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    // Stage 6: Lookup wallet balance
+    pipeline.push({
+      $lookup: {
+        from: 'wallets',
+        localField: '_id',
+        foreignField: 'user',
+        as: 'wallet',
+      },
+    });
+    pipeline.push({
+      $addFields: {
+        walletBalance: { $ifNull: [{ $arrayElemAt: ['$wallet.balance', 0] }, 0] },
+        walletCredits: { $ifNull: [{ $arrayElemAt: ['$wallet.totalCredits', 0] }, 0] },
+        walletDebits: { $ifNull: [{ $arrayElemAt: ['$wallet.totalDebits', 0] }, 0] },
+      },
+    });
+    pipeline.push({ $project: { wallet: 0 } });
+
+    // Count total before sorting/paging
+    const countPipeline = [...pipeline, { $count: 'total' }];
+
+    // Stage 7: Sort
+    const sortField = {
+      totalSpent: 'totalSpent',
+      paymentCount: 'paymentCount',
+      lastPayment: 'lastPaymentAt',
+      walletBalance: 'walletBalance',
+      joined: 'user.createdAt',
+    }[sort] || 'totalSpent';
+    pipeline.push({ $sort: { [sortField]: order === 'asc' ? 1 : -1 } });
+
+    // Stage 8: Paginate
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    // Execute both pipelines in parallel
+    const [results, countResult] = await Promise.all([
+      Payment.aggregate(pipeline),
+      Payment.aggregate(countPipeline),
+    ]);
+
+    const total = countResult[0]?.total || 0;
+
+    // Compute summary stats
+    const summaryPipeline = [
+      { $match: { status: 'completed' } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount' },
+          totalTransactions: { $sum: 1 },
+          uniquePayers: { $addToSet: '$user' },
+          avgTransaction: { $avg: '$amount' },
+        },
+      },
+      {
+        $addFields: {
+          uniquePayerCount: { $size: '$uniquePayers' },
+        },
+      },
+      { $project: { uniquePayers: 0, _id: 0 } },
+    ];
+    const [summary] = await Payment.aggregate(summaryPipeline);
+
+    ApiResponse.paginated(
+      res,
+      results,
+      {
+        ...getPaginationMeta(total, page, limit),
+        summary: summary || { totalRevenue: 0, totalTransactions: 0, uniquePayerCount: 0, avgTransaction: 0 },
+      },
+    );
   } catch (error) {
     next(error);
   }
