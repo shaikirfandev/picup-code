@@ -15,7 +15,7 @@ export default function AdminAILogsPage() {
     const fetchLogs = async () => {
       setIsLoading(true);
       try {
-        const { data } = await adminAPI.getAILogs({ page, limit: 20 });
+        const { data } = await adminAPI.getAiLogs({ page, limit: 20 });
         setLogs(data.data || []);
         setTotalPages(data.pagination?.pages || 1);
       } catch { /* silent */ }

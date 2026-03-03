@@ -102,6 +102,7 @@ export interface Board {
   name: string;
   description: string;
   coverImage: string;
+  coverImages?: string[];
   user: User;
   posts: Post[];
   isPrivate: boolean;

@@ -219,7 +219,7 @@ export default function Header() {
           )}
 
           {/* Mobile menu */}
-          <button onClick={toggleSidebar} className="md:hidden btn-ghost p-2">
+          <button onClick={handleToggleSidebar} className="md:hidden btn-ghost p-2">
             <Menu className="w-5 h-5" />
           </button>
         </div>

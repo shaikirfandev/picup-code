@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { adminAPI } from '@/lib/api';
 import { DashboardStats } from '@/types';
 import {
-  Users, FileImage, Eye, TrendingUp, Heart, Bookmark,
-  Flag, Sparkles, ArrowUpRight, ArrowDownRight, Activity,
+  Users, FileImage, Eye, TrendingUp,
+  Flag, Sparkles, Activity,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -25,14 +25,12 @@ export default function AdminDashboardPage() {
 
   const statCards = stats
     ? [
-        { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'from-blue-500 to-cyan-500' },
-        { label: 'Total Posts', value: stats.totalPosts, icon: FileImage, color: 'from-purple-500 to-pink-500' },
-        { label: 'Total Views', value: stats.totalViews, icon: Eye, color: 'from-amber-500 to-orange-500' },
-        { label: 'Total Likes', value: stats.totalLikes, icon: Heart, color: 'from-red-500 to-rose-500' },
-        { label: 'Total Saves', value: stats.totalSaves, icon: Bookmark, color: 'from-green-500 to-emerald-500' },
-        { label: 'Active Reports', value: stats.activeReports, icon: Flag, color: 'from-yellow-500 to-amber-500' },
-        { label: 'AI Generations', value: stats.totalAIGenerations, icon: Sparkles, color: 'from-violet-500 to-purple-500' },
-        { label: 'New Today', value: stats.newUsersToday, icon: TrendingUp, color: 'from-teal-500 to-cyan-500' },
+        { label: 'Total Users', value: stats.stats.totalUsers, icon: Users, color: 'from-blue-500 to-cyan-500' },
+        { label: 'Total Posts', value: stats.stats.totalPosts, icon: FileImage, color: 'from-purple-500 to-pink-500' },
+        { label: 'Total Views', value: stats.stats.totalViews, icon: Eye, color: 'from-amber-500 to-orange-500' },
+        { label: 'Pending Reports', value: stats.stats.pendingReports, icon: Flag, color: 'from-yellow-500 to-amber-500' },
+        { label: 'AI Generations', value: stats.stats.totalAiGenerations, icon: Sparkles, color: 'from-violet-500 to-purple-500' },
+        { label: 'Active Users', value: stats.stats.activeUsers, icon: TrendingUp, color: 'from-teal-500 to-cyan-500' },
       ]
     : [];
 
@@ -69,14 +67,14 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Recent activity placeholder */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <div className="card p-6">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-brand-500" />
-                Recent Activity
+                Top Posts
               </h2>
               <div className="space-y-3">
-                {stats?.recentPosts?.slice(0, 5).map((post: any) => (
+                {stats?.topPosts?.slice(0, 5).map((post: any) => (
                   <div key={post._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800">
                     {post.image?.url && (
                       <img src={post.image.url} alt="" className="w-12 h-12 rounded-lg object-cover" />
@@ -85,42 +83,11 @@ export default function AdminDashboardPage() {
                       <p className="text-sm font-medium truncate">{post.title}</p>
                       <p className="text-xs text-surface-500">by {post.author?.displayName}</p>
                     </div>
-                    <span className="text-xs text-surface-400">{new Date(post.createdAt).toLocaleDateString()}</span>
+                    <span className="text-xs text-surface-400">{post.viewsCount?.toLocaleString()} views</span>
                   </div>
                 ))}
-                {(!stats?.recentPosts || stats.recentPosts.length === 0) && (
-                  <p className="text-sm text-surface-400 text-center py-4">No recent activity</p>
-                )}
-              </div>
-            </div>
-
-            <div className="card p-6">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-500" />
-                Top Users
-              </h2>
-              <div className="space-y-3">
-                {stats?.topUsers?.slice(0, 5).map((u: any, i: number) => (
-                  <div key={u._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800">
-                    <span className="w-6 h-6 rounded-full bg-surface-100 dark:bg-surface-700 text-xs font-bold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    {u.avatar ? (
-                      <img src={u.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-sm font-bold text-brand-600">
-                        {u.displayName?.[0]}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{u.displayName}</p>
-                      <p className="text-xs text-surface-500">@{u.username}</p>
-                    </div>
-                    <span className="text-sm font-semibold">{u.postsCount} pins</span>
-                  </div>
-                ))}
-                {(!stats?.topUsers || stats.topUsers.length === 0) && (
-                  <p className="text-sm text-surface-400 text-center py-4">No users yet</p>
+                {(!stats?.topPosts || stats.topPosts.length === 0) && (
+                  <p className="text-sm text-surface-400 text-center py-4">No posts yet</p>
                 )}
               </div>
             </div>

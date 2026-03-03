@@ -96,11 +96,14 @@ export const usersAPI = {
   getFollowing: (username: string, params?: { page?: number }) =>
     api.get(`/users/profile/${username}/following`, { params }),
   getSuggested: () => api.get('/users/suggested'),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.put('/auth/change-password', data),
 };
 
 // Boards API
 export const boardsAPI = {
   getMyBoards: () => api.get('/boards/my'),
+  getBoards: () => api.get('/boards/my'),  // alias for getMyBoards
   getUserBoards: (userId: string) => api.get(`/boards/user/${userId}`),
   getBoard: (id: string, params?: { page?: number }) => api.get(`/boards/${id}`, { params }),
   createBoard: (data: { name: string; description?: string; isPrivate?: boolean }) =>
@@ -113,17 +116,21 @@ export const boardsAPI = {
 
 // Search API
 export const searchAPI = {
-  searchPosts: (params: { q?: string; category?: string; tag?: string; sort?: string; page?: number }) =>
+  searchPosts: (params: { q?: string; category?: string; tag?: string; sort?: string; page?: number; limit?: number; priceMin?: number; priceMax?: number }) =>
     api.get('/search/posts', { params }),
+  search: (params: { q?: string; category?: string; tag?: string; sort?: string; page?: number; limit?: number; priceMin?: number; priceMax?: number }) =>
+    api.get('/search/posts', { params }),  // alias for searchPosts
   searchUsers: (params: { q?: string; page?: number }) =>
     api.get('/search/users', { params }),
   getTrendingTags: () => api.get('/search/trending/tags'),
   getTrendingPosts: () => api.get('/search/trending/posts'),
+  getTrending: () => api.get('/search/trending/tags'),  // alias for getTrendingTags
 };
 
 // Categories API
 export const categoriesAPI = {
   getAll: () => api.get('/categories'),
+  getCategories: () => api.get('/categories'),  // alias for getAll
   getBySlug: (slug: string) => api.get(`/categories/${slug}`),
 };
 
@@ -161,21 +168,29 @@ export const uploadAPI = {
 // Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
-  getUsers: (params?: { page?: number; role?: string; status?: string; search?: string }) =>
+  getUsers: (params?: { page?: number; limit?: number; role?: string; status?: string; search?: string }) =>
     api.get('/admin/users', { params }),
+  updateUser: (id: string, data: { role?: string; status?: string; isActive?: boolean }) => 
+    api.put(`/admin/users/${id}`, data),
   updateUserRole: (id: string, role: string) => api.put(`/admin/users/${id}/role`, { role }),
   updateUserStatus: (id: string, status: string) => api.put(`/admin/users/${id}/status`, { status }),
   verifyUser: (id: string) => api.put(`/admin/users/${id}/verify`),
-  getPosts: (params?: { page?: number; status?: string; reported?: string }) =>
+  getPosts: (params?: { page?: number; limit?: number; status?: string; reported?: string; search?: string }) =>
     api.get('/admin/posts', { params }),
+  updatePost: (id: string, data: { status?: string; isFeatured?: boolean }) =>
+    api.put(`/admin/posts/${id}`, data),
+  deletePost: (id: string) => api.delete(`/admin/posts/${id}`),
   moderatePost: (id: string, action: string) => api.put(`/admin/posts/${id}/moderate`, { action }),
-  getReports: (params?: { page?: number; status?: string }) => api.get('/admin/reports', { params }),
+  getReports: (params?: { page?: number; limit?: number; status?: string }) => api.get('/admin/reports', { params }),
+  updateReport: (id: string, data: { status: string; actionTaken?: string; reviewNotes?: string }) =>
+    api.put(`/admin/reports/${id}`, data),
   resolveReport: (id: string, data: { status: string; actionTaken?: string; reviewNotes?: string }) =>
     api.put(`/admin/reports/${id}`, data),
+  getCategories: () => api.get('/categories'),
   createCategory: (data: any) => api.post('/admin/categories', data),
   updateCategory: (id: string, data: any) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id: string) => api.delete(`/admin/categories/${id}`),
-  getAiLogs: (params?: { page?: number; status?: string; userId?: string }) =>
+  getAiLogs: (params?: { page?: number; limit?: number; status?: string; userId?: string }) =>
     api.get('/admin/ai/logs', { params }),
   setUserAiLimit: (id: string, limit: number) => api.put(`/admin/ai/users/${id}/limit`, { limit }),
 };

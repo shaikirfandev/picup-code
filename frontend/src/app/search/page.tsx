@@ -75,7 +75,7 @@ export default function SearchPage() {
 
   const loadMoreRef = useInfiniteScroll(() => {
     if (hasMore && !isLoading) doSearch(page + 1);
-  });
+  }, hasMore);
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
