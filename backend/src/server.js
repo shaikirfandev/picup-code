@@ -35,6 +35,8 @@ const adminPostRoutes = require('./routes/adminPosts');
 const adminBlogRoutes = require('./routes/adminBlogs');
 const analyticsRoutes = require('./routes/analytics');
 const creatorAnalyticsRoutes = require('./routes/creatorAnalytics');
+const walletRoutes = require('./routes/wallet');
+const walletRoutes = require('./routes/wallet');
 
 const app = express();
 const server = http.createServer(app);
@@ -128,6 +130,7 @@ app.use('/api/ads', adRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/creator-analytics', creatorAnalyticsRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
