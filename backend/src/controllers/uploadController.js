@@ -1,71 +1,62 @@
-const { uploadToCloudinary, uploadVideoToCloudinary } = require('../config/cloudinary');
+const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
 const { ApiResponse } = require('../utils/apiResponse');
 
-const MAX_VIDEO_DURATION = 15; // seconds
-
-// Upload image
+// Upload image → MongoDB GridFS
 exports.uploadImage = async (req, res, next) => {
   try {
     if (!req.file) {
       return ApiResponse.error(res, 'No file uploaded', 400);
     }
 
-    const result = await uploadToCloudinary(
-      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-      { folder: 'picup/uploads' }
+    const result = await uploadImageToGridFS(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+
+    // Also create a thumbnail
+    const thumb = await uploadThumbnailToGridFS(
+      req.file.buffer,
+      req.file.originalname
     );
 
     ApiResponse.success(res, {
       url: result.url,
-      publicId: result.publicId,
+      fileId: result.fileId,
+      thumbnailUrl: thumb.url,
       width: result.width,
       height: result.height,
-    }, 'Image uploaded');
+    }, 'Image uploaded to MongoDB');
   } catch (error) {
     next(error);
   }
 };
 
-// Upload video (10-15 seconds max)
+// Upload video → MongoDB GridFS
 exports.uploadVideo = async (req, res, next) => {
   try {
     if (!req.file) {
       return ApiResponse.error(res, 'No video file uploaded', 400);
     }
 
-    // Upload to Cloudinary
-    const result = await uploadVideoToCloudinary(req.file.buffer, {
-      folder: 'picup/videos',
-    });
-
-    // Validate duration after upload (Cloudinary returns duration)
-    if (result.duration && result.duration > MAX_VIDEO_DURATION) {
-      // Delete the uploaded video since it's too long
-      const { deleteFromCloudinary } = require('../config/cloudinary');
-      await deleteFromCloudinary(result.publicId).catch(() => {});
-      return ApiResponse.error(
-        res,
-        `Video is too long (${Math.round(result.duration)}s). Maximum allowed is ${MAX_VIDEO_DURATION} seconds.`,
-        400
-      );
-    }
+    const result = await uploadVideoToGridFS(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
 
     ApiResponse.success(res, {
       url: result.url,
-      publicId: result.publicId,
-      thumbnailUrl: result.thumbnailUrl,
-      width: result.width,
-      height: result.height,
-      duration: result.duration,
-      format: result.format,
-      bytes: result.bytes,
-    }, 'Video uploaded');
+      fileId: result.fileId,
+      mimetype: result.mimetype,
+      bytes: result.size,
+    }, 'Video uploaded to MongoDB');
   } catch (error) {
     next(error);
   }
 };
 
-// Upload multiple images
+// Upload multiple images → MongoDB GridFS
 exports.uploadMultiple = async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -74,14 +65,11 @@ exports.uploadMultiple = async (req, res, next) => {
 
     const results = await Promise.all(
       req.files.map((file) =>
-        uploadToCloudinary(
-          `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
-          { folder: 'picup/uploads' }
-        )
+        uploadImageToGridFS(file.buffer, file.originalname, file.mimetype)
       )
     );
 
-    ApiResponse.success(res, results, 'Images uploaded');
+    ApiResponse.success(res, results, 'Images uploaded to MongoDB');
   } catch (error) {
     next(error);
   }

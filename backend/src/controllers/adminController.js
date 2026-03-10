@@ -1,11 +1,17 @@
 const User = require('../models/User');
 const Post = require('../models/Post');
+const BlogPost = require('../models/BlogPost');
 const Report = require('../models/Report');
 const Category = require('../models/Category');
 const AIGeneration = require('../models/AIGeneration');
 const Comment = require('../models/Comment');
+const LoginLog = require('../models/LoginLog');
+const Advertisement = require('../models/Advertisement');
+const Payment = require('../models/Payment');
+const Wallet = require('../models/Wallet');
 const { Like, Save } = require('../models/Interaction');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
+const { uploadImageToGridFS } = require('../config/gridfs');
 const slugify = require('slugify');
 
 // Dashboard analytics
@@ -189,6 +195,8 @@ exports.getPosts = async (req, res, next) => {
     const filter = {};
     if (status) filter.status = status;
     if (reported === 'true') filter.reportCount = { $gt: 0 };
+    // Exclude soft-deleted posts by default
+    filter.isDeleted = { $ne: true };
 
     const [posts, total] = await Promise.all([
       Post.find(filter)
@@ -244,46 +252,198 @@ exports.moderatePost = async (req, res, next) => {
 // Get reports
 exports.getReports = async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, status = 'pending' } = req.query;
+    const { page = 1, limit = 20, status = 'pending', priority, reason, search } = req.query;
     const { skip } = paginate(null, page, limit);
 
     const filter = {};
     if (status !== 'all') filter.status = status;
+    if (priority) filter.priority = priority;
+    if (reason) filter.reason = reason;
+    if (search) {
+      // Search by reporter username or post/blog title — requires populated data, so we do a subquery
+      const matchingUsers = await User.find({ username: { $regex: search, $options: 'i' } }).select('_id');
+      const matchingPosts = await Post.find({ title: { $regex: search, $options: 'i' } }).select('_id');
+      const matchingBlogPosts = await BlogPost.find({ title: { $regex: search, $options: 'i' } }).select('_id');
+      filter.$or = [
+        { reporter: { $in: matchingUsers.map((u) => u._id) } },
+        { post: { $in: matchingPosts.map((p) => p._id) } },
+        { blogPost: { $in: matchingBlogPosts.map((p) => p._id) } },
+      ];
+    }
 
-    const [reports, total] = await Promise.all([
+    const [reports, total, stats] = await Promise.all([
       Report.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ priority: -1, createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
-        .populate('reporter', 'username avatar')
-        .populate('reportedUser', 'username avatar')
-        .populate('post', 'title image'),
+        .populate('reporter', 'username displayName avatar')
+        .populate('reportedUser', 'username displayName avatar status')
+        .populate('post', 'title image status reportCount author')
+        .populate('blogPost', 'title coverImage status reportCount author slug category')
+        .populate('reviewedBy', 'username displayName'),
       Report.countDocuments(filter),
+      // Aggregate stats for dashboard summary
+      Report.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
     ]);
 
-    ApiResponse.paginated(res, reports, getPaginationMeta(total, page, limit));
+    const statusCounts = {};
+    stats.forEach((s) => { statusCounts[s._id] = s.count; });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Success',
+      data: reports,
+      pagination: getPaginationMeta(total, page, limit),
+      statusCounts,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// Resolve report
+// Get single report detail
+exports.getReportDetail = async (req, res, next) => {
+  try {
+    const report = await Report.findById(req.params.id)
+      .populate('reporter', 'username displayName avatar email createdAt')
+      .populate('reportedUser', 'username displayName avatar email status role createdAt postsCount')
+      .populate({
+        path: 'post',
+        populate: { path: 'author', select: 'username displayName avatar' },
+      })
+      .populate({
+        path: 'blogPost',
+        populate: { path: 'author', select: 'username displayName avatar' },
+      })
+      .populate('reviewedBy', 'username displayName');
+
+    if (!report) return ApiResponse.notFound(res, 'Report not found');
+
+    // Get all reports for the same post/blogPost for context
+    let relatedReports = [];
+    if (report.post) {
+      relatedReports = await Report.find({ post: report.post._id, _id: { $ne: report._id } })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate('reporter', 'username displayName avatar');
+    } else if (report.blogPost) {
+      relatedReports = await Report.find({ blogPost: report.blogPost._id, _id: { $ne: report._id } })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate('reporter', 'username displayName avatar');
+    }
+
+    // Get reporter's report history count
+    const reporterTotalReports = await Report.countDocuments({ reporter: report.reporter._id });
+
+    // Get reported user's total reports received
+    const reportedUserTotalReports = report.reportedUser
+      ? await Report.countDocuments({ reportedUser: report.reportedUser._id })
+      : 0;
+
+    ApiResponse.success(res, {
+      report,
+      relatedReports,
+      reporterTotalReports,
+      reportedUserTotalReports,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all reports for a specific post
+exports.getReportsByPost = async (req, res, next) => {
+  try {
+    const reports = await Report.find({ post: req.params.postId })
+      .sort({ createdAt: -1 })
+      .populate('reporter', 'username displayName avatar')
+      .populate('reviewedBy', 'username displayName');
+
+    const reasonBreakdown = await Report.aggregate([
+      { $match: { post: require('mongoose').Types.ObjectId.createFromHexString(req.params.postId) } },
+      { $group: { _id: '$reason', count: { $sum: 1 } } },
+    ]);
+
+    ApiResponse.success(res, { reports, reasonBreakdown, totalReports: reports.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get reports for a specific blog post
+exports.getReportsByBlogPost = async (req, res, next) => {
+  try {
+    const reports = await Report.find({ blogPost: req.params.blogPostId })
+      .sort({ createdAt: -1 })
+      .populate('reporter', 'username displayName avatar')
+      .populate('reviewedBy', 'username displayName');
+
+    const reasonBreakdown = await Report.aggregate([
+      { $match: { blogPost: require('mongoose').Types.ObjectId.createFromHexString(req.params.blogPostId) } },
+      { $group: { _id: '$reason', count: { $sum: 1 } } },
+    ]);
+
+    ApiResponse.success(res, { reports, reasonBreakdown, totalReports: reports.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Resolve report (enhanced with actions)
 exports.resolveReport = async (req, res, next) => {
   try {
     const { status, actionTaken, reviewNotes } = req.body;
 
-    const report = await Report.findByIdAndUpdate(
-      req.params.id,
-      {
-        status,
-        actionTaken,
-        reviewNotes,
-        reviewedBy: req.user._id,
-      },
-      { new: true }
-    );
-
+    const report = await Report.findById(req.params.id).populate('post').populate('blogPost').populate('reportedUser');
     if (!report) return ApiResponse.notFound(res, 'Report not found');
+
+    // Update report
+    report.status = status || report.status;
+    report.actionTaken = actionTaken || report.actionTaken;
+    report.reviewNotes = reviewNotes || report.reviewNotes;
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+    await report.save();
+
+    // Execute action on post/blogPost/user
+    if (actionTaken === 'removed' && report.post) {
+      await Post.findByIdAndUpdate(report.post._id, { status: 'rejected' });
+      // Resolve all pending reports for this post
+      await Report.updateMany(
+        { post: report.post._id, status: 'pending', _id: { $ne: report._id } },
+        { status: 'resolved', actionTaken: 'removed', reviewedBy: req.user._id, reviewedAt: new Date(), reviewNotes: 'Auto-resolved: post removed' }
+      );
+    } else if (actionTaken === 'removed' && report.blogPost) {
+      await BlogPost.findByIdAndUpdate(report.blogPost._id, { status: 'archived', isDeleted: true, deletedAt: new Date(), deletedBy: req.user._id, deleteReason: 'Removed via report moderation' });
+      // Resolve all pending reports for this blog post
+      await Report.updateMany(
+        { blogPost: report.blogPost._id, status: 'pending', _id: { $ne: report._id } },
+        { status: 'resolved', actionTaken: 'removed', reviewedBy: req.user._id, reviewedAt: new Date(), reviewNotes: 'Auto-resolved: blog post removed' }
+      );
+    } else if (actionTaken === 'hidden' && report.post) {
+      await Post.findByIdAndUpdate(report.post._id, { status: 'pending' });
+    } else if (actionTaken === 'hidden' && report.blogPost) {
+      await BlogPost.findByIdAndUpdate(report.blogPost._id, { status: 'archived' });
+    } else if (actionTaken === 'banned' && report.reportedUser) {
+      await User.findByIdAndUpdate(report.reportedUser._id, { status: 'banned' });
+      // Resolve all pending reports for this user
+      await Report.updateMany(
+        { reportedUser: report.reportedUser._id, status: 'pending', _id: { $ne: report._id } },
+        { status: 'resolved', actionTaken: 'banned', reviewedBy: req.user._id, reviewedAt: new Date(), reviewNotes: 'Auto-resolved: user banned' }
+      );
+    } else if (actionTaken === 'warned' && report.reportedUser) {
+      await User.findByIdAndUpdate(report.reportedUser._id, { status: 'suspended' });
+    }
+
+    await report.populate('reviewedBy', 'username displayName');
     ApiResponse.success(res, report, 'Report updated');
   } catch (error) {
     next(error);
@@ -296,7 +456,16 @@ exports.createCategory = async (req, res, next) => {
     const { name, description, icon, color } = req.body;
     const slug = slugify(name, { lower: true, strict: true });
 
-    const category = await Category.create({ name, slug, description, icon, color });
+    let imageUrl;
+    if (req.file) {
+      const result = await uploadImageToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      imageUrl = result.url;
+    }
+
+    const category = await Category.create({
+      name, slug, description, icon, color,
+      image: imageUrl || undefined,
+    });
     ApiResponse.created(res, category, 'Category created');
   } catch (error) {
     next(error);
@@ -305,9 +474,14 @@ exports.createCategory = async (req, res, next) => {
 
 exports.updateCategory = async (req, res, next) => {
   try {
-    const updates = req.body;
+    const updates = { ...req.body };
     if (updates.name) {
       updates.slug = slugify(updates.name, { lower: true, strict: true });
+    }
+
+    if (req.file) {
+      const result = await uploadImageToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      updates.image = result.url;
     }
 
     const category = await Category.findByIdAndUpdate(req.params.id, updates, { new: true });
@@ -366,6 +540,221 @@ exports.setUserAiLimit = async (req, res, next) => {
 
     if (!user) return ApiResponse.notFound(res, 'User not found');
     ApiResponse.success(res, user, 'AI limit updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Login Analytics ──
+
+// Get daily login statistics
+exports.getLoginAnalytics = async (req, res, next) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const [dailyLogins, totalLogins, uniqueUsers, loginsByMethod] = await Promise.all([
+      LoginLog.aggregate([
+        { $match: { createdAt: { $gte: startDate }, success: true } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$user' },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            uniqueUsers: { $size: '$uniqueUsers' },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      LoginLog.countDocuments({ createdAt: { $gte: startDate }, success: true }),
+      LoginLog.distinct('user', { createdAt: { $gte: startDate }, success: true }),
+      LoginLog.aggregate([
+        { $match: { createdAt: { $gte: startDate }, success: true } },
+        { $group: { _id: '$method', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    ApiResponse.success(res, {
+      dailyLogins,
+      totalLogins,
+      uniqueUsersCount: uniqueUsers.length,
+      loginsByMethod,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get registered users with emails
+exports.getUserEmails = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 50, search } = req.query;
+    const { skip } = paginate(null, page, limit);
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } },
+        { displayName: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .select('username email displayName avatar role status lastLogin createdAt accountType'),
+      User.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(res, users, getPaginationMeta(total, page, limit));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Paid users (admin) ──────────────────────────────────────────────────────
+// Returns users who have at least one completed payment, with aggregated stats.
+exports.getPaidUsers = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, search, sort = 'totalSpent', order = 'desc', type, minSpent } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // --- Build the aggregation pipeline ---
+    const pipeline = [];
+
+    // Stage 1: Only completed payments
+    const matchStage = { status: 'completed' };
+    if (type) matchStage.type = type;
+    pipeline.push({ $match: matchStage });
+
+    // Stage 2: Group by user
+    pipeline.push({
+      $group: {
+        _id: '$user',
+        totalSpent: { $sum: '$amount' },
+        paymentCount: { $sum: 1 },
+        lastPaymentAt: { $max: '$paidAt' },
+        firstPaymentAt: { $min: '$paidAt' },
+        currencies: { $addToSet: '$currency' },
+        paymentTypes: { $addToSet: '$type' },
+        avgPayment: { $avg: '$amount' },
+      },
+    });
+
+    // Stage 3: Optional minimum spend filter
+    if (minSpent) {
+      pipeline.push({ $match: { totalSpent: { $gte: parseFloat(minSpent) } } });
+    }
+
+    // Stage 4: Populate user details
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user',
+        pipeline: [
+          { $project: { password: 0, refreshToken: 0, passwordResetToken: 0, passwordResetExpires: 0 } },
+        ],
+      },
+    });
+    pipeline.push({ $unwind: '$user' });
+
+    // Stage 5: Optional search filter (on populated user)
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'user.username': { $regex: search, $options: 'i' } },
+            { 'user.email': { $regex: search, $options: 'i' } },
+            { 'user.displayName': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    // Stage 6: Lookup wallet balance
+    pipeline.push({
+      $lookup: {
+        from: 'wallets',
+        localField: '_id',
+        foreignField: 'user',
+        as: 'wallet',
+      },
+    });
+    pipeline.push({
+      $addFields: {
+        walletBalance: { $ifNull: [{ $arrayElemAt: ['$wallet.balance', 0] }, 0] },
+        walletCredits: { $ifNull: [{ $arrayElemAt: ['$wallet.totalCredits', 0] }, 0] },
+        walletDebits: { $ifNull: [{ $arrayElemAt: ['$wallet.totalDebits', 0] }, 0] },
+      },
+    });
+    pipeline.push({ $project: { wallet: 0 } });
+
+    // Count total before sorting/paging
+    const countPipeline = [...pipeline, { $count: 'total' }];
+
+    // Stage 7: Sort
+    const sortField = {
+      totalSpent: 'totalSpent',
+      paymentCount: 'paymentCount',
+      lastPayment: 'lastPaymentAt',
+      walletBalance: 'walletBalance',
+      joined: 'user.createdAt',
+    }[sort] || 'totalSpent';
+    pipeline.push({ $sort: { [sortField]: order === 'asc' ? 1 : -1 } });
+
+    // Stage 8: Paginate
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    // Execute both pipelines in parallel
+    const [results, countResult] = await Promise.all([
+      Payment.aggregate(pipeline),
+      Payment.aggregate(countPipeline),
+    ]);
+
+    const total = countResult[0]?.total || 0;
+
+    // Compute summary stats
+    const summaryPipeline = [
+      { $match: { status: 'completed' } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount' },
+          totalTransactions: { $sum: 1 },
+          uniquePayers: { $addToSet: '$user' },
+          avgTransaction: { $avg: '$amount' },
+        },
+      },
+      {
+        $addFields: {
+          uniquePayerCount: { $size: '$uniquePayers' },
+        },
+      },
+      { $project: { uniquePayers: 0, _id: 0 } },
+    ];
+    const [summary] = await Payment.aggregate(summaryPipeline);
+
+    ApiResponse.paginated(
+      res,
+      results,
+      {
+        ...getPaginationMeta(total, page, limit),
+        summary: summary || { totalRevenue: 0, totalTransactions: 0, uniquePayerCount: 0, avgTransaction: 0 },
+      },
+    );
   } catch (error) {
     next(error);
   }

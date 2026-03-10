@@ -2,142 +2,516 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════════════
+   E.D.I.T.H  —  Even Dead I'm The Hero
+   Tony Stark Holographic HUD Theme
+   Dual-mode: Dark (HUD) + Light (Stark Industries)
+   ═══════════════════════════════════════════════════ */
+
+/* ── Dark Mode (default) ────────────────────────── */
+:root {
+  --edith-bg: #050510;
+  --edith-surface: #0a0a1a;
+  --edith-panel: #0d0d20;
+  --edith-elevated: #111128;
+  --edith-border: rgba(0, 200, 255, 0.12);
+  --edith-border-strong: rgba(0, 200, 255, 0.25);
+
+  /* Accents — full neon for dark */
+  --edith-cyan: #00d4ff;
+  --edith-blue: #0088ff;
+  --edith-red: #ff3333;
+  --edith-amber: #ffaa00;
+  --edith-green: #00ff88;
+  --edith-purple: #bf00ff;
+
+  /* Light-adapted accents (same as neon in dark) */
+  --edith-accent: #00d4ff;
+  --edith-accent-hover: #00bbee;
+  --edith-accent-active: #009fd4;
+  --edith-accent-muted: rgba(0, 200, 255, 0.12);
+  --edith-accent-subtle: rgba(0, 200, 255, 0.06);
+
+  /* Semantic text — WCAG AAA on dark */
+  --edith-text: rgba(200, 230, 255, 0.92);
+  --edith-text-secondary: rgba(170, 200, 230, 0.7);
+  --edith-text-dim: rgba(140, 170, 200, 0.5);
+  --edith-text-muted: rgba(120, 150, 180, 0.35);
+  --edith-text-on-accent: #ffffff;
+
+  /* Semantic states */
+  --edith-error: #ff4d4d;
+  --edith-error-bg: rgba(255, 51, 51, 0.1);
+  --edith-success: #00e676;
+  --edith-success-bg: rgba(0, 230, 118, 0.1);
+  --edith-warning: #ffaa00;
+  --edith-warning-bg: rgba(255, 170, 0, 0.1);
+
+  /* Glow & shadows */
+  --edith-glow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 60px rgba(0, 200, 255, 0.05);
+  --edith-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --edith-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --edith-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --edith-shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7);
+
+  /* Component tokens */
+  --edith-card-bg: linear-gradient(135deg, rgba(10,10,30,0.9), rgba(15,15,35,0.8));
+  --edith-glass-bg: rgba(10, 10, 30, 0.85);
+  --edith-input-bg: rgba(0, 200, 255, 0.03);
+  --edith-input-border: rgba(0, 200, 255, 0.1);
+  --edith-input-focus-bg: rgba(0, 200, 255, 0.05);
+  --edith-input-focus-border: rgba(0, 200, 255, 0.35);
+  --edith-header-bg: linear-gradient(180deg, rgba(5,5,16,0.95), rgba(5,5,16,0.85));
+  --edith-header-border: rgba(0, 212, 255, 0.1);
+  --edith-header-shadow: 0 1px 30px rgba(0,0,0,0.5), 0 0 60px rgba(0,212,255,0.03);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(10,10,26,0.97), rgba(15,15,35,0.95));
+  --edith-dropdown-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,255,0.05);
+  --edith-overlay-from: rgba(5,5,16,0.2);
+  --edith-overlay-to: rgba(5,5,16,0.9);
+  --edith-skeleton-from: rgba(0,200,255,0.03);
+  --edith-skeleton-via: rgba(0,200,255,0.08);
+  --edith-btn-secondary-bg: rgba(255,255,255,0.03);
+  --edith-btn-secondary-border: rgba(255,255,255,0.08);
+  --edith-tag-bg: rgba(255,255,255,0.02);
+  --edith-tag-border: rgba(255,255,255,0.06);
+  --edith-tag-text: rgba(255,255,255,0.3);
+  --edith-tag-hover-text: rgba(255,255,255,0.5);
+  --edith-radial-hero: rgba(0,212,255,0.08);
+  --edith-gradient-text: rgba(255,255,255,0.9);
+
+  /* Typography */
+  --edith-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --edith-display: 'Orbitron', sans-serif;
+  --edith-body: 'Rajdhani', 'Inter', sans-serif;
+}
+
+/* ── Light Mode — Stark Industries Clean UI ────── */
+.light {
+  --edith-bg: #f4f6f9;
+  --edith-surface: #ffffff;
+  --edith-panel: #f0f2f6;
+  --edith-elevated: #ffffff;
+  --edith-border: rgba(15, 30, 60, 0.1);
+  --edith-border-strong: rgba(15, 30, 60, 0.2);
+
+  /* Accents — deepened for contrast on white (WCAG AA) */
+  --edith-cyan: #0091b3;
+  --edith-blue: #0064cc;
+  --edith-red: #d92d20;
+  --edith-amber: #b87500;
+  --edith-green: #059652;
+  --edith-purple: #8a14cc;
+
+  --edith-accent: #0091b3;
+  --edith-accent-hover: #007a99;
+  --edith-accent-active: #006680;
+  --edith-accent-muted: rgba(0, 145, 179, 0.1);
+  --edith-accent-subtle: rgba(0, 145, 179, 0.05);
+
+  /* Text — soft dark grays, NOT #000 */
+  --edith-text: #1a2233;
+  --edith-text-secondary: #3d4f66;
+  --edith-text-dim: #6b7d99;
+  --edith-text-muted: #94a3b8;
+  --edith-text-on-accent: #ffffff;
+
+  /* Semantic states (darkened for light bg) */
+  --edith-error: #d92d20;
+  --edith-error-bg: rgba(217, 45, 32, 0.08);
+  --edith-success: #059652;
+  --edith-success-bg: rgba(5, 150, 82, 0.08);
+  --edith-warning: #b87500;
+  --edith-warning-bg: rgba(184, 117, 0, 0.08);
+
+  /* Shadows — elevation instead of glow */
+  --edith-glow: 0 1px 3px rgba(15, 30, 60, 0.06), 0 2px 8px rgba(15, 30, 60, 0.04);
+  --edith-shadow-sm: 0 1px 2px rgba(15, 30, 60, 0.06), 0 1px 3px rgba(15, 30, 60, 0.04);
+  --edith-shadow-md: 0 2px 6px rgba(15, 30, 60, 0.06), 0 6px 16px rgba(15, 30, 60, 0.05);
+  --edith-shadow-lg: 0 4px 12px rgba(15, 30, 60, 0.06), 0 12px 32px rgba(15, 30, 60, 0.06);
+  --edith-shadow-xl: 0 8px 24px rgba(15, 30, 60, 0.08), 0 24px 48px rgba(15, 30, 60, 0.06);
+
+  /* Component tokens */
+  --edith-card-bg: linear-gradient(135deg, #ffffff, #fafbfd);
+  --edith-glass-bg: rgba(255, 255, 255, 0.82);
+  --edith-input-bg: rgba(15, 30, 60, 0.03);
+  --edith-input-border: rgba(15, 30, 60, 0.12);
+  --edith-input-focus-bg: rgba(0, 145, 179, 0.04);
+  --edith-input-focus-border: rgba(0, 145, 179, 0.45);
+  --edith-header-bg: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.88));
+  --edith-header-border: rgba(15, 30, 60, 0.08);
+  --edith-header-shadow: 0 1px 3px rgba(15,30,60,0.05), 0 4px 20px rgba(15,30,60,0.04);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+  --edith-dropdown-shadow: 0 10px 40px rgba(15,30,60,0.12), 0 2px 10px rgba(15,30,60,0.06);
+  --edith-overlay-from: rgba(255,255,255,0.15);
+  --edith-overlay-to: rgba(15,20,35,0.8);
+  --edith-skeleton-from: rgba(15,30,60,0.04);
+  --edith-skeleton-via: rgba(15,30,60,0.08);
+  --edith-btn-secondary-bg: rgba(15,30,60,0.04);
+  --edith-btn-secondary-border: rgba(15,30,60,0.1);
+  --edith-tag-bg: rgba(15,30,60,0.04);
+  --edith-tag-border: rgba(15,30,60,0.1);
+  --edith-tag-text: #6b7d99;
+  --edith-tag-hover-text: #3d4f66;
+  --edith-radial-hero: rgba(0,145,179,0.06);
+  --edith-gradient-text: #1a2233;
+
+  color-scheme: light;
+}
 
 @layer base {
   * {
-    @apply border-surface-200 dark:border-surface-700;
+    border-color: var(--edith-border);
+  }
+
+  html {
+    background: var(--edith-bg);
+  }
+
+  .dark html, html:not(.light) {
+    color-scheme: dark;
   }
 
   body {
-    @apply bg-white dark:bg-surface-950 text-surface-900 dark:text-surface-100 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--edith-bg);
+    color: var(--edith-text);
+    font-family: var(--edith-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* Subtle grid background — Stark HUD grid (dark only) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(rgba(0,200,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.018) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .light body::before {
+    /* Light: a very subtle dot-grid for "tech blueprint" feel */
+    background:
+      radial-gradient(circle, rgba(0,80,140,0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+  /* CRT scan-line overlay (dark only) */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 200, 255, 0.008) 2px,
+      rgba(0, 200, 255, 0.008) 4px
+    );
+  }
+  .light body::after {
+    background: none;
   }
 
+  /* Scrollbar — theme-adaptive */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-surface-300 dark:bg-surface-600 rounded-full;
+    background: linear-gradient(180deg, var(--edith-cyan), var(--edith-blue));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--edith-cyan); }
+
+  .light ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: var(--edith-accent);
   }
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-surface-400 dark:bg-surface-500;
+  ::selection {
+    background: rgba(0, 200, 255, 0.25);
+    color: #fff;
+  }
+  .light ::selection {
+    background: rgba(0, 145, 179, 0.2);
+    color: #1a2233;
+  }
+
+  /* ── Typography hierarchy ── */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--edith-text);
+  }
+  p, li, span {
+    color: var(--edith-text-secondary, var(--edith-text));
   }
 }
 
 @layer components {
+  /* ── EDITH Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold text-sm
-      bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800
-      transition-all duration-200 shadow-sm hover:shadow-md
-      focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
-      disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300;
+    font-family: var(--edith-mono);
+    background: linear-gradient(135deg, var(--edith-accent-muted), rgba(0,136,255,0.1));
+    border: 1px solid var(--edith-accent);
+    color: var(--edith-accent);
+    border-radius: 4px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    box-shadow: var(--edith-shadow-sm);
   }
+  .btn-primary:hover {
+    background: var(--edith-accent);
+    color: var(--edith-text-on-accent);
+    box-shadow: var(--edith-shadow-md);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    background: var(--edith-accent-active);
+    color: var(--edith-text-on-accent);
+    transform: translateY(0);
+  }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  /* Dark-only: neon text-shadow on primary */
+  :root .btn-primary { text-shadow: 0 0 10px rgba(0,200,255,0.5); }
+  :root .btn-primary:hover { box-shadow: 0 0 30px rgba(0,200,255,0.2), inset 0 0 20px rgba(0,200,255,0.1); }
+  .light .btn-primary { text-shadow: none; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold text-sm
-      bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-200
-      hover:bg-surface-200 dark:hover:bg-surface-700 active:bg-surface-300
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-offset-2
-      disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium transition-all duration-200;
+    font-family: var(--edith-mono);
+    background: var(--edith-btn-secondary-bg);
+    border: 1px solid var(--edith-btn-secondary-border);
+    color: var(--edith-text-dim);
+    border-radius: 4px;
+  }
+  .btn-secondary:hover {
+    background: var(--edith-accent-muted);
+    border-color: var(--edith-accent);
+    color: var(--edith-accent);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center px-3 py-2 rounded-xl font-medium text-sm
-      text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800
-      transition-all duration-200 disabled:opacity-50;
+    @apply inline-flex items-center justify-center px-3 py-2 text-sm font-medium transition-all duration-200;
+    color: var(--edith-text-dim);
+    border-radius: 4px;
+    background: transparent;
   }
+  .btn-ghost:hover {
+    background: var(--edith-accent-subtle);
+    color: var(--edith-accent);
+  }
+  :root .btn-ghost:hover { text-shadow: 0 0 10px rgba(0,200,255,0.3); }
+  .light .btn-ghost:hover { text-shadow: none; }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold text-sm
-      bg-red-600 text-white hover:bg-red-700 transition-all duration-200;
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200;
+    font-family: var(--edith-mono);
+    background: var(--edith-error-bg);
+    border: 1px solid var(--edith-error);
+    color: var(--edith-error);
+    border-radius: 4px;
+  }
+  .btn-danger:hover {
+    background: var(--edith-error);
+    color: white;
+    box-shadow: var(--edith-shadow-md);
   }
 
+  /* ── EDITH Input ── */
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-surface-700
-      bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100
-      placeholder:text-surface-400 dark:placeholder:text-surface-500
-      focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-      transition-all duration-200;
+    @apply w-full px-4 py-3 text-sm transition-all duration-200;
+    font-family: var(--edith-mono);
+    background: var(--edith-input-bg);
+    border: 1px solid var(--edith-input-border);
+    border-radius: 4px;
+    color: var(--edith-text);
+    outline: none;
+  }
+  .input-field::placeholder { color: var(--edith-text-muted); font-size: 12px; }
+  .input-field:focus {
+    border-color: var(--edith-input-focus-border);
+    background: var(--edith-input-focus-bg);
+    box-shadow: 0 0 0 3px var(--edith-accent-subtle);
+  }
+  /* Dark: neon inner glow on focus */
+  :root .input-field:focus {
+    box-shadow: 0 0 20px rgba(0,200,255,0.08), inset 0 0 20px rgba(0,200,255,0.03);
   }
 
+  /* ── EDITH Cards ── */
   .card {
-    @apply bg-white dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800
-      shadow-sm hover:shadow-md transition-shadow duration-300;
+    background: var(--edith-card-bg);
+    border: 1px solid var(--edith-border);
+    border-radius: 8px;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--edith-glow);
+  }
+  .light .card {
+    backdrop-filter: none;
+    box-shadow: var(--edith-shadow-sm);
+  }
+  .light .card:hover {
+    box-shadow: var(--edith-shadow-md);
   }
 
   .glass-card {
-    @apply bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl rounded-2xl
-      border border-surface-200/50 dark:border-surface-700/50 shadow-lg;
+    background: var(--edith-glass-bg);
+    backdrop-filter: blur(30px) saturate(1.3);
+    -webkit-backdrop-filter: blur(30px) saturate(1.3);
+    border: 1px solid var(--edith-border);
+    border-radius: 8px;
+    box-shadow: var(--edith-glow);
+  }
+  .light .glass-card {
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    box-shadow: var(--edith-shadow-md);
+    border-color: var(--edith-border);
   }
 
   .skeleton {
-    @apply animate-pulse bg-surface-200 dark:bg-surface-700 rounded-lg;
-  }
-
-  .shimmer {
-    @apply relative overflow-hidden;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    @apply animate-pulse rounded;
+    background: linear-gradient(90deg, var(--edith-skeleton-from), var(--edith-skeleton-via), var(--edith-skeleton-from));
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
   }
 
-  .masonry-grid {
-    display: flex;
-    margin-left: -12px;
-    width: auto;
+  .shimmer {
+    @apply relative overflow-hidden;
+    background: linear-gradient(90deg, transparent, var(--edith-accent-subtle), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
   }
 
+  /* ── EDITH Masonry Grid ── */
+  .masonry-grid {
+    display: flex;
+    margin-left: -10px;
+    width: auto;
+  }
   .masonry-grid-column {
-    padding-left: 12px;
+    padding-left: 10px;
     background-clip: padding-box;
   }
 
+  /* ── EDITH Pin Card ── */
   .pin-card {
-    @apply relative cursor-pointer overflow-hidden rounded-2xl
-      bg-surface-100 dark:bg-surface-800 mb-3 break-inside-avoid;
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+    border-radius: 6px;
+    background: var(--edith-surface);
+    border: 1px solid var(--edith-border);
+    margin-bottom: 10px;
+    break-inside: avoid;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pin-card:hover {
+    border-color: var(--edith-border-strong);
+  }
+  /* Dark: neon glow on card hover */
+  :root .pin-card:hover {
+    box-shadow:
+      0 0 0 1px rgba(0,200,255,0.08),
+      0 4px 30px rgba(0,0,0,0.4),
+      0 0 40px rgba(0,200,255,0.06);
+  }
+  /* Light: clean elevation on hover */
+  .light .pin-card:hover {
+    box-shadow: var(--edith-shadow-lg);
+    border-color: var(--edith-accent);
   }
 
   .pin-card img {
-    @apply w-full object-cover transition-transform duration-500;
-  }
-
-  .pin-card:hover img {
-    @apply scale-105;
+    @apply w-full object-cover;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .pin-overlay {
-    @apply absolute inset-0 bg-black/0 group-hover:bg-black/30
-      transition-all duration-300 flex flex-col justify-between p-3;
+    @apply absolute inset-0 flex flex-col justify-between p-3 transition-all duration-400;
+    background: linear-gradient(180deg,
+      var(--edith-overlay-from) 0%,
+      transparent 30%,
+      transparent 50%,
+      var(--edith-overlay-to) 85%
+    );
+    opacity: 0;
+  }
+  .group:hover .pin-overlay { opacity: 1; }
+  .pin-overlay > * {
+    @apply transition-all duration-300;
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  .group:hover .pin-overlay > * {
+    transform: translateY(0);
+    opacity: 1;
   }
 
-  .pin-overlay > * {
-    @apply opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+  /* ── EDITH HUD accent corners ── */
+  .hud-corners {
+    position: relative;
+  }
+  .hud-corners::before,
+  .hud-corners::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .hud-corners::before {
+    top: 0; left: 0;
+    border-top: 1px solid var(--edith-cyan);
+    border-left: 1px solid var(--edith-cyan);
+  }
+  .hud-corners::after {
+    bottom: 0; right: 0;
+    border-bottom: 1px solid var(--edith-cyan);
+    border-right: 1px solid var(--edith-cyan);
+  }
+  /* Light: soften HUD corners */
+  .light .hud-corners::before,
+  .light .hud-corners::after {
+    opacity: 0.4;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-purple-500;
+    background: linear-gradient(135deg, var(--edith-cyan), var(--edith-blue), var(--edith-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
+
+  .text-edith-glow {
+    text-shadow: 0 0 10px rgba(0,200,255,0.5), 0 0 30px rgba(0,200,255,0.2);
+  }
+  .light .text-edith-glow {
+    text-shadow: none;
+  }
+
+  /* Theme-aware text helpers */
+  .text-heading { color: var(--edith-text); }
+  .text-body { color: var(--edith-text-secondary); }
+  .text-caption { color: var(--edith-text-dim); }
+  .text-label { color: var(--edith-text-muted); }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
   .line-clamp-2 {
     display: -webkit-box;
@@ -145,11 +519,99 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  .perspective-container {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  .edith-border-glow {
+    box-shadow:
+      0 0 0 1px rgba(0,200,255,0.1),
+      0 0 20px rgba(0,200,255,0.05),
+      inset 0 0 20px rgba(0,200,255,0.02);
+  }
+  .light .edith-border-glow {
+    box-shadow: var(--edith-shadow-md);
+  }
+
+  /* Elevation utilities for light mode */
+  .shadow-theme-sm { box-shadow: var(--edith-shadow-sm); }
+  .shadow-theme-md { box-shadow: var(--edith-shadow-md); }
+  .shadow-theme-lg { box-shadow: var(--edith-shadow-lg); }
+  .shadow-theme-xl { box-shadow: var(--edith-shadow-xl); }
+}
+
+/* ── Keyframes ── */
+@keyframes dashFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -16; }
+}
+
+@keyframes edithFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+  51% { opacity: 1; }
+  80% { opacity: 0.98; }
+  81% { opacity: 1; }
+}
+
+@keyframes hudBoot {
+  0% { opacity: 0; transform: scale(0.95); filter: brightness(2) blur(4px); }
+  40% { opacity: 1; filter: brightness(1.5) blur(1px); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1) blur(0); }
+}
+
+@keyframes dataStream {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+/* ═══════════════════════════════════════════════════
+   AG Grid — EDITH Theme Overrides
+   ═══════════════════════════════════════════════════ */
+.ag-theme-quartz,
+.ag-root-wrapper {
+  --ag-background-color: transparent !important;
+  --ag-header-background-color: rgba(0, 200, 255, 0.04) !important;
+  --ag-border-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-row-hover-color: rgba(0, 200, 255, 0.06) !important;
+  --ag-selected-row-background-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-odd-row-background-color: rgba(0, 200, 255, 0.02) !important;
+  font-family: var(--edith-body) !important;
+  border: none !important;
+}
+
+.ag-header-cell-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500 !important;
+}
+
+.ag-row {
+  transition: background-color 0.15s ease !important;
+}
+
+.ag-cell {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Light mode overrides */
+.light .ag-theme-quartz,
+.light .ag-root-wrapper {
+  --ag-background-color: transparent !important;
+  --ag-header-background-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-foreground-color: #1a2233 !important;
+  --ag-header-foreground-color: #6b7d99 !important;
+  --ag-border-color: rgba(15, 30, 60, 0.08) !important;
+  --ag-row-hover-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-selected-row-background-color: rgba(0, 145, 179, 0.06) !important;
+  --ag-odd-row-background-color: rgba(15, 30, 60, 0.02) !important;
 }

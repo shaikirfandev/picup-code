@@ -6,6 +6,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'react-hot-toast';
 import { store } from '@/store';
 import { fetchUser } from '@/store/slices/authSlice';
+import { SocketProvider } from '@/components/providers/SocketProvider';
 
 function AuthInit() {
   useEffect(() => {
@@ -17,18 +18,23 @@ function AuthInit() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true}>
       <AuthInit />
+      <SocketProvider>
       {children}
+      </SocketProvider>
       <Toaster
         position="bottom-center"
         toastOptions={{
           duration: 3000,
           style: {
-            background: 'var(--toast-bg, #18181b)',
-            color: 'var(--toast-color, #fafafa)',
-            borderRadius: '12px',
-            fontSize: '14px',
+            background: 'var(--edith-elevated)',
+            color: 'var(--edith-text)',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontFamily: "'JetBrains Mono', monospace",
+            border: '1px solid var(--edith-border)',
+            boxShadow: 'var(--edith-shadow-lg)',
             padding: '12px 16px',
           },
         }}

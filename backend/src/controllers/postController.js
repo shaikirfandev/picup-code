@@ -3,11 +3,10 @@ const User = require('../models/User');
 const { Like, Save } = require('../models/Interaction');
 const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
-const { uploadToCloudinary, uploadVideoToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
+const notificationService = require('../services/notificationService');
 
-const MAX_VIDEO_DURATION = 15; // seconds
-
-// Create post
+// Create post — files go to MongoDB GridFS
 exports.createPost = async (req, res, next) => {
   try {
     const { title, description, productUrl, tags, category, price, isAiGenerated, aiImageUrl, aiMetadata, mediaType, videoData } = req.body;
@@ -17,52 +16,44 @@ exports.createPost = async (req, res, next) => {
     let postMediaType = mediaType || 'image';
 
     if (postMediaType === 'video') {
-      // Video post
+      /* ── Video post ────────────────────────────── */
       if (req.file) {
-        // Upload video file
-        const result = await uploadVideoToCloudinary(req.file.buffer, {
-          folder: 'picup/videos',
-        });
-
-        if (result.duration && result.duration > MAX_VIDEO_DURATION) {
-          await deleteFromCloudinary(result.publicId).catch(() => {});
-          return ApiResponse.error(
-            res,
-            `Video is too long (${Math.round(result.duration)}s). Maximum is ${MAX_VIDEO_DURATION} seconds.`,
-            400
-          );
-        }
-
+        const result = await uploadVideoToGridFS(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
         videoDataResult = {
           url: result.url,
-          publicId: result.publicId,
-          thumbnailUrl: result.thumbnailUrl,
-          duration: result.duration,
-          width: result.width,
-          height: result.height,
-          format: result.format,
-          bytes: result.bytes,
+          fileId: result.fileId,
+          bytes: result.size,
         };
       } else if (videoData) {
-        // Already-uploaded video data passed as JSON
         videoDataResult = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
       } else {
         return ApiResponse.error(res, 'Video is required for video posts', 400);
       }
     } else {
-      // Image post (existing logic)
+      /* ── Image post ────────────────────────────── */
       if (isAiGenerated && aiImageUrl) {
         imageData = { url: aiImageUrl };
       } else if (req.file) {
-        const result = await uploadToCloudinary(
-          `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-          { folder: 'picup/posts' }
+        const result = await uploadImageToGridFS(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype
+        );
+        // Also generate a thumbnail
+        const thumb = await uploadThumbnailToGridFS(
+          req.file.buffer,
+          req.file.originalname
         );
         imageData = {
           url: result.url,
-          publicId: result.publicId,
+          fileId: result.fileId,
           width: result.width,
           height: result.height,
+          thumbnailUrl: thumb.url,
         };
       } else {
         return ApiResponse.error(res, 'Image is required', 400);
@@ -75,9 +66,9 @@ exports.createPost = async (req, res, next) => {
       mediaType: postMediaType,
       image: imageData || undefined,
       video: videoDataResult || undefined,
-      productUrl,
+      productUrl: productUrl || undefined,
       tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
-      category,
+      category: category || undefined,
       price: price ? (typeof price === 'string' ? JSON.parse(price) : price) : undefined,
       author: req.user._id,
       isAiGenerated: !!isAiGenerated,
@@ -216,6 +207,19 @@ exports.toggleLike = async (req, res, next) => {
 
     await Like.create({ user: req.user._id, post: postId });
     await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
+
+    // Notify post author about the like
+    const likedPost = await Post.findById(postId).select('author title');
+    if (likedPost) {
+      notificationService.createNotification({
+        recipient: likedPost.author,
+        sender: req.user._id,
+        type: 'like',
+        post: postId,
+        message: `${req.user.displayName || req.user.username} liked your post`,
+      }).catch((err) => console.error('Like notification error:', err));
+    }
+
     ApiResponse.success(res, { isLiked: true }, 'Post liked');
   } catch (error) {
     next(error);
@@ -241,6 +245,19 @@ exports.toggleSave = async (req, res, next) => {
       board: boardId || undefined,
     });
     await Post.findByIdAndUpdate(postId, { $inc: { savesCount: 1 } });
+
+    // Notify post author about the save
+    const savedPost = await Post.findById(postId).select('author title');
+    if (savedPost) {
+      notificationService.createNotification({
+        recipient: savedPost.author,
+        sender: req.user._id,
+        type: 'save',
+        post: postId,
+        message: `${req.user.displayName || req.user.username} saved your post`,
+      }).catch((err) => console.error('Save notification error:', err));
+    }
+
     ApiResponse.success(res, { isSaved: true }, 'Post saved');
   } catch (error) {
     next(error);
@@ -274,6 +291,11 @@ exports.reportPost = async (req, res, next) => {
     const post = await Post.findById(req.params.id);
     if (!post) return ApiResponse.notFound(res, 'Post not found');
 
+    // Self-report prevention
+    if (post.author.toString() === req.user._id.toString()) {
+      return ApiResponse.error(res, 'You cannot report your own post', 400);
+    }
+
     const existingReport = await Report.findOne({
       reporter: req.user._id,
       post: post._id,
@@ -292,7 +314,20 @@ exports.reportPost = async (req, res, next) => {
       description,
     });
 
-    await Post.findByIdAndUpdate(post._id, { $inc: { reportCount: 1 } });
+    const newReportCount = (post.reportCount || 0) + 1;
+    const updateFields = { $inc: { reportCount: 1 } };
+
+    // Auto-flag: hide post when report count exceeds threshold
+    if (newReportCount >= Report.AUTO_FLAG_THRESHOLD && post.status === 'published') {
+      updateFields.$set = { status: 'pending' };
+      // Also mark all pending reports as auto-flagged
+      await Report.updateMany(
+        { post: post._id, status: 'pending' },
+        { autoFlagged: true }
+      );
+    }
+
+    await Post.findByIdAndUpdate(post._id, updateFields);
 
     ApiResponse.success(res, null, 'Post reported. We will review it shortly.');
   } catch (error) {

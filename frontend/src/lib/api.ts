@@ -19,30 +19,77 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor for token refresh
+// ── Token refresh queue ─────────────────────────────────────────────────────
+// Prevents multiple concurrent 401s from racing to refresh the token.
+// Only the first 401 refreshes; others wait for the same promise.
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onTokenRefreshed(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function onRefreshFailed() {
+  refreshSubscribers.forEach(() => {}); // let queued requests reject naturally
+  refreshSubscribers = [];
+}
+
+// Response interceptor for token refresh (with queue)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
+    // Only handle 401 that hasn't already been retried
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // If a refresh is already in-flight, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken: string) => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      isRefreshing = true;
+
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const { data } = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
-          localStorage.setItem('accessToken', data.data.accessToken);
-          localStorage.setItem('refreshToken', data.data.refreshToken);
-          originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
-          return api(originalRequest);
-        }
+        if (!refreshToken) throw new Error('No refresh token');
+
+        const { data } = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
+        const newAccessToken = data.data.accessToken;
+        const newRefreshToken = data.data.refreshToken;
+
+        localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
+
+        // Retry the original request
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        // Unblock all queued requests
+        onTokenRefreshed(newAccessToken);
+        isRefreshing = false;
+
+        return api(originalRequest);
       } catch (refreshError) {
+        onRefreshFailed();
+        isRefreshing = false;
+
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
+        return Promise.reject(refreshError);
       }
     }
 
@@ -127,6 +174,23 @@ export const categoriesAPI = {
   getBySlug: (slug: string) => api.get(`/categories/${slug}`),
 };
 
+// Blog API
+export const blogAPI = {
+  getPosts: (params?: { page?: number; limit?: number; category?: string; tag?: string; sort?: string; search?: string }) =>
+    api.get('/blog', { params }),
+  getPost: (slug: string) => api.get(`/blog/${slug}`),
+  createPost: (formData: FormData) =>
+    api.post('/blog', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updatePost: (id: string, formData: FormData) =>
+    api.put(`/blog/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deletePost: (id: string) => api.delete(`/blog/${id}`),
+  getMyPosts: (params?: { page?: number; limit?: number }) =>
+    api.get('/blog/user/my-posts', { params }),
+  getCategories: () => api.get('/blog/categories'),
+  reportPost: (id: string, data: { reason: string; description?: string }) =>
+    api.post(`/blog/${id}/report`, data),
+};
+
 // Comments API
 export const commentsAPI = {
   getComments: (postId: string, params?: { page?: number }) =>
@@ -151,11 +215,88 @@ export const aiAPI = {
 export const uploadAPI = {
   uploadImage: (formData: FormData) =>
     api.post('/upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadImages: (formData: FormData) =>
+    api.post('/upload/images', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   uploadVideo: (formData: FormData) =>
     api.post('/upload/video', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000, // 2 min timeout for video uploads
     }),
+};
+
+// Ads API
+export const adsAPI = {
+  getActiveAds: (params?: { placement?: string; limit?: number }) =>
+    api.get('/ads/active', { params }),
+  createAd: (formData: FormData) =>
+    api.post('/ads', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getMyAds: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/ads/my', { params }),
+  getAd: (id: string) => api.get(`/ads/${id}`),
+  updateAd: (id: string, formData: FormData) =>
+    api.put(`/ads/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteAd: (id: string) => api.delete(`/ads/${id}`),
+  trackClick: (id: string) => api.post(`/ads/${id}/click`),
+  trackImpression: (id: string) => api.post(`/ads/${id}/impression`),
+  getAnalytics: (id: string) => api.get(`/ads/${id}/analytics`),
+};
+
+// Payment API
+export const paymentAPI = {
+  createPayment: (data: { amount: number; currency: string; type: string; advertisementId?: string; description?: string }) =>
+    api.post('/payments/create', data),
+  confirmPayment: (data: { paymentId: string; gatewayPaymentId?: string; gatewaySignature?: string }) =>
+    api.post('/payments/confirm', data),
+  getMyPayments: (params?: { page?: number; limit?: number; type?: string; status?: string }) =>
+    api.get('/payments/my', { params }),
+  getWallet: () => api.get('/payments/wallet'),
+  topUpWallet: (data: { amount: number; currency: string }) =>
+    api.post('/payments/wallet/topup', data),
+};
+
+// Creator Analytics API
+export const creatorAnalyticsAPI = {
+  checkAccess: () => api.get('/creator-analytics/access'),
+  getOverview: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/overview', { params }),
+  getTimeline: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/timeline', { params }),
+  getFollowerGrowth: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/followers', { params }),
+  getPostsPerformance: (params?: {
+    period?: string; startDate?: string; endDate?: string;
+    sort?: string; order?: string; page?: number; limit?: number;
+    mediaType?: string; tag?: string; minImpressions?: number;
+  }) => api.get('/creator-analytics/posts', { params }),
+  getPostAnalytics: (postId: string, params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get(`/creator-analytics/posts/${postId}`, { params }),
+  getAffiliateAnalytics: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/affiliate', { params }),
+  getAudienceInsights: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/audience', { params }),
+  getAIInsights: () => api.get('/creator-analytics/ai-insights'),
+  getRealtimeStats: () => api.get('/creator-analytics/realtime'),
+  getRealtimePostStats: (postId: string) => api.get(`/creator-analytics/realtime/${postId}`),
+  trackEvent: (data: { postId: string; eventType: string; referrer?: string; watchDuration?: number; completionRate?: number; sessionId?: string }) =>
+    api.post('/creator-analytics/track', data),
+  exportCSV: (params?: { period?: string; startDate?: string; endDate?: string }) =>
+    api.get('/creator-analytics/export/csv', { params, responseType: 'blob' }),
+};
+
+// Download API (for authenticated image downloads)
+export const downloadAPI = {
+  downloadImage: (fileId: string) =>
+    api.get(`/files/download/image/${fileId}`, { responseType: 'blob' }),
+};
+
+export const notificationsAPI = {
+  getNotifications: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
+    api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+  deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
+  clearAll: () => api.delete('/notifications/clear-all'),
 };
 
 // Admin API
@@ -169,15 +310,72 @@ export const adminAPI = {
   getPosts: (params?: { page?: number; status?: string; reported?: string }) =>
     api.get('/admin/posts', { params }),
   moderatePost: (id: string, action: string) => api.put(`/admin/posts/${id}/moderate`, { action }),
-  getReports: (params?: { page?: number; status?: string }) => api.get('/admin/reports', { params }),
+  // Enhanced post management
+  getAdminPosts: (params?: { page?: number; limit?: number; status?: string; reported?: string; includeDeleted?: string; search?: string; sort?: string }) =>
+    api.get('/admin/posts-manage', { params }),
+  deleteAdminPost: (id: string, data: { reason?: string; hardDelete?: boolean }) =>
+    api.delete(`/admin/posts-manage/${id}`, { data }),
+  bulkDeletePosts: (data: { postIds: string[]; reason?: string; hardDelete?: boolean }) =>
+    api.post('/admin/posts-manage/bulk-delete', data),
+  restorePost: (id: string) =>
+    api.patch(`/admin/posts-manage/${id}/restore`),
+  getAuditLogs: (params?: { page?: number; limit?: number; actionType?: string }) =>
+    api.get('/admin/posts-manage/audit-logs', { params }),
+  getReports: (params?: { page?: number; status?: string; priority?: string; reason?: string; search?: string }) => api.get('/admin/reports', { params }),
+  getReportDetail: (id: string) => api.get(`/admin/reports/${id}`),
+  getReportsByPost: (postId: string) => api.get(`/admin/reports/post/${postId}`),
+  getReportsByBlogPost: (blogPostId: string) => api.get(`/admin/reports/blog/${blogPostId}`),
   resolveReport: (id: string, data: { status: string; actionTaken?: string; reviewNotes?: string }) =>
     api.put(`/admin/reports/${id}`, data),
-  createCategory: (data: any) => api.post('/admin/categories', data),
-  updateCategory: (id: string, data: any) => api.put(`/admin/categories/${id}`, data),
+  createCategory: (formData: FormData) =>
+    api.post('/admin/categories', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateCategory: (id: string, formData: FormData) =>
+    api.put(`/admin/categories/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteCategory: (id: string) => api.delete(`/admin/categories/${id}`),
   getAiLogs: (params?: { page?: number; status?: string; userId?: string }) =>
     api.get('/admin/ai/logs', { params }),
   setUserAiLimit: (id: string, limit: number) => api.put(`/admin/ai/users/${id}/limit`, { limit }),
+  // Login analytics (legacy)
+  getLoginAnalytics: (params?: { days?: number }) =>
+    api.get('/admin/analytics/logins', { params }),
+  getUserEmails: (params?: { page?: number; limit?: number; search?: string }) =>
+    api.get('/admin/analytics/emails', { params }),
+  // Analytics — new production-grade endpoints
+  getAnalyticsOverview: () => api.get('/admin/analytics/stats/overview'),
+  getAnalyticsLogins: (params?: { days?: number }) =>
+    api.get('/admin/analytics/stats/logins', { params }),
+  getAnalyticsUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; role?: string; status?: string }) =>
+    api.get('/admin/analytics/users', { params }),
+  exportUsersCSV: () =>
+    api.get('/admin/analytics/users/export', { responseType: 'blob' }),
+  getTopUsers: (params?: { metric?: string; limit?: number }) =>
+    api.get('/admin/analytics/users/top', { params }),
+  getRecentActivity: (params?: { limit?: number }) =>
+    api.get('/admin/analytics/activity/recent', { params }),
+  triggerStatsCompute: (data?: { date?: string; backfill?: number }) =>
+    api.post('/admin/analytics/stats/compute', data),
+  // Ads management
+  getAllAds: (params?: { page?: number; status?: string }) =>
+    api.get('/ads/admin/all', { params }),
+  moderateAd: (id: string, action: string) =>
+    api.put(`/ads/admin/${id}/moderate`, { action }),
+  // Payments
+  getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
+    api.get('/payments/admin/all', { params }),
+  // Paid users
+  getPaidUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; type?: string; minSpent?: number }) =>
+    api.get('/admin/paid-users', { params }),
+  // Enhanced blog post management
+  getAdminBlogPosts: (params?: { page?: number; limit?: number; status?: string; category?: string; includeDeleted?: string; search?: string; sort?: string }) =>
+    api.get('/admin/blogs-manage', { params }),
+  deleteAdminBlogPost: (id: string, data: { reason?: string; hardDelete?: boolean }) =>
+    api.delete(`/admin/blogs-manage/${id}`, { data }),
+  bulkDeleteBlogPosts: (data: { postIds: string[]; reason?: string; hardDelete?: boolean }) =>
+    api.post('/admin/blogs-manage/bulk-delete', data),
+  restoreBlogPost: (id: string) =>
+    api.patch(`/admin/blogs-manage/${id}/restore`),
+  getBlogAuditLogs: (params?: { page?: number; limit?: number; actionType?: string }) =>
+    api.get('/admin/blogs-manage/audit-logs', { params }),
 };
 
 export default api;

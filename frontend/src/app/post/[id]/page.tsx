@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { postsAPI, commentsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { commentsAPI, downloadAPI } from '@/lib/api';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { fetchPost, likePost, savePost, trackClick } from '@/store/slices/postSlice';
 import { PostDetailSkeleton } from '@/components/shared/Skeletons';
 import PostCard from '@/components/feed/PostCard';
-import { Post, Comment } from '@/types';
+import ReportModal from '@/components/shared/ReportModal';
+import { Comment } from '@/types';
 import { formatPrice, formatNumber, timeAgo } from '@/lib/utils';
 import {
   Heart, Bookmark, ExternalLink, Share2, MessageCircle, Send,
   ArrowLeft, Flag, MoreHorizontal, Sparkles, Eye, MousePointerClick,
-  Calendar, Tag, Play, Video, Volume2, VolumeX,
+  Calendar, Tag, Play, Video, Volume2, VolumeX, Download,
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import toast from 'react-hot-toast';
@@ -20,58 +22,39 @@ import toast from 'react-hot-toast';
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((s) => s.auth);
-  const [post, setPost] = useState<Post | null>(null);
+  const post = useAppSelector((s) => s.posts.entities[params.id as string] || null);
+  const isLoading = useAppSelector((s) => s.posts.loading);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Derived from normalised entity
+  const isLiked = post?.isLiked || false;
+  const isSaved = post?.isSaved || false;
+  const likesCount = post?.likesCount || 0;
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const { data } = await postsAPI.getPost(params.id as string);
-        setPost(data.data);
-        setIsLiked(data.data.isLiked || false);
-        setIsSaved(data.data.isSaved || false);
-        setLikesCount(data.data.likesCount);
-      } catch (error) {
-        toast.error('Post not found');
-        router.push('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    dispatch(fetchPost(params.id as string)).unwrap().catch(() => {
+      toast.error('Post not found');
+      router.push('/');
+    });
 
-    const fetchComments = async () => {
-      try {
-        const { data } = await commentsAPI.getComments(params.id as string);
-        setComments(data.data);
-      } catch (e) { /* silent */ }
-    };
-
-    fetchPost();
-    fetchComments();
-  }, [params.id, router]);
+    commentsAPI.getComments(params.id as string)
+      .then(({ data }) => setComments(data.data))
+      .catch(() => {});
+  }, [params.id, dispatch, router]);
 
   const handleLike = async () => {
     if (!isAuthenticated) { toast.error('Please login'); return; }
-    try {
-      const { data } = await postsAPI.toggleLike(post!._id);
-      setIsLiked(data.data.isLiked);
-      setLikesCount((p) => p + (data.data.isLiked ? 1 : -1));
-    } catch { toast.error('Failed'); }
+    dispatch(likePost(post!._id));
   };
 
   const handleSave = async () => {
     if (!isAuthenticated) { toast.error('Please login'); return; }
-    try {
-      const { data } = await postsAPI.toggleSave(post!._id);
-      setIsSaved(data.data.isSaved);
-      toast.success(data.data.isSaved ? 'Saved!' : 'Removed');
-    } catch { toast.error('Failed'); }
+    dispatch(savePost({ id: post!._id }));
   };
 
   const handleComment = async (e: React.FormEvent) => {
@@ -90,8 +73,39 @@ export default function PostDetailPage() {
     toast.success('Link copied!');
   };
 
+  const handleDownload = async () => {
+    if (!isAuthenticated) { toast.error('Please login to download'); return; }
+    if (!(post?.image as any)?.fileId && !post?.image?.url) { toast.error('No image to download'); return; }
+    const p = post!;
+    try {
+      if ((p.image as any)?.fileId) {
+        const { data: blob } = await downloadAPI.downloadImage((p.image as any).fileId);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${p.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'image'}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } else if (p.image?.url) {
+        const res = await fetch(p.image.url);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${p.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'image'}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+      toast.success('Download started!');
+    } catch { toast.error('Download failed'); }
+  };
+
   const handleProductClick = async () => {
-    if (post) await postsAPI.trackClick(post._id);
+    if (post) dispatch(trackClick(post._id));
   };
 
   if (isLoading || !post) return <PostDetailSkeleton />;
@@ -157,9 +171,28 @@ export default function PostDetailPage() {
                   <button onClick={handleShare} className="btn-ghost gap-1.5">
                     <Share2 className="w-4 h-4" />
                   </button>
+                  <button onClick={handleDownload} className="btn-ghost gap-1.5" title="Download image">
+                    <Download className="w-4 h-4" />
+                  </button>
                 </div>
-                <button className="btn-ghost p-2">
+                <button className="btn-ghost p-2 relative" onClick={() => setShowMoreMenu(!showMoreMenu)}>
                   <MoreHorizontal className="w-5 h-5" />
+                  {showMoreMenu && (
+                    <div className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden shadow-lg z-50"
+                      style={{ background: 'var(--edith-card-bg)', border: '1px solid var(--edith-border)' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMoreMenu(false);
+                          if (!isAuthenticated) { toast.error('Please login to report posts'); return; }
+                          setShowReportModal(true);
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-red-500/10 text-red-500"
+                      >
+                        <Flag className="w-4 h-4" /> Report Post
+                      </button>
+                    </div>
+                  )}
                 </button>
               </div>
 
@@ -312,6 +345,14 @@ export default function PostDetailPage() {
           </section>
         )}
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        postId={post._id}
+        postTitle={post.title}
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+      />
     </div>
   );
 }

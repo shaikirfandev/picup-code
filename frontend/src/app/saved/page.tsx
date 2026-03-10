@@ -1,30 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { postsAPI } from '@/lib/api';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { fetchSavedPosts } from '@/store/slices/postSlice';
+import { selectSavedPosts } from '@/store/selectors';
 import PostCard from '@/components/feed/PostCard';
 import { Post } from '@/types';
 import { Bookmark } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
 export default function SavedPage() {
+  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const posts = useAppSelector(selectSavedPosts);
+  const isLoading = useAppSelector((s) => s.posts.savedLoading);
 
   useEffect(() => {
-    const fetchSaved = async () => {
-      try {
-        const { data } = await postsAPI.getSavedPosts();
-        setPosts(data.data || []);
-      } catch { /* silent */ }
-      setIsLoading(false);
-    };
-    if (isAuthenticated) fetchSaved();
-    else setIsLoading(false);
-  }, [isAuthenticated]);
+    if (isAuthenticated) dispatch(fetchSavedPosts());
+  }, [isAuthenticated, dispatch]);
 
   if (!isAuthenticated) {
     return (

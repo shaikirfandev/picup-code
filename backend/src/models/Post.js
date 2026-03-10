@@ -26,6 +26,8 @@ const postSchema = new mongoose.Schema(
     image: {
       url: { type: String },
       publicId: String,
+      fileId: String,
+      thumbnailUrl: String,
       width: Number,
       height: Number,
       blurHash: String,
@@ -34,6 +36,7 @@ const postSchema = new mongoose.Schema(
     video: {
       url: { type: String },
       publicId: String,
+      fileId: String,
       thumbnailUrl: String,
       duration: Number,        // seconds
       width: Number,
@@ -48,7 +51,7 @@ const postSchema = new mongoose.Schema(
     },
     productUrl: {
       type: String,
-      required: [true, 'Product URL is required'],
+      default: '',
     },
     price: {
       amount: { type: Number, min: 0 },
@@ -93,6 +96,12 @@ const postSchema = new mongoose.Schema(
     reportCount: { type: Number, default: 0 },
     isNSFW: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
+
+    // Soft-delete fields
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    deleteReason: { type: String, maxlength: 500 },
   },
   {
     timestamps: true,
@@ -111,6 +120,8 @@ postSchema.index({ likesCount: -1 });
 postSchema.index({ viewsCount: -1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ isFeatured: 1, createdAt: -1 });
+postSchema.index({ isDeleted: 1 });
+postSchema.index({ deletedAt: 1 });
 
 // Generate slug before saving & validate media
 postSchema.pre('save', function (next) {

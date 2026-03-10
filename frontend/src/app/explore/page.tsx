@@ -1,83 +1,90 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { categoriesAPI, postsAPI } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchCategories, fetchExplore } from '@/store/slices/postSlice';
+import { selectExplorePosts, selectCategories } from '@/store/selectors';
 import PostCard from '@/components/feed/PostCard';
-import { Category, Post } from '@/types';
-import { Compass, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
+import { Crosshair, TrendingUp, Radar, Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
 export default function ExplorePage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(selectCategories);
+  const posts = useAppSelector(selectExplorePosts);
+  const isLoading = useAppSelector((s) => s.posts.exploreLoading);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [catRes, featRes] = await Promise.all([
-          categoriesAPI.getCategories(),
-          postsAPI.getFeed({ sort: 'popular', limit: 30 }),
-        ]);
-        setCategories(catRes.data.data || []);
-        setFeaturedPosts(featRes.data.data || []);
-        setPosts(featRes.data.data || []);
-      } catch { /* silent */ }
-      setIsLoading(false);
-    };
-    fetchData();
-  }, []);
+    dispatch(fetchCategories());
+    dispatch(fetchExplore({ sort: 'popular', limit: 30 }));
+  }, [dispatch]);
 
-  const handleCategorySelect = async (catId: string) => {
+  const handleCategorySelect = (catId: string) => {
     setSelectedCategory(catId);
-    setIsLoading(true);
-    try {
-      const { data } = await postsAPI.getFeed({ category: catId || undefined, sort: 'popular', limit: 30 });
-      setPosts(data.data || []);
-    } catch { /* silent */ }
-    setIsLoading(false);
+    dispatch(fetchExplore({ category: catId, sort: 'popular', limit: 30 }));
   };
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Compass className="w-8 h-8" />
-            <h1 className="text-4xl font-bold">Explore</h1>
+    <div className="min-h-screen">
+      {/* EDITH Hero */}
+      <div className="relative overflow-hidden py-14 text-center">
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)',
+            }}
+          />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded mb-4"
+            style={{ background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}
+          >
+            <Radar className="w-3 h-3 text-edith-cyan" />
+            <span className="text-[10px] font-mono tracking-wider uppercase" style={{ color: 'var(--edith-text-dim)' }}>
+              Scanning Visual Database
+            </span>
           </div>
-          <p className="text-lg text-white/80 max-w-lg mx-auto">
-            Discover trending products, creative pins, and AI-generated masterpieces
+          <h1 className="text-3xl md:text-4xl font-display font-bold mb-3 tracking-tight">
+            <span style={{ color: 'var(--edith-gradient-text)' }}>Explore </span>
+            <span className="text-gradient">Targets</span>
+          </h1>
+          <p className="text-sm font-mono max-w-lg mx-auto" style={{ color: 'var(--edith-text-muted)' }}>
+            // Discover trending products, creative pins, and AI-generated assets
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-[2000px] mx-auto px-4 py-6">
         {/* Categories */}
-        <div className="flex flex-wrap gap-3 mb-8 justify-center">
+        <div className="flex flex-wrap gap-2 mb-8 justify-center">
           <button
             onClick={() => handleCategorySelect('')}
-            className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-              !selectedCategory ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25' : 'bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 hover:border-brand-300'
+            className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
+              !selectedCategory
+                ? 'text-edith-cyan border border-edith-cyan/30'
+                : 'border hover:border-edith-cyan/15'
             }`}
+            style={!selectedCategory ? { background: 'var(--edith-accent-muted)', boxShadow: 'var(--edith-shadow-sm)' } : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }}
           >
-            <TrendingUp className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-            All
+            <TrendingUp className="w-3 h-3 inline mr-1 -mt-0.5" />
+            ALL
           </button>
           {categories.map((cat) => (
             <button
               key={cat._id}
               onClick={() => handleCategorySelect(cat._id)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                 selectedCategory === cat._id
-                  ? 'text-white shadow-lg'
-                  : 'bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 hover:border-brand-300'
+                  ? 'text-white border'
+                  : 'border hover:border-edith-cyan/15'
               }`}
-              style={selectedCategory === cat._id ? { backgroundColor: cat.color } : {}}
+              style={
+                selectedCategory === cat._id
+                  ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, color: cat.color, boxShadow: 'var(--edith-shadow-sm)' }
+                  : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }
+              }
             >
               {cat.icon} {cat.name}
             </button>
@@ -86,8 +93,11 @@ export default function ExplorePage() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-6 h-6 text-edith-cyan/40 animate-spin" />
+            <span className="text-[10px] font-mono text-edith-cyan/20 tracking-wider">
+              SCANNING...
+            </span>
           </div>
         ) : posts.length > 0 ? (
           <Masonry
@@ -101,9 +111,13 @@ export default function ExplorePage() {
           </Masonry>
         ) : (
           <div className="text-center py-20">
-            <Compass className="w-16 h-16 text-surface-300 mx-auto mb-4" />
-            <p className="text-xl font-medium">Nothing here yet</p>
-            <p className="text-surface-500 mt-1">Check back soon for new pins!</p>
+            <Crosshair className="w-12 h-12 text-edith-cyan/20 mx-auto mb-3" />
+            <p className="text-sm font-display font-medium tracking-wider" style={{ color: 'var(--edith-text-secondary)' }}>
+              NO TARGETS DETECTED
+            </p>
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
+              // Adjust scan parameters or check back later
+            </p>
           </div>
         )}
       </div>

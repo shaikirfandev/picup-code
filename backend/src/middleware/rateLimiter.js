@@ -52,4 +52,16 @@ const searchLimiter = rateLimit({
   },
 });
 
-module.exports = { globalLimiter, authLimiter, aiLimiter, uploadLimiter, searchLimiter };
+// Report rate limiter — prevent report abuse
+const reportLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: {
+    success: false,
+    message: 'Too many reports submitted. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { globalLimiter, authLimiter, aiLimiter, uploadLimiter, searchLimiter, reportLimiter };

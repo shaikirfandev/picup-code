@@ -1,6 +1,7 @@
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
+const notificationService = require('../services/notificationService');
 
 // Get comments for a post
 exports.getComments = async (req, res, next) => {
@@ -74,6 +75,31 @@ exports.createComment = async (req, res, next) => {
       'user',
       'username displayName avatar'
     );
+
+    // Notify post author about the comment
+    notificationService.createNotification({
+      recipient: post.author,
+      sender: req.user._id,
+      type: 'comment',
+      post: post._id,
+      comment: comment._id,
+      message: `${req.user.displayName || req.user.username} commented on your post`,
+    }).catch((err) => console.error('Comment notification error:', err));
+
+    // If it's a reply, also notify the parent comment author
+    if (parentComment) {
+      const parentDoc = await Comment.findById(parentComment).select('user');
+      if (parentDoc && parentDoc.user.toString() !== req.user._id.toString()) {
+        notificationService.createNotification({
+          recipient: parentDoc.user,
+          sender: req.user._id,
+          type: 'reply',
+          post: post._id,
+          comment: comment._id,
+          message: `${req.user.displayName || req.user.username} replied to your comment`,
+        }).catch((err) => console.error('Reply notification error:', err));
+      }
+    }
 
     ApiResponse.created(res, populated, 'Comment added');
   } catch (error) {

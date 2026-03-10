@@ -2,44 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { adminAPI } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchCategories, invalidateCache } from '@/store/slices/postSlice';
+import { selectCategories } from '@/store/selectors';
 import { Category } from '@/types';
 import { Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(selectCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', icon: '', color: '#e11d48', description: '' });
 
-  const fetchCategories = async () => {
-    try {
-      const { data } = await adminAPI.getCategories();
-      setCategories(data.data || []);
-    } catch { /* silent */ }
-    setIsLoading(false);
-  };
+  useEffect(() => {
+    dispatch(fetchCategories()).finally(() => setIsLoading(false));
+  }, [dispatch]);
 
-  useEffect(() => { fetchCategories(); }, []);
+  const refetchCategories = () => {
+    dispatch(invalidateCache()); // Clear categories cache
+    dispatch(fetchCategories());
+  };
 
   const handleCreate = async () => {
     if (!form.name.trim()) return;
     try {
-      await adminAPI.createCategory(form);
+      await adminAPI.createCategory(form as any);
       toast.success('Category created');
       setShowCreate(false);
       setForm({ name: '', icon: '', color: '#e11d48', description: '' });
-      fetchCategories();
+      refetchCategories();
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed'); }
   };
 
   const handleUpdate = async (id: string) => {
     try {
-      await adminAPI.updateCategory(id, form);
+      await adminAPI.updateCategory(id, form as any);
       toast.success('Updated');
       setEditingId(null);
-      fetchCategories();
+      refetchCategories();
     } catch { toast.error('Failed'); }
   };
 
@@ -48,7 +51,7 @@ export default function AdminCategoriesPage() {
     try {
       await adminAPI.deleteCategory(id);
       toast.success('Deleted');
-      fetchCategories();
+      refetchCategories();
     } catch { toast.error('Failed'); }
   };
 
