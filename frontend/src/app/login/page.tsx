@@ -40,15 +40,6 @@ export default function LoginPage() {
 
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api';
 
-  // Don't render login form if already authenticated or still checking
-  if (isAuthenticated || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-7 h-7 rounded-full border-2 border-edith-cyan/30 border-t-edith-cyan animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex">
       {/* Left – EDITH holographic display */}
