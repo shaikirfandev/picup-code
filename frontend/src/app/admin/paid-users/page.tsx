@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { adminAPI } from '@/lib/api';
 import { formatNumber, timeAgo } from '@/lib/utils';
+import { useDebounce } from '@/hooks';
 import {
   Search, ChevronLeft, ChevronRight, DollarSign, Users,
   CreditCard, TrendingUp, Wallet, Filter, X,
@@ -164,6 +165,7 @@ export default function PaidUsersPage() {
   const [users, setUsers] = useState<PaidUser[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -173,11 +175,14 @@ export default function PaidUsersPage() {
   const gridRef = useRef<AgGridReact>(null);
   const edithTheme = useEdithGridTheme();
 
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
+
   const fetchPaidUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: any = { page, limit: 20, sort: 'totalSpent', order: 'desc' };
-      if (search) params.search = search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (typeFilter) params.type = typeFilter;
       const { data } = await adminAPI.getPaidUsers(params);
       setUsers(data.data || []);
@@ -186,7 +191,7 @@ export default function PaidUsersPage() {
       setTotal(data.pagination?.total || 0);
     } catch { /* silent */ }
     setIsLoading(false);
-  }, [page, search, typeFilter]);
+  }, [page, debouncedSearch, typeFilter]);
 
   useEffect(() => { fetchPaidUsers(); }, [fetchPaidUsers]);
 

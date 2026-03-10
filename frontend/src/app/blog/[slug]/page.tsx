@@ -8,18 +8,19 @@ import { useAppSelector } from '@/store/hooks';
 import Link from 'next/link';
 import BlogFooter from '@/components/layout/BlogFooter';
 import {
-  Clock, Eye, Heart, Share2, ArrowLeft, Calendar, Tag,
+  Clock, Eye, Heart, ArrowLeft,
   BookOpen, MessageCircle, Twitter, Linkedin, Copy, Check,
-  ChevronRight, User, Bookmark, Flag,
+  User, Flag,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import ReportModal from '@/components/shared/ReportModal';
 
 function formatDate(d: string) {
-  try { return format(new Date(d), 'MMMM dd, yyyy'); } catch { return ''; }
+  try { return format(new Date(d), 'MMMM d, yyyy'); } catch { return ''; }
 }
 
+/* ═══ Share Buttons — minimal circular ═══ */
 function ShareButtons({ title, slug }: { title: string; slug: string }) {
   const [copied, setCopied] = useState(false);
   const url = typeof window !== 'undefined' ? `${window.location.origin}/blog/${slug}` : '';
@@ -29,35 +30,37 @@ function ShareButtons({ title, slug }: { title: string; slug: string }) {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success('Link copied!');
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     } catch { /* noop */ }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[9px] font-mono uppercase tracking-widest mr-1" style={{ color: 'var(--edith-text-muted)' }}>Share</span>
+    <div className="flex items-center gap-3">
       <a
         href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`}
         target="_blank" rel="noopener noreferrer"
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-edith-cyan"
-        style={{ background: 'var(--edith-accent-subtle)', color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--edith-accent-muted)] hover:text-[var(--edith-accent)]"
+        style={{ color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        title="Share on Twitter"
       >
-        <Twitter className="w-3.5 h-3.5" />
+        <Twitter className="w-4 h-4" />
       </a>
       <a
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
         target="_blank" rel="noopener noreferrer"
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-edith-cyan"
-        style={{ background: 'var(--edith-accent-subtle)', color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--edith-accent-muted)] hover:text-[var(--edith-accent)]"
+        style={{ color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        title="Share on LinkedIn"
       >
-        <Linkedin className="w-3.5 h-3.5" />
+        <Linkedin className="w-4 h-4" />
       </a>
       <button
         onClick={copyLink}
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-edith-cyan"
-        style={{ background: 'var(--edith-accent-subtle)', color: copied ? 'var(--edith-success)' : 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--edith-accent-muted)] hover:text-[var(--edith-accent)]"
+        style={{ color: copied ? 'var(--edith-success)' : 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        title="Copy link"
       >
-        {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
       </button>
     </div>
   );
@@ -76,10 +79,9 @@ export default function BlogPostPage() {
       try {
         const { data } = await blogAPI.getPost(params.slug as string);
         setPost(data.data);
-        // Fetch related posts by same category
         if (data.data?.category) {
           try {
-            const related = await blogAPI.getPosts({ limit: 3, category: data.data.category, sort: 'popular' });
+            const related = await blogAPI.getPosts({ limit: 4, category: data.data.category, sort: 'popular' });
             setRelatedPosts((related.data.data || []).filter((p: BlogPost) => p._id !== data.data._id).slice(0, 3));
           } catch { /* noop */ }
         }
@@ -89,30 +91,32 @@ export default function BlogPostPage() {
         setIsLoading(false);
       }
     };
-    if (params.slug) fetchPost();
+    if (params.slug) {
+      fetchPost();
+      window.scrollTo(0, 0);
+    }
   }, [params.slug]);
 
+  /* ── Loading skeleton ── */
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 py-16">
-          <div className="animate-pulse space-y-6">
-            <div className="skeleton h-4 w-24 rounded" />
-            <div className="skeleton h-10 w-3/4 rounded" />
-            <div className="flex items-center gap-4">
-              <div className="skeleton w-10 h-10 rounded-full" />
+        <div className="max-w-[680px] mx-auto px-6 py-16">
+          <div className="animate-pulse space-y-8">
+            <div className="skeleton h-12 w-4/5 rounded" />
+            <div className="skeleton h-6 w-3/5 rounded" />
+            <div className="flex items-center gap-3 pt-4">
+              <div className="skeleton w-12 h-12 rounded-full" />
               <div className="space-y-2">
-                <div className="skeleton h-3 w-32 rounded" />
-                <div className="skeleton h-3 w-24 rounded" />
+                <div className="skeleton h-4 w-32 rounded" />
+                <div className="skeleton h-3 w-48 rounded" />
               </div>
             </div>
-            <div className="skeleton h-80 w-full rounded-xl" />
-            <div className="space-y-3">
-              <div className="skeleton h-4 w-full rounded" />
-              <div className="skeleton h-4 w-5/6 rounded" />
-              <div className="skeleton h-4 w-4/6 rounded" />
-              <div className="skeleton h-4 w-full rounded" />
-              <div className="skeleton h-4 w-3/4 rounded" />
+            <div className="skeleton h-[400px] w-full rounded-lg" />
+            <div className="space-y-4 pt-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="skeleton h-5 rounded" style={{ width: `${80 + Math.random() * 20}%` }} />
+              ))}
             </div>
           </div>
         </div>
@@ -120,19 +124,21 @@ export default function BlogPostPage() {
     );
   }
 
+  /* ── Not found ── */
   if (!post) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <BookOpen className="w-16 h-16 mx-auto text-edith-cyan/20 mb-4" />
-          <h2 className="text-xl font-display font-bold mb-2" style={{ color: 'var(--edith-text)' }}>
+        <div className="text-center px-6">
+          <BookOpen className="w-16 h-16 mx-auto mb-6" style={{ color: 'var(--edith-text-muted)' }} />
+          <h2 className="text-2xl font-serif font-bold mb-3" style={{ color: 'var(--edith-text)' }}>
             Article not found
           </h2>
-          <p className="text-xs font-mono mb-4" style={{ color: 'var(--edith-text-dim)' }}>
-            This article may have been removed or doesn't exist.
+          <p className="text-base mb-6" style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-article)' }}>
+            This article may have been removed or doesn&apos;t exist.
           </p>
-          <Link href="/blog" className="btn-primary inline-flex gap-2 text-xs">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Blog
+          <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-[var(--edith-accent)]"
+            style={{ color: 'var(--edith-text-dim)' }}>
+            <ArrowLeft className="w-4 h-4" /> Back to Blog
           </Link>
         </div>
       </div>
@@ -141,173 +147,154 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen">
-      {/* ═══ ARTICLE ═══ */}
-      <article className="max-w-4xl mx-auto px-4 py-10">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-8 text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-          <Link href="/blog" className="hover:text-edith-cyan transition-colors flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3" /> Blog
-          </Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link href={`/blog?category=${post.category}`} className="hover:text-edith-cyan transition-colors capitalize">
-            {post.category}
-          </Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="truncate max-w-[200px]" style={{ color: 'var(--edith-text-dim)' }}>{post.title}</span>
-        </div>
-
-        {/* Header */}
-        <header className="mb-8">
-          {/* Category + Read time */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-edith-cyan px-2.5 py-1 rounded"
-              style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)' }}>
+      <article>
+        {/* ── Header — 680px like Medium ── */}
+        <header className="max-w-[680px] mx-auto px-6 pt-10 md:pt-14">
+          {/* Category pill */}
+          <div className="mb-6">
+            <Link
+              href={`/blog?category=${post.category}`}
+              className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-medium capitalize transition-colors hover:opacity-80"
+              style={{ background: 'var(--edith-accent-muted)', color: 'var(--edith-accent)', border: '1px solid var(--edith-border)' }}
+            >
               {post.category}
-            </span>
-            <span className="text-[10px] font-mono flex items-center gap-1" style={{ color: 'var(--edith-text-dim)' }}>
-              <Clock className="w-3 h-3" /> {post.readTime} min read
-            </span>
+            </Link>
             {post.isFeatured && (
-              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-edith-amber px-2 py-0.5 rounded"
-                style={{ background: 'var(--edith-warning-bg)', border: '1px solid rgba(255,170,0,0.2)' }}>
-                Featured
+              <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium"
+                style={{ background: 'var(--edith-warning-bg)', color: 'var(--edith-warning)', border: '1px solid rgba(255,170,0,0.15)' }}>
+                ★ Featured
               </span>
             )}
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-display font-bold mb-6 leading-tight tracking-tight"
-            style={{ color: 'var(--edith-text)' }}>
-            {post.title}
-          </h1>
+          <h1 className="article-title mb-4">{post.title}</h1>
+
+          {/* Subtitle / Excerpt */}
+          {post.excerpt && <p className="article-subtitle mb-8">{post.excerpt}</p>}
 
           {/* Author row */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6"
-            style={{ borderBottom: '1px solid var(--edith-border)' }}>
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 pb-8 mb-2" style={{ borderBottom: '1px solid var(--edith-border)' }}>
+            <Link href={`/profile/${post.author?.username}`} className="shrink-0">
               {post.author?.avatar ? (
-                <img src={post.author.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-2 ring-edith-cyan/15" />
+                <img src={post.author.avatar} alt="" className="w-12 h-12 rounded-full object-cover" style={{ border: '2px solid var(--edith-border)' }} />
               ) : (
-                <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-edith-cyan"
-                  style={{ background: 'var(--edith-accent-muted)' }}>
-                  {post.author?.displayName?.[0] || '?'}
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold"
+                  style={{ background: 'var(--edith-accent-muted)', color: 'var(--edith-accent)' }}>
+                  {post.author?.displayName?.[0]?.toUpperCase() || '?'}
                 </div>
               )}
-              <div>
+            </Link>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
                 <Link href={`/profile/${post.author?.username}`}
-                  className="text-sm font-semibold hover:text-edith-cyan transition-colors" style={{ color: 'var(--edith-text)' }}>
+                  className="text-[15px] font-medium hover:underline"
+                  style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-body)' }}>
                   {post.author?.displayName}
                 </Link>
-                <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> {formatDate(post.createdAt)}
-                  </span>
-                </div>
+                {post.author?.isVerified && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-sm"
+                    style={{ background: 'var(--edith-accent-muted)', color: 'var(--edith-accent)' }}>✓</span>
+                )}
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {post.viewsCount} views</span>
-                <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {post.likesCount}</span>
-                <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {post.commentsCount}</span>
+              <div className="flex items-center gap-1 flex-wrap article-meta mt-0.5">
+                <span>{formatDate(post.createdAt)}</span>
+                <span className="mx-1">·</span>
+                <span>{post.readTime} min read</span>
+                <span className="mx-1">·</span>
+                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {post.viewsCount?.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Cover image */}
+        {/* ── Cover image — wider ── */}
         {post.coverImage?.url && (
-          <div className="mb-10 rounded-xl overflow-hidden" style={{ border: '1px solid var(--edith-border)', boxShadow: 'var(--edith-shadow-md)' }}>
-            <img src={post.coverImage.url} alt={post.title} className="w-full object-cover max-h-[500px]" />
-          </div>
+          <figure className="max-w-[900px] mx-auto px-4 my-10 md:my-12">
+            <img src={post.coverImage.url} alt={post.title}
+              className="w-full object-cover rounded-lg max-h-[520px]"
+              style={{ boxShadow: 'var(--edith-shadow-md)' }} />
+          </figure>
         )}
 
-        {/* Content */}
-        <div
-          className="prose prose-invert dark:prose-invert max-w-none mb-10
-            prose-headings:font-display prose-headings:tracking-tight
-            prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
-            prose-p:font-mono prose-p:text-sm prose-p:leading-relaxed
-            prose-a:text-edith-cyan prose-a:no-underline hover:prose-a:underline
-            prose-code:text-edith-cyan prose-code:text-xs
-            prose-pre:rounded-lg prose-pre:border
-            prose-img:rounded-lg prose-img:border
-            prose-blockquote:border-edith-cyan/30 prose-blockquote:bg-edith-cyan/5 prose-blockquote:rounded-r-lg prose-blockquote:py-1
-            prose-li:font-mono prose-li:text-sm"
-          style={{ color: 'var(--edith-text-secondary)' }}
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-
-        {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap mb-8 pb-8" style={{ borderBottom: '1px solid var(--edith-border)' }}>
-            <Tag className="w-3.5 h-3.5 text-edith-cyan/40 shrink-0" />
-            {post.tags.map((tag) => (
-              <Link key={tag} href={`/blog?search=${tag}`}
-                className="text-[10px] font-mono px-2.5 py-1 rounded transition-all hover:text-edith-cyan hover:border-edith-cyan/20"
-                style={{ color: 'var(--edith-tag-text)', background: 'var(--edith-tag-bg)', border: '1px solid var(--edith-tag-border)' }}>
-                #{tag}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Share + Actions */}
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-3">
-            <ShareButtons title={post.title} slug={post.slug} />
-            {isAuthenticated && post.author && (post.author as any)._id !== undefined && (
-              <button
-                onClick={() => setReportOpen(true)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-red-400 hover:border-red-500/30"
-                style={{ background: 'var(--edith-accent-subtle)', color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
-                title="Report this article"
-              >
-                <Flag className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-          <Link href="/blog" className="text-[10px] font-mono flex items-center gap-1 hover:text-edith-cyan transition-colors"
-            style={{ color: 'var(--edith-text-dim)' }}>
-            <ArrowLeft className="w-3 h-3" /> Back to Blog
-          </Link>
+        {/* ── Article body — 680px, Medium typography ── */}
+        <div className="max-w-[680px] mx-auto px-6">
+          <div className="article-content" dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
 
-        {/* Author Card */}
-        <div className="rounded-xl p-6 mb-12" style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
-          <div className="flex items-start gap-4">
-            {post.author?.avatar ? (
-              <img src={post.author.avatar} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-edith-cyan/15 shrink-0" />
-            ) : (
-              <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-edith-cyan shrink-0"
-                style={{ background: 'var(--edith-accent-muted)' }}>
-                {post.author?.displayName?.[0] || '?'}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-display font-bold" style={{ color: 'var(--edith-text)' }}>
-                  {post.author?.displayName}
-                </h3>
-                {post.author?.isVerified && (
-                  <span className="text-[8px] font-mono text-edith-cyan px-1.5 py-0.5 rounded"
-                    style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)' }}>
-                    Verified
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] font-mono mb-2" style={{ color: 'var(--edith-text-muted)' }}>
-                @{post.author?.username}
-              </p>
-              {post.author?.bio && (
-                <p className="text-xs font-mono leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
-                  {post.author.bio}
-                </p>
+        {/* ── Tags ── */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="max-w-[680px] mx-auto px-6 mt-12 pt-8" style={{ borderTop: '1px solid var(--edith-border)' }}>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {post.tags.map((tag) => (
+                <Link key={tag} href={`/blog?search=${tag}`}
+                  className="inline-flex items-center px-4 py-1.5 rounded-full text-[13px] transition-all hover:opacity-80"
+                  style={{ color: 'var(--edith-text-dim)', background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)', fontFamily: 'var(--edith-body)' }}>
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Bottom action bar ── */}
+        <div className="max-w-[680px] mx-auto px-6 mt-8 pt-6 pb-2" style={{ borderTop: '1px solid var(--edith-border)' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 article-meta">
+              <span className="flex items-center gap-1.5"><Heart className="w-5 h-5" /> {post.likesCount}</span>
+              <span className="flex items-center gap-1.5"><MessageCircle className="w-5 h-5" /> {post.commentsCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShareButtons title={post.title} slug={post.slug} />
+              {isAuthenticated && post.author && (
+                <button onClick={() => setReportOpen(true)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-red-500/10 hover:text-red-500 ml-1"
+                  style={{ color: 'var(--edith-text-muted)', border: '1px solid var(--edith-border)' }}
+                  title="Report this article">
+                  <Flag className="w-4 h-4" />
+                </button>
               )}
-              <div className="mt-3">
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Author Card ═══ */}
+        <div className="max-w-[680px] mx-auto px-6 py-10">
+          <div className="rounded-2xl p-8" style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              <Link href={`/profile/${post.author?.username}`} className="shrink-0">
+                {post.author?.avatar ? (
+                  <img src={post.author.avatar} alt="" className="w-[72px] h-[72px] rounded-full object-cover"
+                    style={{ border: '2px solid var(--edith-border)' }} />
+                ) : (
+                  <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-xl font-bold"
+                    style={{ background: 'var(--edith-accent-muted)', color: 'var(--edith-accent)' }}>
+                    {post.author?.displayName?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </Link>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-widest mb-2 font-medium"
+                  style={{ color: 'var(--edith-text-muted)', fontFamily: 'var(--edith-body)' }}>
+                  Written by
+                </p>
                 <Link href={`/profile/${post.author?.username}`}
-                  className="btn-secondary text-[10px] px-4 py-1.5 inline-flex gap-1.5">
-                  <User className="w-3 h-3" /> View Profile
+                  className="text-xl font-bold hover:underline block mb-1"
+                  style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)' }}>
+                  {post.author?.displayName}
+                </Link>
+                <p className="text-sm mb-3" style={{ color: 'var(--edith-text-muted)', fontFamily: 'var(--edith-body)' }}>
+                  @{post.author?.username}
+                </p>
+                {post.author?.bio && (
+                  <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-article)' }}>
+                    {post.author.bio}
+                  </p>
+                )}
+                <Link href={`/profile/${post.author?.username}`}
+                  className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
+                  style={{ background: 'var(--edith-accent-muted)', color: 'var(--edith-accent)', border: '1px solid var(--edith-accent)', fontFamily: 'var(--edith-body)' }}>
+                  <User className="w-4 h-4" /> View Profile
                 </Link>
               </div>
             </div>
@@ -317,39 +304,37 @@ export default function BlogPostPage() {
 
       {/* ═══ RELATED POSTS ═══ */}
       {relatedPosts.length > 0 && (
-        <section className="max-w-4xl mx-auto px-4 pb-16">
-          <div className="flex items-center gap-2 mb-6">
-            <BookOpen className="w-4 h-4 text-edith-cyan" />
-            <h2 className="text-sm font-mono font-bold uppercase tracking-widest text-edith-cyan/70">
-              Related Articles
+        <section className="max-w-[900px] mx-auto px-6 pb-16">
+          <div className="pt-8 mb-8" style={{ borderTop: '1px solid var(--edith-border)' }}>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)' }}>
+              More from E.D.I.T.H Blog
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {relatedPosts.map((rp) => (
               <Link key={rp._id} href={`/blog/${rp.slug}`} className="group block">
-                <article className="rounded-xl overflow-hidden transition-all duration-300"
-                  style={{ background: 'var(--edith-card-bg)', border: '1px solid var(--edith-border)', boxShadow: 'var(--edith-shadow-sm)' }}>
-                  <div className="aspect-video overflow-hidden">
+                <article>
+                  <div className="aspect-[16/10] overflow-hidden rounded-lg mb-4">
                     {rp.coverImage?.url ? (
                       <img src={rp.coverImage.url} alt={rp.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--edith-panel)' }}>
-                        <BookOpen className="w-8 h-8 text-edith-cyan/15" />
+                      <div className="w-full h-full flex items-center justify-center rounded-lg" style={{ background: 'var(--edith-panel)' }}>
+                        <BookOpen className="w-10 h-10" style={{ color: 'var(--edith-text-muted)' }} />
                       </div>
                     )}
                   </div>
-                  <div className="p-3">
-                    <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60">{rp.category}</span>
-                    <h3 className="text-xs font-semibold line-clamp-2 mt-1 group-hover:text-edith-cyan transition-colors"
-                      style={{ color: 'var(--edith-text)' }}>
-                      {rp.title}
-                    </h3>
-                    <p className="text-[9px] font-mono mt-1.5 flex items-center gap-2" style={{ color: 'var(--edith-text-muted)' }}>
-                      <span>{rp.author?.displayName}</span>
-                      <span>·</span>
-                      <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> {rp.readTime} min</span>
-                    </p>
+                  <p className="text-[12px] font-medium uppercase tracking-wide mb-2 capitalize"
+                    style={{ color: 'var(--edith-accent)', fontFamily: 'var(--edith-body)' }}>{rp.category}</p>
+                  <h3 className="text-base font-bold line-clamp-2 group-hover:text-[var(--edith-accent)] transition-colors mb-2"
+                    style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)', lineHeight: '1.35' }}>
+                    {rp.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[13px]"
+                    style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-body)' }}>
+                    <span>{rp.author?.displayName}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {rp.readTime} min read</span>
                   </div>
                 </article>
               </Link>
@@ -358,10 +343,16 @@ export default function BlogPostPage() {
         </section>
       )}
 
-      {/* ═══ FOOTER ═══ */}
+      {/* Back to blog */}
+      <div className="max-w-[680px] mx-auto px-6 pb-10">
+        <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-[var(--edith-accent)]"
+          style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-body)' }}>
+          <ArrowLeft className="w-4 h-4" /> All articles
+        </Link>
+      </div>
+
       <BlogFooter />
 
-      {/* Report Modal */}
       {post && (
         <ReportModal
           blogPostId={post._id}

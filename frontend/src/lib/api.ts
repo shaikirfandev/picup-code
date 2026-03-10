@@ -228,9 +228,15 @@ export const uploadAPI = {
 export const adsAPI = {
   getActiveAds: (params?: { placement?: string; limit?: number }) =>
     api.get('/ads/active', { params }),
+  getDashboard: (params?: { period?: string }) =>
+    api.get('/ads/dashboard', { params }),
+  getEarnings: (params?: { period?: string }) =>
+    api.get('/ads/earnings', { params }),
   createAd: (formData: FormData) =>
     api.post('/ads', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  getMyAds: (params?: { page?: number; limit?: number; status?: string }) =>
+  createAdFromWallet: (formData: FormData) =>
+    api.post('/ads/wallet-create', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getMyAds: (params?: { page?: number; limit?: number; status?: string; search?: string; sort?: string }) =>
     api.get('/ads/my', { params }),
   getAd: (id: string) => api.get(`/ads/${id}`),
   updateAd: (id: string, formData: FormData) =>
@@ -238,6 +244,7 @@ export const adsAPI = {
   deleteAd: (id: string) => api.delete(`/ads/${id}`),
   trackClick: (id: string) => api.post(`/ads/${id}/click`),
   trackImpression: (id: string) => api.post(`/ads/${id}/impression`),
+  trackView: (id: string) => api.post(`/ads/${id}/view`),
   getAnalytics: (id: string) => api.get(`/ads/${id}/analytics`),
 };
 
@@ -252,6 +259,22 @@ export const paymentAPI = {
   getWallet: () => api.get('/payments/wallet'),
   topUpWallet: (data: { amount: number; currency: string }) =>
     api.post('/payments/wallet/topup', data),
+  getWalletTransactions: (params?: { page?: number; limit?: number; type?: string }) =>
+    api.get('/payments/wallet/transactions', { params }),
+  requestWithdraw: (data: { amount: number; payoutMethod: string; payoutDetails: Record<string, string> }) =>
+    api.post('/payments/withdraw', data),
+  getMyWithdrawals: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/payments/withdraw/my', { params }),
+  getPaymentMethods: () =>
+    api.get('/payments/methods'),
+  addPaymentMethod: (data: { type: string; details: Record<string, string>; label?: string; gateway?: string }) =>
+    api.post('/payments/methods', data),
+  updatePaymentMethod: (id: string, data: { isDefault?: boolean; label?: string }) =>
+    api.put(`/payments/methods/${id}`, data),
+  deletePaymentMethod: (id: string) =>
+    api.delete(`/payments/methods/${id}`),
+  subscribePlan: (data: { plan: string }) =>
+    api.post('/payments/subscribe', data),
 };
 
 // Creator Analytics API
@@ -359,9 +382,15 @@ export const adminAPI = {
     api.get('/ads/admin/all', { params }),
   moderateAd: (id: string, action: string) =>
     api.put(`/ads/admin/${id}/moderate`, { action }),
+  getAdminAdStats: () =>
+    api.get('/ads/admin/stats'),
   // Payments
   getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
     api.get('/payments/admin/all', { params }),
+  getAdminWithdrawals: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/payments/admin/withdrawals', { params }),
+  processWithdrawal: (id: string, data: { status: string; rejectionReason?: string; transactionRef?: string }) =>
+    api.put(`/payments/admin/withdrawals/${id}`, data),
   // Paid users
   getPaidUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; type?: string; minSpent?: number }) =>
     api.get('/admin/paid-users', { params }),
@@ -376,6 +405,69 @@ export const adminAPI = {
     api.patch(`/admin/blogs-manage/${id}/restore`),
   getBlogAuditLogs: (params?: { page?: number; limit?: number; actionType?: string }) =>
     api.get('/admin/blogs-manage/audit-logs', { params }),
+};
+
+// Creator Professional Dashboard API
+export const creatorDashboardAPI = {
+  // Overview
+  getOverview: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/overview', { params }),
+
+  // Content Performance
+  getContentPerformance: (params?: {
+    page?: number; limit?: number; sortBy?: string; sortOrder?: string;
+    mediaType?: string; period?: string; search?: string;
+  }) => api.get('/creator-dashboard/content-performance', { params }),
+  getPerformanceHeatmap: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/performance-heatmap', { params }),
+  getEngagementTrends: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/engagement-trends', { params }),
+
+  // Audience Insights
+  getAudienceInsights: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/audience-insights', { params }),
+
+  // Monetization
+  getMonetization: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/monetization', { params }),
+  enableMonetization: () =>
+    api.post('/creator-dashboard/monetization/enable'),
+
+  // Content Management
+  getContentManagement: (params?: {
+    page?: number; limit?: number; status?: string;
+    mediaType?: string; search?: string; sortBy?: string; sortOrder?: string;
+  }) => api.get('/creator-dashboard/content', { params }),
+  schedulePost: (data: { postId?: string; title?: string; content?: string; scheduledFor: string; timezone?: string; recurring?: boolean; recurrencePattern?: string; notes?: string }) =>
+    api.post('/creator-dashboard/content/schedule', data),
+  cancelScheduledPost: (id: string) =>
+    api.delete(`/creator-dashboard/content/schedule/${id}`),
+  togglePinPost: (postId: string) =>
+    api.patch(`/creator-dashboard/content/${postId}/pin`),
+  bulkUpdatePosts: (data: { postIds: string[]; action: string }) =>
+    api.post('/creator-dashboard/content/bulk', data),
+
+  // Growth Insights (AI)
+  getGrowthInsights: () =>
+    api.get('/creator-dashboard/growth-insights'),
+
+  // Activity Feed
+  getActivityFeed: (params?: { page?: number; limit?: number; eventType?: string }) =>
+    api.get('/creator-dashboard/activity', { params }),
+  markActivityRead: (eventIds?: string[] | 'all') =>
+    api.post('/creator-dashboard/activity/read', { eventIds: eventIds || 'all' }),
+
+  // Creator Profile / Settings
+  getCreatorProfile: () =>
+    api.get('/creator-dashboard/profile'),
+  updateCreatorProfile: (data: Record<string, unknown>) =>
+    api.put('/creator-dashboard/profile', data),
+
+  // Comment Moderation
+  getCommentsForModeration: (params?: { page?: number; limit?: number; filter?: string }) =>
+    api.get('/creator-dashboard/comments', { params }),
+  moderateComment: (commentId: string, action: string) =>
+    api.post(`/creator-dashboard/comments/${commentId}/moderate`, { action }),
 };
 
 export default api;

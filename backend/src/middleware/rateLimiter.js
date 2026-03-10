@@ -1,9 +1,26 @@
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+
+// Skip rate limiting for authenticated admin users
+const skipForAdmin = (req) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.role === 'admin') return true;
+    }
+  } catch {
+    // Token invalid/expired — don't skip
+  }
+  return false;
+};
 
 // Global rate limiter
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: 1000,
+  skip: skipForAdmin,
   message: {
     success: false,
     message: 'Too many requests. Please try again later.',

@@ -55,7 +55,7 @@ const walletSchema = new mongoose.Schema(
   }
 );
 
-walletSchema.index({ user: 1 });
+// unique: true on 'user' field already creates a unique index
 
 // Add credit to wallet
 walletSchema.methods.addCredit = function (amount, description = '', reference = '') {

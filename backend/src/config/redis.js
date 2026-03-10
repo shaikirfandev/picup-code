@@ -1,8 +1,19 @@
 /**
  * Redis Client Configuration
- * Shared Redis connection for caching, real-time counters, and event buffering.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Production  → connects to a real Redis via REDIS_URL (ioredis).
+ * Development → spins up an in-memory MemoryRedis so devs never need a
+ *               local Redis install. Same API, zero latency, zero config.
+ *
+ * Toggle: set  USE_REAL_REDIS=true  in .env to force ioredis in dev.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
-const Redis = require('ioredis');
+
+const { MemoryRedis } = require('./memoryRedis');
+
+const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+const forceReal = process.env.USE_REAL_REDIS === 'true';
+const useMemory = isDev && !forceReal;
 
 let redisClient = null;
 let isConnected = false;
@@ -10,6 +21,16 @@ let isConnected = false;
 function getRedisClient() {
   if (redisClient && isConnected) return redisClient;
 
+  if (useMemory) {
+    // ── In-Memory Redis for development ──────────────────────────────────────
+    redisClient = new MemoryRedis();
+    isConnected = true;
+    console.log('🟢 MemoryRedis (in-house dev) — ready  ⚡ zero-latency cache');
+    return redisClient;
+  }
+
+  // ── Real ioredis for production ────────────────────────────────────────────
+  const Redis = require('ioredis');
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
   redisClient = new Redis(redisUrl, {
@@ -29,7 +50,7 @@ function getRedisClient() {
 
   redisClient.on('connect', () => {
     isConnected = true;
-    console.log('🔴 Redis connected');
+    console.log('🔴 Redis connected (ioredis)');
   });
 
   redisClient.on('error', (err) => {
@@ -45,6 +66,7 @@ function getRedisClient() {
 }
 
 function isRedisConnected() {
+  if (useMemory) return true; // MemoryRedis is always "connected"
   return isConnected && redisClient && redisClient.status === 'ready';
 }
 
@@ -59,6 +81,10 @@ const safeRedis = {
   async set(key, value, ...args) {
     if (!isRedisConnected()) return null;
     try { return await redisClient.set(key, value, ...args); } catch { return null; }
+  },
+  async setex(key, seconds, value) {
+    if (!isRedisConnected()) return null;
+    try { return await redisClient.setex(key, seconds, value); } catch { return null; }
   },
   async incr(key) {
     if (!isRedisConnected()) return null;
@@ -104,6 +130,10 @@ const safeRedis = {
     if (!isRedisConnected()) return null;
     try { return await redisClient.hset(key, field, value); } catch { return null; }
   },
+  async hget(key, field) {
+    if (!isRedisConnected()) return null;
+    try { return await redisClient.hget(key, field); } catch { return null; }
+  },
   async hincrby(key, field, amount) {
     if (!isRedisConnected()) return null;
     try { return await redisClient.hincrby(key, field, amount); } catch { return null; }
@@ -130,4 +160,28 @@ const safeRedis = {
   },
 };
 
-module.exports = { getRedisClient, isRedisConnected, safeRedis };
+/**
+ * safeRedisOp — call any redis method by name, fail-safe.
+ * Used by adTrackingService: safeRedisOp('get', key), safeRedisOp('set', key, val, 'EX', 300)
+ */
+async function safeRedisOp(method, ...args) {
+  if (!isRedisConnected() || !redisClient) return null;
+  try {
+    if (typeof redisClient[method] !== 'function') return null;
+    return await redisClient[method](...args);
+  } catch {
+    return null;
+  }
+}
+
+// ── Eagerly initialize so `const { redisClient } = require('./redis')` works ──
+getRedisClient();
+
+module.exports = {
+  getRedisClient,
+  isRedisConnected,
+  safeRedis,
+  safeRedisOp,
+  redisClient,
+};
+

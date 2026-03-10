@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '@/lib/api';
 import { timeAgo } from '@/lib/utils';
+import { useDebounce } from '@/hooks';
 import {
   ChevronLeft, ChevronRight, CheckCircle, XCircle, Eye, AlertTriangle,
   Shield, Trash2, Ban, Search, Filter, X, ExternalLink,
@@ -54,6 +55,7 @@ export default function AdminReportsPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 400);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,13 +68,16 @@ export default function AdminReportsPage() {
   const [isResolving, setIsResolving] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearchQuery]);
+
   const fetchReports = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: any = { page, status: filter, limit: 20 };
       if (priorityFilter) params.priority = priorityFilter;
       if (reasonFilter) params.reason = reasonFilter;
-      if (searchQuery) params.search = searchQuery;
+      if (debouncedSearchQuery) params.search = debouncedSearchQuery;
       const { data } = await adminAPI.getReports(params);
       setReports(data.data || []);
       setTotalPages(data.pagination?.pages || 1);
@@ -81,7 +86,7 @@ export default function AdminReportsPage() {
       toast.error('Failed to load reports');
     }
     setIsLoading(false);
-  }, [page, filter, priorityFilter, reasonFilter, searchQuery]);
+  }, [page, filter, priorityFilter, reasonFilter, debouncedSearchQuery]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
 

@@ -298,8 +298,206 @@ export interface Advertisement {
   shares: number;
   views: number;
   ctr: number;
+  targetCategories?: string[];
+  targetLocations?: string[];
+  targetAudience?: 'all' | 'followers' | 'new_users' | 'returning_users';
+  promotionType?: 'standard' | 'featured' | 'homepage' | 'category_boost';
+  dailyStats?: AdDailyStat[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdDailyStat {
+  date: string;
+  impressions: number;
+  clicks: number;
+  views: number;
+  spent: number;
+}
+
+// Ad Dashboard types
+export interface AdDashboardData {
+  stats: {
+    totalAds: number;
+    activeAds: number;
+    pendingAds: number;
+    completedAds: number;
+    totalClicks: number;
+    totalImpressions: number;
+    totalViews: number;
+    totalSpent: number;
+    engagementScore: number;
+    ctr: number;
+  };
+  statusBreakdown: Record<string, number>;
+  clickTrends: Array<{
+    date: string;
+    clicks: number;
+    impressions: number;
+  }>;
+  categoryPerformance: Array<{
+    name: string;
+    impressions: number;
+    clicks: number;
+    spent: number;
+    count: number;
+  }>;
+  recentActiveAds: Advertisement[];
+  period: string;
+}
+
+// Ad Earnings types
+export interface AdEarningsData {
+  revenueTimeline: Array<{
+    date: string;
+    amount: number;
+    count: number;
+  }>;
+  campaignPerformance: Array<{
+    _id: string;
+    title: string;
+    status: string;
+    impressions: number;
+    clicks: number;
+    views: number;
+    budget: number;
+    spent: number;
+    ctr: number;
+    roi: number;
+  }>;
+  totals: {
+    totalBudget: number;
+    totalSpent: number;
+    totalClicks: number;
+    totalImpressions: number;
+    avgCPC: number;
+    avgCPM: number;
+  };
+  period: string;
+}
+
+// Ad Analytics types (per-ad)
+export interface AdAnalyticsData {
+  ad: {
+    _id: string;
+    title: string;
+    status: string;
+    placement: string;
+    promotionType: string;
+    campaign: {
+      budget: number;
+      spent: number;
+      startDate: string;
+      endDate?: string;
+      currency?: string;
+    };
+    createdAt: string;
+  };
+  totals: {
+    impressions: number;
+    clicks: number;
+    likes: number;
+    shares: number;
+    views: number;
+    ctr: number;
+    budget: number;
+    spent: number;
+  };
+  dailyStats: AdDailyStat[];
+  eventAnalytics: {
+    totals: Record<string, number>;
+    daily: Array<{ date: string; impressions: number; clicks: number; views: number }>;
+    devices: Array<{ _id: string; count: number }>;
+    geo: Array<{ _id: string; count: number }>;
+  };
+}
+
+// Ad Click Event
+export interface AdClickEvent {
+  _id: string;
+  advertisement: string;
+  eventType: 'impression' | 'click' | 'view' | 'conversion';
+  user?: string;
+  sessionId: string;
+  ip: string;
+  country?: string;
+  city?: string;
+  deviceType?: string;
+  browser?: string;
+  os?: string;
+  referrer?: string;
+  placement?: string;
+  costPerClick?: number;
+  costPerImpression?: number;
+  isSuspicious: boolean;
+  createdAt: string;
+}
+
+// Withdraw Request types
+export interface WithdrawRequest {
+  _id: string;
+  user: User | string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'processing' | 'completed' | 'rejected';
+  payoutMethod: 'bank_transfer' | 'paypal' | 'upi';
+  payoutDetails: {
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    paypalEmail?: string;
+    upiId?: string;
+  };
+  processedBy?: User | string;
+  rejectionReason?: string;
+  transactionRef?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Payment Method types
+export interface PaymentMethod {
+  _id: string;
+  user: string;
+  type: 'card' | 'upi' | 'paypal' | 'bank_account';
+  label: string;
+  details: {
+    last4?: string;
+    brand?: string;
+    expiry?: string;
+    paypalEmail?: string;
+    upiId?: string;
+    bankName?: string;
+    accountLast4?: string;
+  };
+  gateway: string;
+  gatewayToken?: string;
+  isDefault: boolean;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Subscription types
+export interface SubscriptionData {
+  plan: 'basic' | 'pro' | 'enterprise';
+  expiresAt: string;
+  price: number;
+}
+
+export interface SubscriptionPlan {
+  id: 'basic' | 'pro' | 'enterprise';
+  name: string;
+  price: number;
+  features: string[];
+}
+
+// Admin Ad Stats
+export interface AdminAdStats {
+  totalAds: number;
+  statusBreakdown: Record<string, number>;
+  totalRevenue: number;
+  recentAds: Advertisement[];
 }
 
 // Payment types
@@ -618,5 +816,333 @@ export interface CreatorAccessCheck {
   accountType: string;
   plan: string;
   isActive: boolean;
+}
+
+// ─── Creator Professional Dashboard Types ──────────────────────
+
+export interface DashboardOverview {
+  user: { username: string; displayName: string; avatar: string };
+  metrics: {
+    totalFollowers: number;
+    profileVisits: number;
+    totalContentPosted: number;
+    totalImpressions: number;
+    engagementRate: number;
+    totalRevenue: number;
+  };
+  growth: {
+    followers: number;
+    impressions: number;
+    engagement: number;
+    revenue: number;
+    profileVisits: number;
+  };
+  revenueStats: { totalRevenue: number; prevRevenue: number };
+  topPosts: ContentMetricsItem[];
+  recentActivity: ActivityEventItem[];
+  realtimeCounters: { liveViews: number; liveEngagement: number; liveViewers: number };
+  period: string;
+}
+
+export interface ContentMetricsItem {
+  _id: string;
+  post: { _id: string; title: string; slug: string; mediaType: string; image?: { url: string; thumbnailUrl?: string }; video?: { thumbnailUrl?: string }; createdAt: string };
+  totalViews: number;
+  uniqueViews: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  totalSaves: number;
+  engagementRate: number;
+  clickThroughRate: number;
+  performanceScore: number;
+  performanceTier: string;
+  totalWatchTime: number;
+  averageWatchTime: number;
+  viewsTrend: { date: string; value: number }[];
+  engagementTrend: { date: string; value: number }[];
+}
+
+export interface ContentPerformanceData {
+  posts: ContentPostItem[];
+  totals: { totalViews: number; totalLikes: number; totalComments: number; totalShares: number; avgEngagement: number };
+  pagination: PaginationMeta;
+}
+
+export interface ContentPostItem {
+  _id: string;
+  title: string;
+  slug: string;
+  mediaType: string;
+  image?: { url: string; thumbnailUrl?: string };
+  video?: { url: string; thumbnailUrl?: string };
+  createdAt: string;
+  isPinned?: boolean;
+  metrics: {
+    totalViews: number;
+    totalLikes: number;
+    totalComments: number;
+    totalShares: number;
+    totalSaves: number;
+    engagementRate: number;
+    clickThroughRate: number;
+    performanceScore: number;
+    performanceTier: string;
+    totalWatchTime: number;
+    averageWatchTime: number;
+  };
+  periodMetrics: {
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+    clicks: number;
+    watchTime: number;
+  };
+  trend: { date: string; value: number }[];
+  engagementTrend: { date: string; value: number }[];
+}
+
+export interface EngagementTrendItem {
+  date: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  engagementRate: number;
+}
+
+export interface PerformanceHeatmapData {
+  heatmap: number[][];
+  period: string;
+}
+
+export interface DashboardAudienceInsights {
+  demographics: {
+    ageGroups: Record<string, number>;
+    genderDistribution: { male: number; female: number; other: number; unknown: number };
+    countries: { code: string; name: string; count: number; percentage: number }[];
+    cities: { name: string; country: string; count: number; percentage: number }[];
+  };
+  engagement: {
+    segments: { superFans: number; activeFans: number; casualViewers: number; dormant: number };
+    followerRate: number;
+    nonFollowerRate: number;
+    ratio: number;
+    devices: { device: string; count: number; percentage: number }[];
+    trafficSources: { source: string; count: number; percentage: number }[];
+  };
+  activity: {
+    activeHours: Record<string, number>;
+    activeDays: Record<string, number>;
+    peakHour: number;
+  };
+  followers: {
+    totalFollowers: number;
+    totalFollowing: number;
+    recentGain: number;
+    recentLost: number;
+    netGrowth: number;
+    growthTimeline: { date: string; totalFollowers: number; newFollowers: number; lostFollowers: number }[];
+  };
+  viewers: { newViewers: number; returningViewers: number };
+}
+
+export interface MonetizationData {
+  profile: {
+    monetizationEnabled: boolean;
+    monetizationTier: string;
+    enabledStreams: {
+      adRevenue: boolean;
+      sponsorship: boolean;
+      donations: boolean;
+      tips: boolean;
+      subscriptions: boolean;
+      premiumContent: boolean;
+      affiliate: boolean;
+    };
+  };
+  earnings: {
+    totalRevenue: number;
+    revenueGrowth: number;
+    transactionCount: number;
+    revenueByType: { type: string; total: number; count: number }[];
+    revenuePerPost: number;
+  };
+  timeline: { date: string; amount: number; transactions: number }[];
+  payouts: {
+    history: PayoutItem[];
+    pendingBalance: number;
+    lifetimePayouts: number;
+    lifetimeRevenue: number;
+  };
+  wallet: { balance: number; totalDeposits: number; totalWithdrawals: number };
+  topEarningPosts: TopEarningPost[];
+  recentDonations: DonationItem[];
+  subscriberCount: number;
+  period: string;
+}
+
+export interface PayoutItem {
+  _id: string;
+  amount: number;
+  netAmount: number;
+  status: string;
+  paidAt: string;
+  payoutMethod: string;
+}
+
+export interface TopEarningPost {
+  _id: string;
+  post: { title: string; slug: string; mediaType: string; image?: { thumbnailUrl?: string } };
+  totalRevenue: number;
+  transactions: number;
+}
+
+export interface DonationItem {
+  _id: string;
+  amount: number;
+  netAmount: number;
+  donor: { username: string; avatar: string; displayName: string };
+  donorMessage: string;
+  createdAt: string;
+}
+
+export interface ContentManagementData {
+  posts: ManagedPost[];
+  scheduled: ScheduledPostItem[];
+  statusSummary: { published: number; draft: number; pending: number; archived: number; rejected: number };
+  pagination: PaginationMeta;
+}
+
+export interface ManagedPost {
+  _id: string;
+  title: string;
+  slug: string;
+  mediaType: string;
+  image?: { url: string; thumbnailUrl?: string };
+  video?: { url: string; thumbnailUrl?: string };
+  status: string;
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+  likesCount: number;
+  commentsCount: number;
+  viewsCount: number;
+  sharesCount: number;
+  savesCount: number;
+  tags?: string[];
+  actualCommentCount: number;
+}
+
+export interface ScheduledPostItem {
+  _id: string;
+  post: { _id: string; title: string; slug: string; mediaType: string; image?: { url: string } };
+  scheduledFor: string;
+  status: string;
+  timezone: string;
+  recurring: boolean;
+  recurrencePattern?: string;
+}
+
+export interface GrowthInsightsData {
+  bestPostingTimes: { day: string; hour: number; avgEngagement: number; avgViews: number; postCount: number }[];
+  contentTypePerformance: { _id: string; avgViews: number; avgLikes: number; avgComments: number; totalPosts: number }[];
+  tagPerformance: { _id: string; avgViews: number; avgEngagement: number; postCount: number }[];
+  trendingTopics: { _id: string; postCount: number; avgViews: number; avgEngagement: number }[];
+  growthPrediction: {
+    currentFollowers: number;
+    dailyGrowthRate: number;
+    predicted30d: number;
+    predicted90d: number;
+    trajectory: string;
+    confidence: number;
+  };
+  recommendations: GrowthRecommendation[];
+  engagementPatterns: { _id: string; count: number }[];
+  audienceSummary: { topCountry: string; peakDay: string; topDevice: string };
+}
+
+export interface GrowthRecommendation {
+  type: string;
+  priority: 'high' | 'medium' | 'info';
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface ActivityEventItem {
+  _id: string;
+  eventType: string;
+  actor?: { _id: string; username: string; avatar: string };
+  actorName?: string;
+  actorAvatar?: string;
+  post?: string;
+  postTitle?: string;
+  postThumbnail?: string;
+  message?: string;
+  amount?: number;
+  currency?: string;
+  milestone?: number;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface ActivityFeedData {
+  events: ActivityEventItem[];
+  unreadCount: number;
+  pagination: PaginationMeta;
+}
+
+export interface CreatorProfileData {
+  _id: string;
+  user: string;
+  isCreator: boolean;
+  creatorSince: string;
+  verificationStatus: string;
+  monetizationEnabled: boolean;
+  monetizationTier: string;
+  adRevenueEnabled: boolean;
+  sponsorshipEnabled: boolean;
+  donationsEnabled: boolean;
+  tipsEnabled: boolean;
+  subscriptionEnabled: boolean;
+  premiumContentEnabled: boolean;
+  affiliateEnabled: boolean;
+  payoutMethod: string;
+  minimumPayout: number;
+  payoutSchedule: string;
+  autoModeration: boolean;
+  commentFilter: {
+    enabled: boolean;
+    blockedWords: string[];
+    requireApproval: boolean;
+    blockLinks: boolean;
+  };
+  spamDetection: boolean;
+  dashboardLayout: string;
+  emailReports: { enabled: boolean; frequency: string };
+  notificationPreferences: Record<string, boolean>;
+  goals: {
+    followerTarget?: number;
+    monthlyRevenueTarget?: number;
+    engagementRateTarget?: number;
+    postsPerWeekTarget?: number;
+  };
+  lifetimeRevenue: number;
+  lifetimePayouts: number;
+  pendingBalance: number;
+  totalSubscribers: number;
+  totalDonationsReceived: number;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
 }
 

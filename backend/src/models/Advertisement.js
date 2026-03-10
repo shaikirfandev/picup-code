@@ -67,6 +67,26 @@ const advertisementSchema = new mongoose.Schema(
     // Targeting (optional)
     targetCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     targetTags: [String],
+    targetLocations: [String],
+    targetAudience: {
+      type: String,
+      enum: ['all', 'followers', 'new_users', 'returning_users'],
+      default: 'all',
+    },
+    // Promotion type
+    promotionType: {
+      type: String,
+      enum: ['standard', 'featured', 'homepage', 'category_boost'],
+      default: 'standard',
+    },
+    // Daily analytics snapshots (last 30 days)
+    dailyStats: [{
+      date: { type: Date, required: true },
+      impressions: { type: Number, default: 0 },
+      clicks: { type: Number, default: 0 },
+      views: { type: Number, default: 0 },
+      spent: { type: Number, default: 0 },
+    }],
   },
   {
     timestamps: true,

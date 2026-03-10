@@ -11,9 +11,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
     ],
   },
-  experimental: {
-    optimizeCss: true,
-  },
+
 };
 
 module.exports = nextConfig;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -15,21 +15,9 @@ import {
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
-export default function Header() {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+/** Tiny isolated clock — re-renders every second WITHOUT re-rendering Header */
+const HudClock = memo(function HudClock() {
   const [time, setTime] = useState('');
-
-  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () =>
-    setShowUserMenu(false)
-  );
-
-  /* Live HUD clock */
   useEffect(() => {
     const tick = () => {
       const d = new Date();
@@ -46,6 +34,28 @@ export default function Header() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+  return (
+    <div className="hidden lg:flex items-center gap-2 mr-2">
+      <span className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>
+        {time}
+      </span>
+      <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
+    </div>
+  );
+});
+
+export default function Header() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () =>
+    setShowUserMenu(false)
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,12 +175,7 @@ export default function Header() {
         {/* ── Right side ── */}
         <div className="flex items-center gap-2 ml-auto">
           {/* Live clock */}
-          <div className="hidden lg:flex items-center gap-2 mr-2">
-            <span className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>
-              {time}
-            </span>
-            <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
-          </div>
+          <HudClock />
 
           {/* Mobile search toggle */}
           <button

@@ -69,11 +69,11 @@ function FeaturedCard({ post }: { post: BlogPost }) {
                 {post.category}
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-display font-bold mb-3 group-hover:text-edith-cyan transition-colors line-clamp-2"
-              style={{ color: 'var(--edith-text)' }}>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 group-hover:text-edith-cyan transition-colors line-clamp-2"
+              style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)', letterSpacing: '-0.01em' }}>
               {post.title}
             </h2>
-            <p className="text-xs font-mono mb-5 line-clamp-3 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+            <p className="text-[15px] mb-5 line-clamp-3 leading-relaxed" style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-article)' }}>
               {post.excerpt}
             </p>
             <div className="flex items-center gap-3">
@@ -119,42 +119,36 @@ function BlogCard({ post }: { post: BlogPost }) {
             </div>
           )}
           <div className="absolute top-3 left-3">
-            <span className="text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-sm text-edith-cyan"
-              style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,212,255,0.2)' }}>
+            <span className="text-[11px] font-medium capitalize px-2.5 py-1 rounded-full backdrop-blur-md"
+              style={{ background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}>
               {post.category}
             </span>
           </div>
-          <div className="absolute top-3 right-3">
-            <span className="text-[8px] font-mono px-2 py-0.5 rounded backdrop-blur-sm flex items-center gap-1"
-              style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.7)' }}>
-              <Clock className="w-2.5 h-2.5" /> {post.readTime} min
-            </span>
-          </div>
         </div>
-        <div className="p-4">
-          <h3 className="text-sm font-semibold mb-2 line-clamp-2 group-hover:text-edith-cyan transition-colors leading-snug"
-            style={{ color: 'var(--edith-text)' }}>
+        <div className="p-5">
+          <h3 className="text-[17px] font-bold mb-2 line-clamp-2 group-hover:text-[var(--edith-accent)] transition-colors"
+            style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)', lineHeight: '1.3', letterSpacing: '-0.01em' }}>
             {post.title}
           </h3>
-          <p className="text-[11px] font-mono line-clamp-2 mb-3 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+          <p className="text-[15px] line-clamp-2 mb-4 leading-relaxed"
+            style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-article)' }}>
             {post.excerpt}
           </p>
           <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--edith-border)' }}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {post.author?.avatar ? (
-                <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+                <img src={post.author.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
               ) : (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold text-edith-cyan"
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold text-edith-cyan"
                   style={{ background: 'var(--edith-accent-muted)' }}>
                   {post.author?.displayName?.[0] || '?'}
                 </div>
               )}
-              <span className="text-[10px] font-mono" style={{ color: 'var(--edith-text-dim)' }}>{post.author?.displayName}</span>
+              <span className="text-[13px]" style={{ color: 'var(--edith-text-dim)', fontFamily: 'var(--edith-body)' }}>{post.author?.displayName}</span>
             </div>
-            <div className="flex items-center gap-2.5 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-              <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" />{post.viewsCount}</span>
+            <div className="flex items-center gap-3 text-[12px]" style={{ color: 'var(--edith-text-muted)', fontFamily: 'var(--edith-body)' }}>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.readTime} min</span>
               <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" />{post.likesCount}</span>
-              <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" />{post.commentsCount}</span>
             </div>
           </div>
         </div>
@@ -171,8 +165,8 @@ function SidebarArticle({ post, rank }: { post: BlogPost; rank: number }) {
         {String(rank).padStart(2, '0')}
       </span>
       <div className="flex-1 min-w-0">
-        <h4 className="text-xs font-semibold line-clamp-2 group-hover:text-edith-cyan transition-colors leading-snug mb-1"
-          style={{ color: 'var(--edith-text)' }}>
+        <h4 className="text-[13px] font-semibold line-clamp-2 group-hover:text-edith-cyan transition-colors leading-snug mb-1"
+          style={{ color: 'var(--edith-text)', fontFamily: 'var(--edith-article-heading)' }}>
           {post.title}
         </h4>
         <div className="flex items-center gap-2 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
@@ -280,13 +274,15 @@ export default function BlogPage() {
             </span>
             <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight"
+            style={{ fontFamily: 'var(--edith-article-heading)' }}>
             <span style={{ color: 'var(--edith-gradient-text)' }}>Latest </span>
             <span className="text-gradient">Tech Insights</span>
           </h1>
-          <p className="text-sm md:text-base font-mono max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: 'var(--edith-text-muted)' }}>
-            // Deep-dive articles on AI, web development, cybersecurity, and emerging technologies.
-            <br className="hidden md:block" /> Written by the community, curated for developers.
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: 'var(--edith-text-muted)', fontFamily: 'var(--edith-article)' }}>
+            Deep-dive articles on AI, web development, cybersecurity, and emerging technologies.
+            <br className="hidden md:block" />
+            Written by the community, curated for developers.
           </p>
           <form onSubmit={handleSearch} className="max-w-xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-edith-cyan/40" />

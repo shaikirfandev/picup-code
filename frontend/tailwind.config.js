@@ -44,9 +44,11 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Rajdhani', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
-        display: ['Orbitron', 'sans-serif'],
+        sans: ['var(--font-rajdhani)', 'Rajdhani', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-jetbrains)', 'JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        display: ['var(--font-orbitron)', 'Orbitron', 'sans-serif'],
+        serif: ['var(--font-lora)', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        article: ['var(--font-source-serif)', 'charter', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -115,5 +117,7 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };

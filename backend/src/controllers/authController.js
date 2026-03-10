@@ -22,7 +22,7 @@ exports.register = async (req, res, next) => {
       displayName: displayName || username,
     });
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role);
 
     user.refreshToken = refreshToken;
     user.lastLogin = new Date();
@@ -66,7 +66,7 @@ exports.login = async (req, res, next) => {
       return ApiResponse.error(res, 'Your account has been banned', 403);
     }
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role);
 
     user.refreshToken = refreshToken;
     user.lastLogin = new Date();
@@ -99,7 +99,7 @@ exports.login = async (req, res, next) => {
 exports.oauthCallback = async (req, res, next) => {
   try {
     const user = req.user;
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role);
 
     user.refreshToken = refreshToken;
     user.lastLogin = new Date();
@@ -137,7 +137,7 @@ exports.refreshToken = async (req, res, next) => {
       return ApiResponse.error(res, 'Invalid refresh token', 401);
     }
 
-    const tokens = generateTokens(user._id);
+    const tokens = generateTokens(user._id, user.role);
     user.refreshToken = tokens.refreshToken;
     await user.save();
 

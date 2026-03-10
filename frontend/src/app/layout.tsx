@@ -1,7 +1,52 @@
 import type { Metadata } from 'next';
 import { Providers } from './providers';
 import Header from '@/components/layout/Header';
+import ScrollHoverGuard from '@/components/ui/ScrollHoverGuard';
+import { JetBrains_Mono, Rajdhani, Lora, Source_Serif_4, Orbitron } from 'next/font/google';
 import './globals.css';
+
+/* ── Fonts via next/font — auto-preloaded, swap, no layout shift ── */
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+  preload: true,
+});
+
+const rajdhani = Rajdhani({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-rajdhani',
+  display: 'swap',
+  preload: true,
+});
+
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-orbitron',
+  display: 'swap',
+  preload: true,
+});
+
+const lora = Lora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-lora',
+  display: 'swap',
+  preload: true,
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-source-serif',
+  display: 'swap',
+  preload: true,
+});
 
 export const metadata: Metadata = {
   title: {
@@ -90,7 +135,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen">
+      <body className={`min-h-screen ${jetbrainsMono.variable} ${rajdhani.variable} ${orbitron.variable} ${lora.variable} ${sourceSerif.variable}`}>
+        <ScrollHoverGuard />
         <Providers>
           <Header />
           <main className="pt-14">{children}</main>

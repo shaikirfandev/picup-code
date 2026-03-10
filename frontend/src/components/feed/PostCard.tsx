@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import {
   Heart, Bookmark, ExternalLink, Share2, Sparkles,
   Play, Volume2, VolumeX, Eye, MoreHorizontal, Flag,
@@ -14,15 +13,21 @@ import { likePost, savePost, sharePost as sharePostThunk, trackClick } from '@/s
 import toast from 'react-hot-toast';
 import GlassTilt from '@/components/ui/GlassTilt';
 import MatrixText from '@/components/ui/MatrixText';
-import CyberHoverModal from '@/components/ui/CyberHoverModal';
 import ReportModal from '@/components/shared/ReportModal';
+
+// Lazy-load the heavy CyberHoverModal — only imported when first shown
+import dynamic from 'next/dynamic';
+const CyberHoverModal = dynamic(
+  () => import('@/components/ui/CyberHoverModal'),
+  { ssr: false }
+);
 
 interface PostCardProps {
   post: Post;
   index?: number;
 }
 
-export default function PostCard({ post, index = 0 }: PostCardProps) {
+function PostCardInner({ post, index = 0 }: PostCardProps) {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
   const dispatch = useAppDispatch();
 
@@ -38,6 +43,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardRect, setCardRect] = useState<DOMRect | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalEverShown, setModalEverShown] = useState(false);
   const modalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const rafRef = useRef<number | null>(null);
   const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,6 +54,24 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
+
+  // Stable aspect ratio — deterministic from post data, no Math.random()
+  const aspectRatio = useMemo(() => {
+    if (isVideo) {
+      return post.video?.height && post.video?.width ? post.video.height / post.video.width : 1.33;
+    }
+    if (post.image?.height && post.image?.width) {
+      return post.image.height / post.image.width;
+    }
+    // Deterministic pseudo-random from post ID
+    let hash = 0;
+    const id = post._id || '';
+    for (let i = 0; i < id.length; i++) {
+      hash = ((hash << 5) - hash) + id.charCodeAt(i);
+      hash |= 0;
+    }
+    return 1 + (Math.abs(hash) % 800) / 1000;
+  }, [isVideo, post._id, post.video?.height, post.video?.width, post.image?.height, post.image?.width]);
 
   // Keep cardRect in sync while hovering (handles scroll/resize)
   const updateCardRect = useCallback(() => {
@@ -68,6 +92,7 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
     // Show modal after short delay
     if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     modalTimerRef.current = setTimeout(() => {
+      setModalEverShown(true);
       setShowModal(true);
       updateCardRect();
     }, 400);
@@ -186,18 +211,11 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const aspectRatio = isVideo
-    ? (post.video?.height && post.video?.width ? post.video.height / post.video.width : 1.33)
-    : (post.image?.height && post.image?.width ? post.image.height / post.image.width : 1 + Math.random() * 0.8);
-
   const thumbnailUrl = isVideo ? (post.video?.thumbnailUrl || post.image?.url) : post.image?.url;
 
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.04, 0.25) }}
       className="pin-card group"
     >
       {/* GlassTilt gives 3D perspective tilt on mouse move */}
@@ -417,22 +435,28 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
         </Link>
       </GlassTilt>
 
-      {/* CyberHoverModal — interactive, user can move mouse to it */}
-      <CyberHoverModal
-        post={post}
-        cardRect={cardRect}
-        isVisible={showModal}
-        onModalMouseEnter={handleModalMouseEnter}
-        onModalMouseLeave={handleModalMouseLeave}
-      />
+      {/* CyberHoverModal — only loaded after first hover */}
+      {modalEverShown && (
+        <CyberHoverModal
+          post={post}
+          cardRect={cardRect}
+          isVisible={showModal}
+          onModalMouseEnter={handleModalMouseEnter}
+          onModalMouseLeave={handleModalMouseLeave}
+        />
+      )}
 
       {/* Report Modal */}
-      <ReportModal
-        postId={post._id}
-        postTitle={post.title}
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-      />
-    </motion.div>
+      {showReportModal && (
+        <ReportModal
+          postId={post._id}
+          postTitle={post.title}
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+    </div>
   );
 }
+
+export default memo(PostCardInner);

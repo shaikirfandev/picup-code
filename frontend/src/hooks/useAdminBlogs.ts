@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { adminAPI } from '@/lib/api';
 import { BlogPost } from '@/types';
 import toast from 'react-hot-toast';
+import { useDebounce } from '@/hooks';
 
 interface UseAdminBlogsOptions {
   initialLimit?: number;
@@ -37,6 +38,10 @@ export function useAdminBlogs({ initialLimit = 20 }: UseAdminBlogsOptions = {}) 
   });
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const debouncedSearch = useDebounce(state.search, 400);
+
+  // Reset to page 1 when debounced search changes
+  useEffect(() => { setState((s) => ({ ...s, page: 1 })); }, [debouncedSearch]);
 
   const fetchPosts = useCallback(async () => {
     setState((s) => ({ ...s, isLoading: true }));
@@ -46,7 +51,7 @@ export function useAdminBlogs({ initialLimit = 20 }: UseAdminBlogsOptions = {}) 
         limit: initialLimit,
         sort: state.sortBy,
       };
-      if (state.search) params.search = state.search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (state.statusFilter) params.status = state.statusFilter;
       if (state.categoryFilter) params.category = state.categoryFilter;
       if (state.deletedFilter) params.includeDeleted = state.deletedFilter;
@@ -62,7 +67,7 @@ export function useAdminBlogs({ initialLimit = 20 }: UseAdminBlogsOptions = {}) 
     } catch {
       setState((s) => ({ ...s, isLoading: false }));
     }
-  }, [state.page, state.search, state.statusFilter, state.categoryFilter, state.deletedFilter, state.sortBy, initialLimit]);
+  }, [state.page, debouncedSearch, state.statusFilter, state.categoryFilter, state.deletedFilter, state.sortBy, initialLimit]);
 
   useEffect(() => {
     fetchPosts();

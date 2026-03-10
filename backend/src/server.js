@@ -35,6 +35,7 @@ const adminPostRoutes = require('./routes/adminPosts');
 const adminBlogRoutes = require('./routes/adminBlogs');
 const analyticsRoutes = require('./routes/analytics');
 const creatorAnalyticsRoutes = require('./routes/creatorAnalytics');
+const creatorDashboardRoutes = require('./routes/creatorDashboard');
 
 const app = express();
 const server = http.createServer(app);
@@ -128,6 +129,7 @@ app.use('/api/ads', adRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/creator-analytics', creatorAnalyticsRoutes);
+app.use('/api/creator-dashboard', creatorDashboardRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -181,6 +183,27 @@ server.listen(PORT, () => {
 
   // Compute yesterday's stats on startup (if not already computed)
   computeDailyStats().catch(() => {});
+
+  // Start scheduled post publisher worker (checks every 60s)
+  const SchedulerWorker = require('./workers/schedulerWorker');
+  SchedulerWorker.start(60 * 1000);
+
+  // Start content metrics aggregation (runs daily at 1 AM)
+  const ContentMetricsWorker = require('./workers/contentMetricsWorker');
+  setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === 1 && now.getMinutes() < 5) {
+      ContentMetricsWorker.runAll().catch(err => {
+        console.error('[ContentMetricsWorker] Scheduled run failed:', err.message);
+      });
+    }
+  }, 5 * 60 * 1000);
+  // Run initial aggregation on startup
+  ContentMetricsWorker.runAll().catch(() => {});
+
+  // Start ad campaign worker (expiry, budget enforcement, daily stats)
+  const { startAdCampaignWorker } = require('./workers/adCampaignWorker');
+  startAdCampaignWorker();
 });
 
 module.exports = { app, server, io };

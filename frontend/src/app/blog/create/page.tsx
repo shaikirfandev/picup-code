@@ -160,8 +160,8 @@ export default function CreateBlogPost() {
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-transparent text-2xl md:text-3xl font-display font-bold outline-none placeholder:text-[var(--edith-text-muted)] pb-4"
-              style={{ color: 'var(--edith-text)', borderBottom: '1px solid var(--edith-border)' }}
+              className="w-full bg-transparent text-2xl md:text-3xl font-bold outline-none pb-4"
+              style={{ color: 'var(--edith-text)', borderBottom: '1px solid var(--edith-border)', fontFamily: 'var(--edith-article-heading)', letterSpacing: '-0.015em' }}
               placeholder="Article title..."
               required
             />
@@ -249,8 +249,7 @@ export default function CreateBlogPost() {
                 style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
                 {form.content ? (
                   <div
-                    className="prose prose-invert dark:prose-invert max-w-none prose-p:font-mono prose-p:text-sm prose-a:text-edith-cyan"
-                    style={{ color: 'var(--edith-text-secondary)' }}
+                    className="article-content"
                     dangerouslySetInnerHTML={{ __html: form.content }}
                   />
                 ) : (
@@ -283,8 +282,8 @@ export default function CreateBlogPost() {
                   ref={contentRef}
                   value={form.content}
                   onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  className="w-full h-80 resize-y text-sm font-mono p-4 outline-none"
-                  style={{ background: 'var(--edith-bg)', color: 'var(--edith-text)', border: 'none' }}
+                  className="w-full h-80 resize-y text-lg p-6 outline-none leading-relaxed"
+                  style={{ background: 'var(--edith-bg)', color: 'var(--edith-text)', border: 'none', fontFamily: 'var(--edith-article)' }}
                   placeholder="Write your article content here... HTML is supported."
                   required
                 />

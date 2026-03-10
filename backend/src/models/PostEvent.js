@@ -12,13 +12,11 @@ const postEventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Post',
       required: true,
-      index: true,
     },
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
     },
     viewerId: {
       type: mongoose.Schema.Types.ObjectId,
