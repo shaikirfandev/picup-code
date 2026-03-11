@@ -14,20 +14,22 @@ import toast from 'react-hot-toast';
 import GlassTilt from '@/components/ui/GlassTilt';
 import MatrixText from '@/components/ui/MatrixText';
 import ReportModal from '@/components/shared/ReportModal';
+import type { ModalColorTheme } from '@/components/ui/StarkHoverModal';
 
-// Lazy-load the heavy CyberHoverModal — only imported when first shown
+// Lazy-load the heavy StarkHoverModal — only imported when first shown
 import dynamic from 'next/dynamic';
-const CyberHoverModal = dynamic(
-  () => import('@/components/ui/CyberHoverModal'),
+const StarkHoverModal = dynamic(
+  () => import('@/components/ui/StarkHoverModal'),
   { ssr: false }
 );
 
 interface PostCardProps {
   post: Post;
   index?: number;
+  colorTheme?: ModalColorTheme;
 }
 
-function PostCardInner({ post, index = 0 }: PostCardProps) {
+function PostCardInner({ post, index = 0, colorTheme = 'stark' }: PostCardProps) {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
   const dispatch = useAppDispatch();
 
@@ -44,6 +46,7 @@ function PostCardInner({ post, index = 0 }: PostCardProps) {
   const [cardRect, setCardRect] = useState<DOMRect | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalEverShown, setModalEverShown] = useState(false);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const modalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const rafRef = useRef<number | null>(null);
   const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,20 +90,25 @@ function PostCardInner({ post, index = 0 }: PostCardProps) {
 
   const handleMouseEnter = useCallback(() => {
     cancelPendingLeave();
-    setIsHovering(true);
-    if (isVideo && videoRef.current) videoRef.current.play().catch(() => {});
-    // Show modal after short delay
+    // Stage 1: small debounce before showing any hover effects (avoids flicker while scrolling)
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      setIsHovering(true);
+      if (isVideo && videoRef.current) videoRef.current.play().catch(() => {});
+    }, 120);
+    // Stage 2: open modal only after sustained hover
     if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     modalTimerRef.current = setTimeout(() => {
       setModalEverShown(true);
       setShowModal(true);
       updateCardRect();
-    }, 400);
+    }, 600);
   }, [isVideo, updateCardRect, cancelPendingLeave]);
 
   const dismissAll = useCallback(() => {
     setIsHovering(false);
     if (isVideo && videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     setShowModal(false);
@@ -111,19 +119,22 @@ function PostCardInner({ post, index = 0 }: PostCardProps) {
 
   const handleMouseLeave = useCallback(() => {
     setIsHovering(false);
+    if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+    if (modalTimerRef.current) { clearTimeout(modalTimerRef.current); modalTimerRef.current = null; }
     cancelPendingLeave();
     leaveTimerRef.current = setTimeout(() => {
       if (!isModalHoveredRef.current) dismissAll();
-    }, 250);
+    }, 180);
   }, [cancelPendingLeave, dismissAll]);
 
   // When modal becomes un-hovered and card isn't hovered, dismiss
   useEffect(() => {
     if (!isModalHovered && !isHovering && showModal) {
-      leaveTimerRef.current = setTimeout(dismissAll, 200);
+      cancelPendingLeave();
+      leaveTimerRef.current = setTimeout(dismissAll, 150);
     }
     return () => { if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current); };
-  }, [isModalHovered, isHovering, showModal, dismissAll]);
+  }, [isModalHovered, isHovering, showModal, dismissAll, cancelPendingLeave]);
 
   const handleModalMouseEnter = useCallback(() => {
     cancelPendingLeave();
@@ -136,12 +147,13 @@ function PostCardInner({ post, index = 0 }: PostCardProps) {
     isModalHoveredRef.current = false;
     cancelPendingLeave();
     leaveTimerRef.current = setTimeout(() => {
-      dismissAll();
-    }, 200);
+      if (!isModalHoveredRef.current) dismissAll();
+    }, 150);
   }, [cancelPendingLeave, dismissAll]);
 
   // Cleanup on unmount
   useEffect(() => () => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     if (modalTimerRef.current) clearTimeout(modalTimerRef.current);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
@@ -435,12 +447,13 @@ function PostCardInner({ post, index = 0 }: PostCardProps) {
         </Link>
       </GlassTilt>
 
-      {/* CyberHoverModal — only loaded after first hover */}
+      {/* StarkHoverModal — Iron Man 3 investigation HUD */}
       {modalEverShown && (
-        <CyberHoverModal
+        <StarkHoverModal
           post={post}
           cardRect={cardRect}
           isVisible={showModal}
+          colorTheme={colorTheme}
           onModalMouseEnter={handleModalMouseEnter}
           onModalMouseLeave={handleModalMouseLeave}
         />
