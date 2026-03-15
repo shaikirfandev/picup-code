@@ -71,22 +71,22 @@ export default function AdminPostsPage() {
           <div className="flex items-center gap-2.5">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--edith-accent-muted)' }}
+              style={{ background: 'var(--accent-muted)' }}
             >
-              <FileImage className="w-4 h-4 text-edith-cyan" />
+              <FileImage className="w-4 h-4 text-accent" />
             </div>
-            <h1 className="text-lg font-mono font-bold tracking-tight" style={{ color: 'var(--edith-text)' }}>
+            <h1 className="text-lg font-mono font-bold tracking-tight" style={{ color: 'var(--foreground)' }}>
               Post Management
             </h1>
           </div>
-          <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
             {total} total posts &middot; soft-delete + audit logging enabled
           </p>
         </div>
         <button
           onClick={refresh}
-          className="p-2 rounded-lg transition-colors hover:bg-edith-cyan/10"
-          style={{ color: 'var(--edith-text-muted)' }}
+          className="p-2 rounded-lg transition-colors hover:bg-accent/10"
+          style={{ color: 'var(--text-tertiary)' }}
           title="Refresh"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -96,33 +96,33 @@ export default function AdminPostsPage() {
       {/* ---------- Search + filter toggle ---------- */}
       <div className="flex gap-2 mb-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--edith-text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search posts by title or tag..."
             className="w-full h-9 text-xs font-mono rounded-lg pl-9 pr-3 outline-none transition-all"
             style={{
-              background: 'var(--edith-elevated)',
-              border: '1px solid var(--edith-border)',
-              color: 'var(--edith-text)',
+              background: 'var(--surface-elevated)',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
             }}
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`h-9 px-3 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-colors ${
-            showFilters || hasActiveFilters ? 'bg-edith-cyan/10 text-edith-cyan' : ''
+            showFilters || hasActiveFilters ? 'bg-accent/10 text-accent' : ''
           }`}
           style={{
-            border: '1px solid var(--edith-border)',
-            color: showFilters || hasActiveFilters ? undefined : 'var(--edith-text-muted)',
+            border: '1px solid var(--border)',
+            color: showFilters || hasActiveFilters ? undefined : 'var(--text-tertiary)',
           }}
         >
           <Filter className="w-3 h-3" />
           Filters
           {hasActiveFilters && (
-            <span className="w-1.5 h-1.5 rounded-full bg-edith-cyan" />
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           )}
         </button>
       </div>
@@ -131,7 +131,7 @@ export default function AdminPostsPage() {
       {showFilters && (
         <div
           className="flex flex-wrap gap-2 mb-4 p-3 rounded-lg"
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
           <Select
             label="Status"
@@ -187,11 +187,11 @@ export default function AdminPostsPage() {
       {selectedIds.size > 0 && (
         <div
           className="flex items-center justify-between gap-4 mb-3 px-4 py-2.5 rounded-lg"
-          style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-cyan-dim, rgba(0,212,255,0.15))' }}
+          style={{ background: 'var(--accent-muted)', border: '1px solid var(--accent-muted)' }}
         >
           <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-edith-cyan" />
-            <span className="text-xs font-mono text-edith-cyan">
+            <Shield className="w-3.5 h-3.5 text-accent" />
+            <span className="text-xs font-mono text-accent">
               {selectedIds.size} post{selectedIds.size > 1 ? 's' : ''} selected
             </span>
           </div>
@@ -199,7 +199,7 @@ export default function AdminPostsPage() {
             <button
               onClick={clearSelection}
               className="h-7 px-2.5 text-[10px] font-mono rounded-md transition-colors"
-              style={{ color: 'var(--edith-text-muted)' }}
+              style={{ color: 'var(--text-tertiary)' }}
             >
               Deselect
             </button>
@@ -229,25 +229,25 @@ export default function AdminPostsPage() {
       {totalPages > 1 && (
         <div
           className="flex items-center justify-between mt-3 px-4 py-2.5 rounded-lg"
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
-          <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
             Page {page} of {totalPages} &middot; {total} posts
           </p>
           <div className="flex gap-1">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page <= 1}
-              className="p-1.5 rounded-lg transition-colors hover:bg-edith-cyan/10 disabled:opacity-30 disabled:pointer-events-none"
-              style={{ color: 'var(--edith-text-muted)' }}
+              className="p-1.5 rounded-lg transition-colors hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none"
+              style={{ color: 'var(--text-tertiary)' }}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages}
-              className="p-1.5 rounded-lg transition-colors hover:bg-edith-cyan/10 disabled:opacity-30 disabled:pointer-events-none"
-              style={{ color: 'var(--edith-text-muted)' }}
+              className="p-1.5 rounded-lg transition-colors hover:bg-accent/10 disabled:opacity-30 disabled:pointer-events-none"
+              style={{ color: 'var(--text-tertiary)' }}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -281,7 +281,7 @@ function Select({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--edith-text-muted)' }}>
+      <span className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
         {label.toUpperCase()}
       </span>
       <select
@@ -289,9 +289,9 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
         className="h-8 px-2 pr-6 text-[11px] font-mono rounded-md outline-none appearance-none cursor-pointer"
         style={{
-          background: 'var(--edith-surface)',
-          border: '1px solid var(--edith-border)',
-          color: 'var(--edith-text)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          color: 'var(--foreground)',
         }}
       >
         {options.map((o) => (

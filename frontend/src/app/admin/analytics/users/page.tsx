@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ICellRendererParams, GridReadyEvent } from 'ag-grid-community';
-import { useEdithGridTheme } from '@/lib/agGridTheme';
+import { usePicupGridTheme } from '@/lib/agGridTheme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -39,19 +39,19 @@ function UserCellRenderer(params: ICellRendererParams) {
       {u.avatar ? (
         <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
       ) : (
-        <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)] flex items-center justify-center text-xs font-bold text-[var(--edith-accent)] flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)] flex items-center justify-center text-xs font-bold text-[var(--accent)] flex-shrink-0">
           {u.displayName?.[0] || '?'}
         </div>
       )}
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          <p className="text-sm font-medium truncate leading-tight" style={{ color: 'var(--edith-text)' }}>{u.displayName || u.username}</p>
+          <p className="text-sm font-medium truncate leading-tight" style={{ color: 'var(--foreground)' }}>{u.displayName || u.username}</p>
           {u.isVerified && <CheckCircle className="w-3 h-3 text-blue-500 flex-shrink-0" />}
           {u.role !== 'user' && roleStyle && (
             <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${roleStyle}`}>{u.role}</span>
           )}
         </div>
-        <p className="text-[10px] leading-tight" style={{ color: 'var(--edith-text-muted)' }}>@{u.username}</p>
+        <p className="text-[10px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>@{u.username}</p>
       </div>
     </div>
   );
@@ -62,8 +62,8 @@ function CountryCellRenderer(params: ICellRendererParams) {
   if (!u) return null;
   return (
     <div className="flex items-center gap-1.5">
-      <Globe className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--edith-text-muted)' }} />
-      <span className="text-xs" style={{ color: 'var(--edith-text-dim)' }}>{u.lastLoginCountry || '—'}</span>
+      <Globe className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--text-tertiary)' }} />
+      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.lastLoginCountry || '—'}</span>
     </div>
   );
 }
@@ -91,7 +91,7 @@ export default function AnalyticsUsersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const gridRef = useRef<AgGridReact>(null);
-  const edithTheme = useEdithGridTheme();
+  const picupTheme = usePicupGridTheme();
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -149,7 +149,7 @@ export default function AnalyticsUsersPage() {
       field: 'email',
       flex: 1.5,
       minWidth: 180,
-      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' } as any,
+      cellStyle: { color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' } as any,
     },
     {
       headerName: 'Country',
@@ -163,7 +163,7 @@ export default function AnalyticsUsersPage() {
       field: 'lastLogin',
       width: 120,
       valueFormatter: (p) => p.value ? timeAgo(p.value) : 'Never',
-      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '12px' } as any,
+      cellStyle: { color: 'var(--text-secondary)', fontSize: '12px' } as any,
       sortable: true,
     },
     {
@@ -178,7 +178,7 @@ export default function AnalyticsUsersPage() {
       headerName: 'Device',
       field: 'lastLoginDevice',
       width: 140,
-      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '11px' } as any,
+      cellStyle: { color: 'var(--text-secondary)', fontSize: '11px' } as any,
       valueFormatter: (p) => p.value || '—',
     },
     {
@@ -209,8 +209,8 @@ export default function AnalyticsUsersPage() {
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--edith-text)' }}>User Management</h1>
-            <p className="text-sm" style={{ color: 'var(--edith-text-muted)' }}>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>User Management</h1>
+            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
               {total.toLocaleString()} registered users
             </p>
           </div>
@@ -226,7 +226,7 @@ export default function AnalyticsUsersPage() {
       {/* Search + Filter toggle */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
           <input
             type="text"
             placeholder="Search by name, email, username..."
@@ -247,12 +247,12 @@ export default function AnalyticsUsersPage() {
       {showFilters && (
         <div className="card p-4 mb-4 flex flex-wrap items-center gap-4">
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--edith-text-dim)' }}>Role</label>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Role</label>
             <select
               value={roleFilter}
               onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
               className="px-3 py-1.5 rounded-lg text-sm"
-              style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             >
               <option value="">All</option>
               <option value="admin">Admin</option>
@@ -261,12 +261,12 @@ export default function AnalyticsUsersPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--edith-text-dim)' }}>Status</label>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Status</label>
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
               className="px-3 py-1.5 rounded-lg text-sm"
-              style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             >
               <option value="">All</option>
               <option value="active">Active</option>
@@ -289,19 +289,19 @@ export default function AnalyticsUsersPage() {
           <div className="space-y-2 p-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 animate-pulse">
-                <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)]" />
+                <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)]" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 rounded bg-[var(--edith-accent-muted)]" style={{ width: `${40 + Math.random() * 60}%` }} />
-                  <div className="h-2 w-24 rounded bg-[var(--edith-accent-muted)]" />
+                  <div className="h-3 rounded bg-[var(--accent-muted)]" style={{ width: `${40 + Math.random() * 60}%` }} />
+                  <div className="h-2 w-24 rounded bg-[var(--accent-muted)]" />
                 </div>
-                <div className="h-3 w-16 rounded bg-[var(--edith-accent-muted)]" />
+                <div className="h-3 w-16 rounded bg-[var(--accent-muted)]" />
               </div>
             ))}
           </div>
         ) : (
           <AgGridReact
             ref={gridRef}
-            theme={edithTheme}
+            theme={picupTheme}
             rowData={rowData}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
@@ -310,7 +310,7 @@ export default function AnalyticsUsersPage() {
             animateRows={true}
             suppressCellFocus={true}
             onGridReady={onGridReady}
-            overlayNoRowsTemplate='<span style="color: var(--edith-text-muted)">No users found</span>'
+            overlayNoRowsTemplate='<span style="color: var(--text-tertiary)">No users found</span>'
           />
         )}
       </div>
@@ -318,9 +318,9 @@ export default function AnalyticsUsersPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3 px-4 py-2.5 rounded-lg"
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
-          <p className="text-xs font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
             Page {page} of {totalPages} · {total.toLocaleString()} users
           </p>
           <div className="flex gap-1">

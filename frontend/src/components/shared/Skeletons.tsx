@@ -4,14 +4,14 @@ export function PostCardSkeleton() {
   const height = 200 + Math.random() * 200;
 
   return (
-    <div className="mb-3 break-inside-avoid">
-      <div className="rounded-2xl overflow-hidden">
-        <div className="skeleton shimmer" style={{ height: `${height}px` }} />
-        <div className="p-3 space-y-2">
-          <div className="skeleton h-4 w-3/4 rounded" />
+    <div className="mb-4 break-inside-avoid">
+      <div className="overflow-hidden" style={{ borderRadius: 'var(--radius-lg)' }}>
+        <div className="skeleton" style={{ height: `${height}px` }} />
+        <div className="px-1 pt-2.5 pb-1 space-y-2">
+          <div className="skeleton h-4 w-3/4" style={{ borderRadius: 'var(--radius-sm)' }} />
           <div className="flex items-center gap-2">
-            <div className="skeleton w-6 h-6 rounded-full" />
-            <div className="skeleton h-3 w-20 rounded" />
+            <div className="skeleton w-[22px] h-[22px] rounded-full" />
+            <div className="skeleton h-3 w-20" style={{ borderRadius: 'var(--radius-sm)' }} />
           </div>
         </div>
       </div>
@@ -21,7 +21,7 @@ export function PostCardSkeleton() {
 
 export function FeedSkeleton({ count = 12 }: { count?: number }) {
   return (
-    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-3 px-4">
+    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4">
       {Array.from({ length: count }).map((_, i) => (
         <PostCardSkeleton key={i} />
       ))}

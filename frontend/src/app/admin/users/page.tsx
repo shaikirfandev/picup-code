@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ICellRendererParams, GridReadyEvent } from 'ag-grid-community';
-import { useEdithGridTheme } from '@/lib/agGridTheme';
+import { usePicupGridTheme } from '@/lib/agGridTheme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -21,13 +21,13 @@ function UserCellRenderer(params: ICellRendererParams) {
       {u.avatar ? (
         <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
       ) : (
-        <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--edith-accent)] flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--accent)] flex-shrink-0">
           {u.displayName?.[0]?.toUpperCase() || '?'}
         </div>
       )}
       <div className="min-w-0">
         <p className="text-sm font-medium truncate leading-tight">{u.displayName}</p>
-        <p className="text-[11px] text-[var(--edith-text-dim)] truncate leading-tight">@{u.username}</p>
+        <p className="text-[11px] text-[var(--text-secondary)] truncate leading-tight">@{u.username}</p>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ function RoleCellRenderer(params: ICellRendererParams) {
       value={u.role}
       onChange={(e) => _handleRoleChange(u._id, e.target.value)}
       className="text-xs px-2 py-1 rounded-lg outline-none cursor-pointer"
-      style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
     >
       <option value="user">User</option>
       <option value="moderator">Moderator</option>
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const gridRef = useRef<AgGridReact>(null);
-  const edithTheme = useEdithGridTheme();
+  const picupTheme = usePicupGridTheme();
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -144,7 +144,7 @@ export default function AdminUsersPage() {
       field: 'email',
       flex: 1.5,
       minWidth: 180,
-      cellStyle: { color: 'var(--edith-text-dim)', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' } as any,
+      cellStyle: { color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' } as any,
     },
     {
       headerName: 'Role',
@@ -197,14 +197,14 @@ export default function AdminUsersPage() {
     <div className="p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--edith-text)' }}>Users</h1>
-          <p style={{ color: 'var(--edith-text-muted)' }}>Manage platform users</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Users</h1>
+          <p style={{ color: 'var(--text-tertiary)' }}>Manage platform users</p>
         </div>
       </div>
 
       {/* Search */}
       <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
         <input
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -219,19 +219,19 @@ export default function AdminUsersPage() {
           <div className="space-y-2 p-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 animate-pulse">
-                <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)]" />
+                <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)]" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-40 rounded bg-[var(--edith-accent-muted)]" />
-                  <div className="h-2 w-24 rounded bg-[var(--edith-accent-muted)]" />
+                  <div className="h-3 w-40 rounded bg-[var(--accent-muted)]" />
+                  <div className="h-2 w-24 rounded bg-[var(--accent-muted)]" />
                 </div>
-                <div className="h-3 w-16 rounded bg-[var(--edith-accent-muted)]" />
+                <div className="h-3 w-16 rounded bg-[var(--accent-muted)]" />
               </div>
             ))}
           </div>
         ) : (
           <AgGridReact
             ref={gridRef}
-            theme={edithTheme}
+            theme={picupTheme}
             rowData={rowData}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
@@ -240,7 +240,7 @@ export default function AdminUsersPage() {
             animateRows={true}
             suppressCellFocus={true}
             onGridReady={onGridReady}
-            overlayNoRowsTemplate='<span style="color: var(--edith-text-muted)">No users found</span>'
+            overlayNoRowsTemplate='<span style="color: var(--text-tertiary)">No users found</span>'
           />
         )}
       </div>
@@ -248,9 +248,9 @@ export default function AdminUsersPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3 px-4 py-2.5 rounded-lg"
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
-          <p className="text-xs font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
             Page {page} of {totalPages}
           </p>
           <div className="flex gap-1">

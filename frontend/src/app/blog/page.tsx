@@ -45,7 +45,7 @@ function timeAgo(d: string) {
 function FeaturedCard({ post }: { post: BlogPost }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block">
-      <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid var(--edith-border)' }}>
+      <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
         <div className="grid md:grid-cols-2">
           <div className="aspect-video md:aspect-auto md:h-full overflow-hidden">
             {post.coverImage?.url ? (
@@ -53,45 +53,45 @@ function FeaturedCard({ post }: { post: BlogPost }) {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             ) : (
               <div className="w-full h-full min-h-[280px] flex items-center justify-center"
-                style={{ background: 'var(--edith-panel)' }}>
-                <BookOpen className="w-16 h-16 text-edith-cyan/20" />
+                style={{ background: 'var(--surface)' }}>
+                <BookOpen className="w-16 h-16 text-accent/20" />
               </div>
             )}
           </div>
-          <div className="p-6 md:p-8 flex flex-col justify-center" style={{ background: 'var(--edith-panel)' }}>
+          <div className="p-6 md:p-8 flex flex-col justify-center" style={{ background: 'var(--surface)' }}>
             <div className="flex items-center gap-2 mb-4">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider text-edith-cyan"
-                style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)' }}>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider text-accent"
+                style={{ background: 'var(--accent-muted)', border: '1px solid var(--border-strong)' }}>
                 <Sparkles className="w-2.5 h-2.5" /> Featured
               </span>
               <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded"
-                style={{ color: 'var(--edith-text-dim)', background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}>
+                style={{ color: 'var(--text-secondary)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                 {post.category}
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-display font-bold mb-3 group-hover:text-edith-cyan transition-colors line-clamp-2"
-              style={{ color: 'var(--edith-text)' }}>
+            <h2 className="text-xl md:text-2xl font-semibold font-bold mb-3 group-hover:text-accent transition-colors line-clamp-2"
+              style={{ color: 'var(--foreground)' }}>
               {post.title}
             </h2>
-            <p className="text-xs font-mono mb-5 line-clamp-3 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+            <p className="text-xs font-mono mb-5 line-clamp-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {post.excerpt}
             </p>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 {post.author?.avatar ? (
-                  <img src={post.author.avatar} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-edith-cyan/20" />
+                  <img src={post.author.avatar} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-accent/20" />
                 ) : (
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-edith-cyan"
-                    style={{ background: 'var(--edith-accent-muted)' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-accent"
+                    style={{ background: 'var(--accent-muted)' }}>
                     {post.author?.displayName?.[0] || '?'}
                   </div>
                 )}
                 <div>
-                  <p className="text-[11px] font-semibold" style={{ color: 'var(--edith-text-secondary)' }}>{post.author?.displayName}</p>
-                  <p className="text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>{formatDate(post.createdAt)}</p>
+                  <p className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>{post.author?.displayName}</p>
+                  <p className="text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>{formatDate(post.createdAt)}</p>
                 </div>
               </div>
-              <div className="ml-auto flex items-center gap-3 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+              <div className="ml-auto flex items-center gap-3 text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.readTime} min</span>
                 <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {post.viewsCount}</span>
               </div>
@@ -108,18 +108,18 @@ function BlogCard({ post }: { post: BlogPost }) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block">
       <article className="rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg"
-        style={{ background: 'var(--edith-card-bg)', border: '1px solid var(--edith-border)', boxShadow: 'var(--edith-shadow-sm)' }}>
+        style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
         <div className="aspect-video overflow-hidden relative">
           {post.coverImage?.url ? (
             <img src={post.coverImage.url} alt={post.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--edith-panel)' }}>
-              <BookOpen className="w-10 h-10 text-edith-cyan/15" />
+            <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--surface)' }}>
+              <BookOpen className="w-10 h-10 text-accent/15" />
             </div>
           )}
           <div className="absolute top-3 left-3">
-            <span className="text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-sm text-edith-cyan"
+            <span className="text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded backdrop-blur-sm text-accent"
               style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,212,255,0.2)' }}>
               {post.category}
             </span>
@@ -132,26 +132,26 @@ function BlogCard({ post }: { post: BlogPost }) {
           </div>
         </div>
         <div className="p-4">
-          <h3 className="text-sm font-semibold mb-2 line-clamp-2 group-hover:text-edith-cyan transition-colors leading-snug"
-            style={{ color: 'var(--edith-text)' }}>
+          <h3 className="text-sm font-semibold mb-2 line-clamp-2 group-hover:text-accent transition-colors leading-snug"
+            style={{ color: 'var(--foreground)' }}>
             {post.title}
           </h3>
-          <p className="text-[11px] font-mono line-clamp-2 mb-3 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+          <p className="text-[11px] font-mono line-clamp-2 mb-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             {post.excerpt}
           </p>
-          <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--edith-border)' }}>
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2">
               {post.author?.avatar ? (
                 <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
               ) : (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold text-edith-cyan"
-                  style={{ background: 'var(--edith-accent-muted)' }}>
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold text-accent"
+                  style={{ background: 'var(--accent-muted)' }}>
                   {post.author?.displayName?.[0] || '?'}
                 </div>
               )}
-              <span className="text-[10px] font-mono" style={{ color: 'var(--edith-text-dim)' }}>{post.author?.displayName}</span>
+              <span className="text-[10px] font-mono" style={{ color: 'var(--text-secondary)' }}>{post.author?.displayName}</span>
             </div>
-            <div className="flex items-center gap-2.5 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+            <div className="flex items-center gap-2.5 text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
               <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" />{post.viewsCount}</span>
               <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" />{post.likesCount}</span>
               <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" />{post.commentsCount}</span>
@@ -166,16 +166,16 @@ function BlogCard({ post }: { post: BlogPost }) {
 /* ──────────── Sidebar Article ──────────── */
 function SidebarArticle({ post, rank }: { post: BlogPost; rank: number }) {
   return (
-    <Link href={`/blog/${post.slug}`} className="flex gap-3 group items-start py-3" style={{ borderBottom: '1px solid var(--edith-border)' }}>
-      <span className="text-lg font-display font-bold text-edith-cyan/20 shrink-0 w-6 text-center leading-none mt-0.5">
+    <Link href={`/blog/${post.slug}`} className="flex gap-3 group items-start py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+      <span className="text-lg font-semibold font-bold text-accent/20 shrink-0 w-6 text-center leading-none mt-0.5">
         {String(rank).padStart(2, '0')}
       </span>
       <div className="flex-1 min-w-0">
-        <h4 className="text-xs font-semibold line-clamp-2 group-hover:text-edith-cyan transition-colors leading-snug mb-1"
-          style={{ color: 'var(--edith-text)' }}>
+        <h4 className="text-xs font-semibold line-clamp-2 group-hover:text-accent transition-colors leading-snug mb-1"
+          style={{ color: 'var(--foreground)' }}>
           {post.title}
         </h4>
-        <div className="flex items-center gap-2 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+        <div className="flex items-center gap-2 text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
           <span>{post.author?.displayName}</span>
           <span>·</span>
           <span>{timeAgo(post.createdAt)}</span>
@@ -269,34 +269,34 @@ export default function BlogPage() {
       <section className="relative py-14 md:py-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-25"
-            style={{ background: 'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)' }} />
+            style={{ background: 'radial-gradient(circle, transparent 0%, transparent 70%)' }} />
         </div>
         <div className="relative max-w-6xl mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6"
-            style={{ background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}>
-            <BookOpen className="w-3.5 h-3.5 text-edith-cyan" />
-            <span className="text-[10px] font-mono font-medium tracking-widest uppercase" style={{ color: 'var(--edith-text-dim)' }}>
-              E.D.I.T.H Tech Blog
+            style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+            <BookOpen className="w-3.5 h-3.5 text-accent" />
+            <span className="text-[10px] font-mono font-medium tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>
+              Picup Blog
             </span>
-            <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-success/60 animate-pulse" />
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 tracking-tight">
-            <span style={{ color: 'var(--edith-gradient-text)' }}>Latest </span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold font-bold mb-4 tracking-tight">
+            <span style={{ color: 'var(--foreground)' }}>Latest </span>
             <span className="text-gradient">Tech Insights</span>
           </h1>
-          <p className="text-sm md:text-base font-mono max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-sm md:text-base font-mono max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
             // Deep-dive articles on AI, web development, cybersecurity, and emerging technologies.
             <br className="hidden md:block" /> Written by the community, curated for developers.
           </p>
           <form onSubmit={handleSearch} className="max-w-xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-edith-cyan/40" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/40" />
             <input
               type="text"
               placeholder="Search articles, tutorials, topics..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-11 pr-24 py-3 text-xs font-mono rounded-lg outline-none transition-all"
-              style={{ background: 'var(--edith-input-bg)', border: '1px solid var(--edith-input-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--foreground)' }}
             />
             <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary text-[10px] px-4 py-1.5">
               Search
@@ -304,18 +304,18 @@ export default function BlogPage() {
           </form>
           <div className="flex items-center justify-center gap-6 mt-6">
             <div className="text-center">
-              <span className="text-lg font-display font-bold text-edith-cyan">{totalPosts || '—'}</span>
-              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Articles</p>
+              <span className="text-lg font-semibold font-bold text-accent">{totalPosts || '—'}</span>
+              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Articles</p>
             </div>
-            <div className="w-px h-8" style={{ background: 'var(--edith-border)' }} />
+            <div className="w-px h-8" style={{ background: 'var(--border)' }} />
             <div className="text-center">
-              <span className="text-lg font-display font-bold text-edith-cyan">{BLOG_CATEGORIES.length - 1}</span>
-              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Categories</p>
+              <span className="text-lg font-semibold font-bold text-accent">{BLOG_CATEGORIES.length - 1}</span>
+              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Categories</p>
             </div>
-            <div className="w-px h-8" style={{ background: 'var(--edith-border)' }} />
+            <div className="w-px h-8" style={{ background: 'var(--border)' }} />
             <div className="text-center">
-              <span className="text-lg font-display font-bold text-edith-cyan">Open</span>
-              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>Submissions</p>
+              <span className="text-lg font-semibold font-bold text-accent">Open</span>
+              <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Submissions</p>
             </div>
           </div>
         </div>
@@ -336,11 +336,11 @@ export default function BlogPage() {
               key={cat.id}
               onClick={() => setCategory(cat.id)}
               className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                category === cat.id ? 'text-edith-cyan' : ''
+                category === cat.id ? 'text-accent' : ''
               }`}
               style={category === cat.id
-                ? { background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)', boxShadow: 'var(--edith-shadow-sm)' }
-                : { background: 'transparent', border: '1px solid transparent', color: 'var(--edith-tag-text)' }
+                ? { background: 'var(--accent-muted)', border: '1px solid var(--border-strong)', boxShadow: 'var(--shadow-sm)' }
+                : { background: 'transparent', border: '1px solid transparent', color: 'var(--tag-text)' }
               }
             >
               <span>{cat.icon}</span> {cat.name}
@@ -363,11 +363,11 @@ export default function BlogPage() {
                 key={opt.key}
                 onClick={() => setSort(opt.key)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono font-medium tracking-wider transition-all ${
-                  sort === opt.key ? 'text-edith-cyan' : ''
+                  sort === opt.key ? 'text-accent' : ''
                 }`}
                 style={sort === opt.key
-                  ? { background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)' }
-                  : { background: 'transparent', border: '1px solid transparent', color: 'var(--edith-tag-text)' }
+                  ? { background: 'var(--accent-muted)', border: '1px solid var(--border-strong)' }
+                  : { background: 'transparent', border: '1px solid transparent', color: 'var(--tag-text)' }
                 }
               >
                 <opt.icon className="w-3 h-3" /> {opt.label.toUpperCase()}
@@ -390,7 +390,7 @@ export default function BlogPage() {
             {isLoading && posts.length === 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+                  <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                     <div className="skeleton shimmer aspect-video" />
                     <div className="p-4 space-y-2">
                       <div className="skeleton h-3 w-16 rounded" />
@@ -405,12 +405,12 @@ export default function BlogPage() {
                 ))}
               </div>
             ) : posts.length === 0 ? (
-              <div className="text-center py-20 rounded-xl" style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
-                <BookOpen className="w-12 h-12 mx-auto text-edith-cyan/20 mb-4" />
-                <h3 className="text-base font-display font-semibold mb-2" style={{ color: 'var(--edith-text)' }}>
+              <div className="text-center py-20 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <BookOpen className="w-12 h-12 mx-auto text-accent/20 mb-4" />
+                <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                   No articles found
                 </h3>
-                <p className="text-xs font-mono mb-4" style={{ color: 'var(--edith-text-dim)' }}>
+                <p className="text-xs font-mono mb-4" style={{ color: 'var(--text-secondary)' }}>
                   {search ? `No results for "${search}"` : 'Be the first to share your knowledge!'}
                 </p>
                 {isAuthenticated && (
@@ -432,7 +432,7 @@ export default function BlogPage() {
                       className="btn-secondary gap-2 text-xs px-6">
                       {isLoading ? (
                         <span className="flex items-center gap-2">
-                          <span className="w-3 h-3 border-2 border-edith-cyan/30 border-t-edith-cyan rounded-full animate-spin" /> Loading...
+                          <span className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" /> Loading...
                         </span>
                       ) : (
                         <><ArrowRight className="w-3.5 h-3.5" /> Load More Articles</>
@@ -448,20 +448,20 @@ export default function BlogPage() {
           <aside className="space-y-6">
             {/* Write CTA */}
             <div className="rounded-xl p-5 relative overflow-hidden"
-              style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20"
-                style={{ background: 'radial-gradient(circle, var(--edith-radial-hero), transparent)' }} />
+                style={{ background: 'radial-gradient(circle, transparent, transparent)' }} />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: 'var(--edith-accent-muted)' }}>
-                    <Sparkles className="w-4 h-4 text-edith-cyan" />
+                    style={{ background: 'var(--accent-muted)' }}>
+                    <Sparkles className="w-4 h-4 text-accent" />
                   </div>
-                  <h3 className="text-sm font-display font-bold" style={{ color: 'var(--edith-text)' }}>
+                  <h3 className="text-sm font-semibold font-bold" style={{ color: 'var(--foreground)' }}>
                     Share Your Knowledge
                   </h3>
                 </div>
-                <p className="text-[11px] font-mono mb-4 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+                <p className="text-[11px] font-mono mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   Write articles about technology, share tutorials, and contribute to the community.
                 </p>
                 <Link href={isAuthenticated ? '/blog/create' : '/login'}
@@ -474,10 +474,10 @@ export default function BlogPage() {
             {/* Trending */}
             {trendingPosts.length > 0 && (
               <div className="rounded-xl p-5"
-                style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-4 h-4 text-edith-cyan" />
-                  <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-edith-cyan/70">Trending</h3>
+                  <TrendingUp className="w-4 h-4 text-accent" />
+                  <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-accent/70">Trending</h3>
                 </div>
                 <div>
                   {trendingPosts.map((post, i) => (
@@ -489,10 +489,10 @@ export default function BlogPage() {
 
             {/* Categories */}
             <div className="rounded-xl p-5"
-              style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-4">
-                <Tag className="w-4 h-4 text-edith-cyan" />
-                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-edith-cyan/70">Categories</h3>
+                <Tag className="w-4 h-4 text-accent" />
+                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-accent/70">Categories</h3>
               </div>
               <ul className="space-y-1">
                 {BLOG_CATEGORIES.filter((c) => c.id).map((cat) => (
@@ -500,11 +500,11 @@ export default function BlogPage() {
                     <button
                       onClick={() => setCategory(cat.id)}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-mono transition-all text-left ${
-                        category === cat.id ? 'text-edith-cyan' : ''
+                        category === cat.id ? 'text-accent' : ''
                       }`}
                       style={category === cat.id
-                        ? { background: 'var(--edith-accent-muted)' }
-                        : { color: 'var(--edith-text-dim)' }
+                        ? { background: 'var(--accent-muted)' }
+                        : { color: 'var(--text-secondary)' }
                       }
                     >
                       <span>{cat.icon}</span>
@@ -518,18 +518,18 @@ export default function BlogPage() {
 
             {/* Tags Cloud */}
             <div className="rounded-xl p-5"
-              style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-4">
-                <Bookmark className="w-4 h-4 text-edith-cyan" />
-                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-edith-cyan/70">Popular Tags</h3>
+                <Bookmark className="w-4 h-4 text-accent" />
+                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-accent/70">Popular Tags</h3>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {['react', 'nextjs', 'typescript', 'python', 'ai', 'machine-learning', 'devops', 'docker', 'kubernetes', 'rust', 'golang', 'css', 'tailwind', 'api', 'graphql', 'security'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => { setSearch(tag); setPage(1); fetchPosts(1, true); }}
-                    className="text-[9px] font-mono px-2 py-1 rounded transition-all hover:text-edith-cyan hover:border-edith-cyan/20"
-                    style={{ color: 'var(--edith-tag-text)', background: 'var(--edith-tag-bg)', border: '1px solid var(--edith-tag-border)' }}
+                    className="text-[9px] font-mono px-2 py-1 rounded transition-all hover:text-accent hover:border-accent/20"
+                    style={{ color: 'var(--tag-text)', background: 'var(--tag-bg)', border: '1px solid var(--tag-border)' }}
                   >
                     #{tag}
                   </button>

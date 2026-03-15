@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ICellRendererParams, GridReadyEvent } from 'ag-grid-community';
-import { useEdithGridTheme } from '@/lib/agGridTheme';
+import { usePicupGridTheme } from '@/lib/agGridTheme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -62,16 +62,16 @@ function UserCellRenderer(params: ICellRendererParams) {
       {u.avatar ? (
         <img src={u.avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
       ) : (
-        <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--edith-accent)] flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)] flex items-center justify-center text-sm font-bold text-[var(--accent)] flex-shrink-0">
           {u.displayName?.[0]?.toUpperCase() || '?'}
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-sm font-medium truncate leading-tight group-hover:text-[var(--edith-accent)] transition-colors">
+        <p className="text-sm font-medium truncate leading-tight group-hover:text-[var(--accent)] transition-colors">
           {u.displayName}
           {u.accountType === 'paid' && <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400 inline ml-1 -mt-0.5" />}
         </p>
-        <p className="text-[11px] text-[var(--edith-text-dim)] truncate leading-tight">@{u.username}</p>
+        <p className="text-[11px] text-[var(--text-secondary)] truncate leading-tight">@{u.username}</p>
       </div>
     </Link>
   );
@@ -85,7 +85,7 @@ function SpentCellRenderer(params: ICellRendererParams) {
       <span className="text-sm font-bold text-green-600 dark:text-green-400">
         ${item.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </span>
-      <p className="text-[10px] text-[var(--edith-text-muted)] mt-0.5">avg ${item.avgPayment.toFixed(2)}</p>
+      <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">avg ${item.avgPayment.toFixed(2)}</p>
     </div>
   );
 }
@@ -96,7 +96,7 @@ function PaymentsCellRenderer(params: ICellRendererParams) {
   return (
     <div>
       <span className="text-sm font-medium">{item.paymentCount}</span>
-      <p className="text-[10px] text-[var(--edith-text-muted)] mt-0.5">{item.currencies.join(', ')}</p>
+      <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{item.currencies.join(', ')}</p>
     </div>
   );
 }
@@ -110,7 +110,7 @@ function WalletCellRenderer(params: ICellRendererParams) {
         <Wallet className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
         <span className="text-sm font-medium">${item.walletBalance.toFixed(2)}</span>
       </div>
-      <p className="text-[10px] text-[var(--edith-text-muted)] mt-0.5">
+      <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
         +{item.walletCredits.toFixed(0)} / -{item.walletDebits.toFixed(0)}
       </p>
     </div>
@@ -126,7 +126,7 @@ function TypesCellRenderer(params: ICellRendererParams) {
     subscription: 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400',
     wallet_topup: 'bg-green-500/20 text-green-600 dark:text-green-400',
     refund: 'bg-red-500/20 text-red-600 dark:text-red-400',
-  }[t] || 'bg-[var(--edith-accent-muted)] text-[var(--edith-text-dim)]');
+  }[t] || 'bg-[var(--accent-muted)] text-[var(--text-secondary)]');
   return (
     <div className="flex flex-wrap gap-1">
       {item.paymentTypes.map((t) => (
@@ -171,7 +171,7 @@ export default function PaidUsersPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const gridRef = useRef<AgGridReact>(null);
-  const edithTheme = useEdithGridTheme();
+  const picupTheme = usePicupGridTheme();
 
   const fetchPaidUsers = useCallback(async () => {
     setIsLoading(true);
@@ -269,13 +269,13 @@ export default function PaidUsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--edith-text)' }}>
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
             <Crown className="w-6 h-6 text-amber-500 dark:text-amber-400" />
             Paid Users
           </h1>
-          <p className="mt-1" style={{ color: 'var(--edith-text-muted)' }}>Users with completed payments &amp; transactions</p>
+          <p className="mt-1" style={{ color: 'var(--text-tertiary)' }}>Users with completed payments &amp; transactions</p>
         </div>
-        <span className="text-sm font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+        <span className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>
           {total} paid user{total !== 1 ? 's' : ''}
         </span>
       </div>
@@ -291,12 +291,12 @@ export default function PaidUsersPage() {
           ].map(({ label, value, icon: Icon, gradient }) => (
             <div key={label} className="card p-5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs" style={{ color: 'var(--edith-text-muted)' }}>{label}</span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{label}</span>
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
                   <Icon className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--edith-text)' }}>{value}</p>
+              <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{value}</p>
             </div>
           ))}
         </div>
@@ -305,7 +305,7 @@ export default function PaidUsersPage() {
       {/* Search + Filters */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -315,7 +315,7 @@ export default function PaidUsersPage() {
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`btn-ghost p-2.5 ${showFilters ? 'text-[var(--edith-accent)]' : ''}`}
+          className={`btn-ghost p-2.5 ${showFilters ? 'text-[var(--accent)]' : ''}`}
         >
           <Filter className="w-4 h-4" />
         </button>
@@ -324,17 +324,17 @@ export default function PaidUsersPage() {
       {/* Filter bar */}
       {showFilters && (
         <div className="card p-4 mb-4 flex flex-wrap items-center gap-3">
-          <span className="text-xs font-mono" style={{ color: 'var(--edith-text-muted)' }}>Payment Type:</span>
+          <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>Payment Type:</span>
           {['', 'wallet_topup', 'ad_payment', 'subscription'].map((t) => (
             <button
               key={t}
               onClick={() => { setTypeFilter(t); setPage(1); }}
               className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors ${
                 typeFilter === t
-                  ? 'bg-[var(--edith-accent-muted)] text-[var(--edith-accent)] border border-[var(--edith-accent)]'
+                  ? 'bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]'
                   : ''
               }`}
-              style={typeFilter !== t ? { color: 'var(--edith-text-muted)', background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' } : {}}
+              style={typeFilter !== t ? { color: 'var(--text-tertiary)', background: 'var(--surface)', border: '1px solid var(--border)' } : {}}
             >
               {paymentTypeLabel(t)}
             </button>
@@ -356,19 +356,19 @@ export default function PaidUsersPage() {
           <div className="space-y-2 p-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 animate-pulse">
-                <div className="w-9 h-9 rounded-full bg-[var(--edith-accent-muted)]" />
+                <div className="w-9 h-9 rounded-full bg-[var(--accent-muted)]" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 w-40 rounded bg-[var(--edith-accent-muted)]" />
-                  <div className="h-2 w-24 rounded bg-[var(--edith-accent-muted)]" />
+                  <div className="h-3 w-40 rounded bg-[var(--accent-muted)]" />
+                  <div className="h-2 w-24 rounded bg-[var(--accent-muted)]" />
                 </div>
-                <div className="h-3 w-16 rounded bg-[var(--edith-accent-muted)]" />
+                <div className="h-3 w-16 rounded bg-[var(--accent-muted)]" />
               </div>
             ))}
           </div>
         ) : (
           <AgGridReact
             ref={gridRef}
-            theme={edithTheme}
+            theme={picupTheme}
             rowData={rowData}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
@@ -377,7 +377,7 @@ export default function PaidUsersPage() {
             animateRows={true}
             suppressCellFocus={true}
             onGridReady={onGridReady}
-            overlayNoRowsTemplate={`<span style="color: var(--edith-text-muted)">${search || typeFilter ? 'No paid users match your filters' : 'No paid users yet'}</span>`}
+            overlayNoRowsTemplate={`<span style="color: var(--text-tertiary)">${search || typeFilter ? 'No paid users match your filters' : 'No paid users yet'}</span>`}
           />
         )}
       </div>
@@ -385,9 +385,9 @@ export default function PaidUsersPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3 px-4 py-2.5 rounded-lg"
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
-          <p className="text-xs font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
             Page {page} of {totalPages} · {total} paid users
           </p>
           <div className="flex gap-1">

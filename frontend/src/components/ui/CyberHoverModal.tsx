@@ -129,14 +129,14 @@ export default function CyberHoverModal({
           style={{ animation: animIn ? 'dashFlow 1.2s linear infinite' : 'none' }} />
 
         {/* Start endpoint */}
-        <circle cx={lineX1} cy={lineY1} r={animIn ? 4 : 0} fill="var(--edith-surface)"
+        <circle cx={lineX1} cy={lineY1} r={animIn ? 4 : 0} fill="var(--surface)"
           stroke="rgba(0,240,255,0.8)" strokeWidth="1.5"
           filter={`url(#${filterId})`} style={{ transition: 'r 0.3s ease' }} />
         <circle cx={lineX1} cy={lineY1} r={animIn ? 2 : 0}
           fill="rgba(0,240,255,0.9)" style={{ transition: 'r 0.3s ease 0.1s' }} />
 
         {/* End endpoint */}
-        <circle cx={lineX2} cy={lineY2} r={animIn ? 4 : 0} fill="var(--edith-surface)"
+        <circle cx={lineX2} cy={lineY2} r={animIn ? 4 : 0} fill="var(--surface)"
           stroke="rgba(0,240,255,0.8)" strokeWidth="1.5"
           filter={`url(#${filterId})`} style={{ transition: 'r 0.3s ease 0.15s' }} />
         <circle cx={lineX2} cy={lineY2} r={animIn ? 2 : 0}
@@ -169,11 +169,11 @@ export default function CyberHoverModal({
         <div
           className="rounded-2xl overflow-hidden"
           style={{
-            background: 'var(--edith-dropdown-bg)',
+            background: 'var(--dropdown-bg)',
             backdropFilter: 'blur(30px) saturate(1.4)',
             WebkitBackdropFilter: 'blur(30px) saturate(1.4)',
-            border: '1px solid var(--edith-border-strong)',
-            boxShadow: 'var(--edith-dropdown-shadow)',
+            border: '1px solid var(--border-strong)',
+            boxShadow: 'var(--dropdown-shadow)',
           }}
         >
           {/* Image section */}
@@ -184,7 +184,7 @@ export default function CyberHoverModal({
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/media:scale-105" />
             )}
             <div className="absolute inset-0"
-              style={{ background: 'linear-gradient(180deg, var(--edith-overlay-from) 0%, transparent 30%, var(--edith-overlay-to) 100%)' }} />
+              style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 30%, rgba(0,0,0,0.5) 100%)' }} />
             {/* Scan line */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute left-0 right-0 h-[1px] animate-scan-line"
@@ -226,13 +226,13 @@ export default function CyberHoverModal({
             </Link>
 
             {post.description && (
-              <p className="text-[10px] line-clamp-2 leading-relaxed font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+              <p className="text-[10px] line-clamp-2 leading-relaxed font-mono" style={{ color: 'var(--text-tertiary)' }}>
                 <MatrixText text={post.description.slice(0, 80)} trigger={animIn} speed={12} scramblePasses={1} />
               </p>
             )}
 
             {/* Stats */}
-            <div className="flex items-center gap-3 text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+            <div className="flex items-center gap-3 text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
               <span className="flex items-center gap-1"><Heart className="w-2.5 h-2.5 text-pink-500/50" /><MatrixText text={formatNumber(post.likesCount)} trigger={animIn} speed={30} scramblePasses={3} /></span>
               <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" /><MatrixText text={formatNumber(post.viewsCount || 0)} trigger={animIn} speed={30} scramblePasses={3} /></span>
               <span className="flex items-center gap-1"><Bookmark className="w-2.5 h-2.5" /><MatrixText text={formatNumber(post.savesCount || 0)} trigger={animIn} speed={30} scramblePasses={3} /></span>
@@ -241,19 +241,19 @@ export default function CyberHoverModal({
 
             {/* Author */}
             <Link href={`/profile/${post.author?.username}`}
-              className="flex items-center gap-2 pt-2 hover:opacity-80 transition-opacity" style={{ borderTop: '1px solid var(--edith-border)' }}>
+              className="flex items-center gap-2 pt-2 hover:opacity-80 transition-opacity" style={{ borderTop: '1px solid var(--border)' }}>
               {post.author?.avatar ? (
                 <img src={post.author.avatar} alt=""
                   width={20} height={20} loading="lazy" decoding="async"
-                  className="w-5 h-5 rounded-full object-cover" style={{ boxShadow: '0 0 0 1px var(--edith-border)' }} />
+                  className="w-5 h-5 rounded-full object-cover" style={{ boxShadow: '0 0 0 1px var(--border)' }} />
               ) : (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-cyan-400 font-mono"
-                  style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' }}>
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                   {post.author?.displayName?.[0]?.toUpperCase()}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-medium block truncate font-mono" style={{ color: 'var(--edith-text-secondary)' }}>
+                <span className="text-[10px] font-medium block truncate font-mono" style={{ color: 'var(--text-secondary)' }}>
                   <MatrixText text={post.author?.displayName || ''} trigger={animIn} speed={22} scramblePasses={2} />
                 </span>
                 <span className="text-[9px] text-emerald-400/40 font-mono">
@@ -273,16 +273,16 @@ export default function CyberHoverModal({
                   </span>
                 ))}
                 {post.tags.length > 4 && (
-                  <span className="text-[8px] font-mono self-center" style={{ color: 'var(--edith-text-muted)' }}>+{post.tags.length - 4}</span>
+                  <span className="text-[8px] font-mono self-center" style={{ color: 'var(--text-tertiary)' }}>+{post.tags.length - 4}</span>
                 )}
               </div>
             )}
 
             {/* Price / Product */}
             {(post.price?.amount || post.productUrl) && (
-              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--edith-border)' }}>
+              <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
                 {post.price?.amount && (
-                  <span className="text-sm font-bold font-mono text-edith-cyan dark:text-edith-glow">
+                  <span className="text-sm font-bold font-mono text-accent">
                     <MatrixText text={formatPrice(post.price.amount)} trigger={animIn} speed={25} scramblePasses={3} />
                   </span>
                 )}

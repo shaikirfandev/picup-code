@@ -36,10 +36,10 @@ export default function Tooltip({ content, children, position = 'top', delay = 2
         <div
           className={`absolute z-50 px-2.5 py-1.5 text-[10px] font-mono whitespace-nowrap rounded pointer-events-none ${positionClasses[position]}`}
           style={{
-            background: 'var(--edith-elevated)',
-            border: '1px solid var(--edith-border-strong)',
-            color: 'var(--edith-text)',
-            boxShadow: 'var(--edith-shadow-md)',
+            background: 'var(--surface-elevated)',
+            border: '1px solid var(--border-strong)',
+            color: 'var(--foreground)',
+            boxShadow: 'var(--shadow-md)',
             animation: 'tooltipIn 0.15s ease',
           }}
         >

@@ -10,7 +10,7 @@ import { formatNumber } from '@/lib/utils';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ICellRendererParams, GridReadyEvent, RowClickedEvent } from 'ag-grid-community';
-import { useEdithGridTheme } from '@/lib/agGridTheme';
+import { usePicupGridTheme } from '@/lib/agGridTheme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -24,13 +24,13 @@ function PostCellRenderer(params: ICellRendererParams) {
       {thumb ? (
         <img src={thumb} alt="" className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
       ) : (
-        <div className="w-9 h-9 rounded-lg bg-[var(--edith-accent-muted)] flex items-center justify-center flex-shrink-0">
-          <Eye className="w-4 h-4 text-[var(--edith-text-dim)]" />
+        <div className="w-9 h-9 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center flex-shrink-0">
+          <Eye className="w-4 h-4 text-[var(--text-secondary)]" />
         </div>
       )}
       <div className="min-w-0">
         <p className="text-sm font-medium truncate leading-tight">{row.post.title || 'Untitled'}</p>
-        <p className="text-[11px] text-[var(--edith-text-dim)] capitalize leading-tight">{row.post.mediaType}</p>
+        <p className="text-[11px] text-[var(--text-secondary)] capitalize leading-tight">{row.post.mediaType}</p>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ function DetailsCellRenderer(params: ICellRendererParams) {
   return (
     <Link
       href={`/analytics/post/${row.postId}`}
-      className="text-[var(--edith-accent)] hover:underline text-sm inline-flex items-center gap-1"
+      className="text-[var(--accent)] hover:underline text-sm inline-flex items-center gap-1"
       onClick={(e) => e.stopPropagation()}
     >
       Details <ExternalLink className="w-3 h-3" />
@@ -83,7 +83,7 @@ interface PostsTableProps {
 export default function PostsTable({ data, isLoading, pagination, onPageChange }: PostsTableProps) {
   const router = useRouter();
   const gridRef = useRef<AgGridReact>(null);
-  const edithTheme = useEdithGridTheme();
+  const picupTheme = usePicupGridTheme();
 
   // Deep-clone data to avoid Immer frozen-state issues with AG Grid internal mutations
   const rowData = useMemo(() => {
@@ -193,7 +193,7 @@ export default function PostsTable({ data, isLoading, pagination, onPageChange }
       <div className="card overflow-hidden" style={{ height: Math.min(rowData.length * 52 + 56, 680) }}>
         <AgGridReact
           ref={gridRef}
-          theme={edithTheme}
+          theme={picupTheme}
           rowData={rowData}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
@@ -204,7 +204,7 @@ export default function PostsTable({ data, isLoading, pagination, onPageChange }
           onGridReady={onGridReady}
           onRowClicked={onRowClicked}
           rowClass="cursor-pointer"
-          overlayNoRowsTemplate="<span class='text-[var(--edith-text-dim)]'>No post data</span>"
+          overlayNoRowsTemplate="<span class='text-[var(--text-secondary)]'>No post data</span>"
         />
       </div>
 
@@ -258,8 +258,8 @@ export default function PostsTable({ data, isLoading, pagination, onPageChange }
                   onClick={() => onPageChange(p)}
                   className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                     p === pagination.page
-                      ? 'bg-[var(--edith-accent)] text-white'
-                      : 'hover:bg-[var(--edith-accent-muted)] text-[var(--edith-text-secondary)]'
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'hover:bg-[var(--accent-muted)] text-[var(--text-secondary)]'
                   }`}
                 >
                   {p}

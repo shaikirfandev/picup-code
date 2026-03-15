@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Crosshair, Github, Twitter, Mail, Heart } from 'lucide-react';
+import { Camera, Github, Twitter, Mail, Heart } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -31,8 +31,8 @@ export default function Footer() {
     <footer
       className="relative mt-20 border-t"
       style={{
-        background: 'var(--edith-surface)',
-        borderColor: 'var(--edith-border)',
+        background: 'var(--surface)',
+        borderColor: 'var(--border)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -41,24 +41,24 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="relative w-8 h-8 flex items-center justify-center">
-                <div className="absolute inset-0 rounded border border-edith-cyan/30 rotate-45" />
-                <Crosshair className="w-4 h-4 text-edith-cyan relative z-10" />
+                <div className="absolute inset-0 rounded border border-accent/30 rotate-45" />
+                <Camera className="w-4 h-4 text-accent relative z-10" />
               </div>
-              <span className="text-[15px] font-display font-bold tracking-[0.2em] text-edith-cyan">
-                E.D.I.T.H
+              <span className="text-[15px] font-semibold font-bold tracking-[0.2em] text-accent">
+                Picup
               </span>
             </Link>
-            <p className="text-sm font-mono text-[var(--edith-text-dim)] mb-4 max-w-xs">
+            <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-xs">
               Visual discovery platform for products, AI art, and creative assets.
             </p>
             <div className="flex items-center gap-3">
-              <a href="#" className="text-[var(--edith-text-dim)] hover:text-edith-cyan transition-colors">
+              <a href="#" className="text-[var(--text-secondary)] hover:text-accent transition-colors">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="text-[var(--edith-text-dim)] hover:text-edith-cyan transition-colors">
+              <a href="#" className="text-[var(--text-secondary)] hover:text-accent transition-colors">
                 <Github className="w-4 h-4" />
               </a>
-              <a href="#" className="text-[var(--edith-text-dim)] hover:text-edith-cyan transition-colors">
+              <a href="#" className="text-[var(--text-secondary)] hover:text-accent transition-colors">
                 <Mail className="w-4 h-4" />
               </a>
             </div>
@@ -67,7 +67,7 @@ export default function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section}>
-              <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-edith-cyan/60 mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-accent/60 mb-4">
                 {section}
               </h3>
               <ul className="space-y-2">
@@ -75,7 +75,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm font-mono text-[var(--edith-text-dim)] hover:text-edith-cyan transition-colors"
+                      className="text-sm text-[var(--text-secondary)] hover:text-accent transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -89,13 +89,13 @@ export default function Footer() {
         {/* Bottom bar */}
         <div
           className="mt-10 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ borderColor: 'var(--edith-border)' }}
+          style={{ borderColor: 'var(--border)' }}
         >
-          <p className="text-[10px] font-mono text-[var(--edith-text-dim)]">
-            &copy; {currentYear} E.D.I.T.H — All rights reserved.
+          <p className="text-[10px] text-[var(--text-secondary)]">
+            &copy; {currentYear} Picup — All rights reserved.
           </p>
-          <p className="text-[10px] font-mono text-[var(--edith-text-dim)] flex items-center gap-1">
-            Made with <Heart className="w-3 h-3 text-edith-red" /> by Stark Industries
+          <p className="text-[10px] text-[var(--text-secondary)] flex items-center gap-1">
+            Made with <Heart className="w-3 h-3 text-error" /> by Picup Team
           </p>
         </div>
       </div>

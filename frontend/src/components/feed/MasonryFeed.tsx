@@ -50,9 +50,9 @@ const MasonryFeed = memo(function MasonryFeed({
       {hasMore && (
         <div ref={lastRef} className="flex items-center justify-center py-8">
           {isLoading && (
-            <div className="flex items-center gap-2 text-surface-400">
-              <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm">Loading more pins...</span>
+            <div className="flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
+              <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border-strong)', borderTopColor: 'transparent' }} />
+              <span className="text-sm">Loading...</span>
             </div>
           )}
         </div>
@@ -60,7 +60,7 @@ const MasonryFeed = memo(function MasonryFeed({
 
       {!hasMore && posts.length > 0 && (
         <div className="text-center py-12">
-          <p className="text-surface-400 text-sm">✨ You&apos;ve seen it all!</p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>You&apos;ve reached the end</p>
         </div>
       )}
     </div>

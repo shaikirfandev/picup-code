@@ -10,7 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[E.D.I.T.H Critical Error]', error);
+    console.error('Critical Error', error);
   }, [error]);
 
   return (
@@ -56,7 +56,7 @@ export default function GlobalError({
           <h1
             style={{
               fontSize: 20,
-              fontFamily: "'Orbitron', sans-serif",
+              fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
               letterSpacing: '0.15em',
               marginBottom: 8,
@@ -73,7 +73,7 @@ export default function GlobalError({
               marginBottom: 8,
             }}
           >
-            // E.D.I.T.H root process encountered a fatal error<br />
+            // An unexpected error occurred<br />
             // All subsystems are offline
           </p>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {
-  Crosshair, Github, Twitter, Mail, Heart, Linkedin,
+  Camera, Github, Twitter, Mail, Heart, Linkedin,
   Youtube, Rss, ArrowUpRight, Zap, BookOpen, Shield,
   FileText, HelpCircle, Globe, Code,
 } from 'lucide-react';
@@ -44,36 +44,36 @@ const SOCIAL_LINKS = [
   { icon: Linkedin, href: '#', label: 'LinkedIn' },
   { icon: Youtube, href: '#', label: 'YouTube' },
   { icon: Rss, href: '/blog', label: 'RSS' },
-  { icon: Mail, href: 'mailto:hello@edith.dev', label: 'Email' },
+  { icon: Mail, href: 'mailto:hello@picup.app', label: 'Email' },
 ];
 
 export default function BlogFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-24 border-t" style={{ background: 'var(--edith-surface)', borderColor: 'var(--edith-border)' }}>
+    <footer className="relative mt-24 border-t" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] dark:opacity-60 opacity-30"
-        style={{ background: 'linear-gradient(90deg, transparent 5%, var(--edith-accent-muted) 30%, var(--edith-accent-subtle) 50%, transparent 95%)' }} />
+        style={{ background: 'linear-gradient(90deg, transparent 5%, var(--accent-muted) 30%, var(--accent-subtle) 50%, transparent 95%)' }} />
 
       {/* Newsletter CTA */}
       <div className="max-w-7xl mx-auto px-4 pt-12 pb-8">
         <div className="rounded-xl p-6 md:p-8 mb-12 relative overflow-hidden"
-          style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div className="absolute inset-0 pointer-events-none opacity-30">
             <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full"
-              style={{ background: 'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)' }} />
+              style={{ background: 'radial-gradient(circle, transparent 0%, transparent 70%)' }} />
           </div>
           <div className="relative flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4 text-edith-cyan" />
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-edith-cyan/70">Newsletter</span>
+                <Zap className="w-4 h-4 text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent/70">Newsletter</span>
               </div>
-              <h3 className="text-lg font-display font-bold mb-1" style={{ color: 'var(--edith-text)' }}>
+              <h3 className="text-lg font-semibold font-bold mb-1" style={{ color: 'var(--foreground)' }}>
                 Stay ahead in tech
               </h3>
-              <p className="text-xs font-mono" style={{ color: 'var(--edith-text-dim)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                 Get the latest articles, tutorials, and insights delivered to your inbox weekly.
               </p>
             </div>
@@ -96,14 +96,14 @@ export default function BlogFooter() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4 group">
               <div className="relative w-8 h-8 flex items-center justify-center">
-                <div className="absolute inset-0 rounded border border-edith-cyan/30 rotate-45 group-hover:rotate-[225deg] transition-transform duration-700" />
-                <Crosshair className="w-4 h-4 text-edith-cyan relative z-10" />
+                <div className="absolute inset-0 rounded border border-accent/30 rotate-45 group-hover:rotate-[225deg] transition-transform duration-700" />
+                <Camera className="w-4 h-4 text-accent relative z-10" />
               </div>
-              <span className="text-[15px] font-display font-bold tracking-[0.2em] text-edith-cyan">
-                E.D.I.T.H
+              <span className="text-[15px] font-semibold font-bold tracking-[0.2em] text-accent">
+                Picup
               </span>
             </Link>
-            <p className="text-xs font-mono mb-5 leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
+            <p className="text-xs mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Visual discovery & tech blog platform. Explore products, AI art, creative assets, and stay up-to-date with the latest in technology.
             </p>
             <div className="flex items-center gap-2 flex-wrap">
@@ -112,8 +112,8 @@ export default function BlogFooter() {
                   key={s.label}
                   href={s.href}
                   aria-label={s.label}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-edith-cyan"
-                  style={{ background: 'var(--edith-accent-subtle)', color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:text-accent"
+                  style={{ background: 'var(--accent-subtle)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                 >
                   <s.icon className="w-3.5 h-3.5" />
                 </a>
@@ -124,7 +124,7 @@ export default function BlogFooter() {
           {/* Nav cols */}
           {Object.entries(FOOTER_NAV).map(([section, links]) => (
             <div key={section}>
-              <h4 className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-4 text-edith-cyan/60">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 text-accent/60">
                 {section}
               </h4>
               <ul className="space-y-2.5">
@@ -132,8 +132,8 @@ export default function BlogFooter() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-xs font-mono hover:text-edith-cyan transition-colors flex items-center gap-1 group"
-                      style={{ color: 'var(--edith-text-dim)' }}
+                      className="text-xs hover:text-accent transition-colors flex items-center gap-1 group"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
                       {link.label}
                       <ArrowUpRight className="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all" />
@@ -147,7 +147,7 @@ export default function BlogFooter() {
 
         {/* Trust badges */}
         <div className="flex flex-wrap items-center justify-center gap-6 mb-10 py-6 rounded-lg"
-          style={{ background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}>
+          style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
           {[
             { icon: Shield, text: 'SSL Encrypted' },
             { icon: Globe, text: 'Open Platform' },
@@ -157,25 +157,25 @@ export default function BlogFooter() {
             { icon: HelpCircle, text: '24/7 Support' },
           ].map((badge) => (
             <div key={badge.text} className="flex items-center gap-1.5">
-              <badge.icon className="w-3 h-3 text-edith-cyan/50" />
-              <span className="text-[10px] font-mono" style={{ color: 'var(--edith-text-dim)' }}>{badge.text}</span>
+              <badge.icon className="w-3 h-3 text-accent/50" />
+              <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{badge.text}</span>
             </div>
           ))}
         </div>
 
         {/* Bottom bar */}
         <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ borderColor: 'var(--edith-border)' }}>
-          <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-            &copy; {year} E.D.I.T.H &mdash; Even Dead I&apos;m The Hero &mdash; All rights reserved.
+          style={{ borderColor: 'var(--border)' }}>
+          <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+            &copy; {year} Picup &mdash; All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-[10px] font-mono hover:text-edith-cyan transition-colors" style={{ color: 'var(--edith-text-muted)' }}>Privacy</Link>
-            <Link href="/terms" className="text-[10px] font-mono hover:text-edith-cyan transition-colors" style={{ color: 'var(--edith-text-muted)' }}>Terms</Link>
-            <Link href="/contact" className="text-[10px] font-mono hover:text-edith-cyan transition-colors" style={{ color: 'var(--edith-text-muted)' }}>Contact</Link>
+            <Link href="/privacy" className="text-[10px] hover:text-accent transition-colors" style={{ color: 'var(--text-secondary)' }}>Privacy</Link>
+            <Link href="/terms" className="text-[10px] hover:text-accent transition-colors" style={{ color: 'var(--text-secondary)' }}>Terms</Link>
+            <Link href="/contact" className="text-[10px] hover:text-accent transition-colors" style={{ color: 'var(--text-secondary)' }}>Contact</Link>
           </div>
-          <p className="text-[10px] font-mono flex items-center gap-1" style={{ color: 'var(--edith-text-muted)' }}>
-            Built with <Heart className="w-3 h-3 text-edith-red" /> by Stark Industries
+          <p className="text-[10px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+            Built with <Heart className="w-3 h-3 text-error" /> by Picup Team
           </p>
         </div>
       </div>

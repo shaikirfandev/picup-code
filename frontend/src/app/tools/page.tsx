@@ -113,16 +113,16 @@ export default function ToolsPage() {
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded mb-6"
             style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)' }}>
-            <Wrench className="w-3.5 h-3.5 text-edith-cyan" />
-            <span className="text-[11px] font-mono font-medium tracking-wider text-edith-cyan/70 uppercase">
+            <Wrench className="w-3.5 h-3.5 text-accent" />
+            <span className="text-[11px] font-mono font-medium tracking-wider text-accent/70 uppercase">
               AI Tools & Utilities
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 tracking-tight">
-            <span style={{ color: 'var(--edith-text)' }}>Creative </span>
+          <h1 className="text-4xl md:text-5xl font-semibold font-bold mb-4 tracking-tight">
+            <span style={{ color: 'var(--foreground)' }}>Creative </span>
             <span className="text-gradient">Tools</span>
           </h1>
-          <p className="text-sm font-mono text-[var(--edith-text-dim)] max-w-xl mx-auto">
+          <p className="text-sm font-mono text-[var(--text-secondary)] max-w-xl mx-auto">
             AI-powered tools to enhance your creative workflow.
           </p>
         </div>
@@ -137,20 +137,20 @@ export default function ToolsPage() {
               onClick={() => tool.available && setActiveTool(tool.id)}
               disabled={!tool.available}
               className={`relative card p-4 text-center transition-all ${
-                activeTool === tool.id ? 'border-edith-cyan/30' : ''
-              } ${!tool.available ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-edith-cyan/20'}`}
+                activeTool === tool.id ? 'border-accent/30' : ''
+              } ${!tool.available ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-accent/20'}`}
             >
               {!tool.available && (
-                <span className="absolute top-2 right-2 text-[7px] font-mono font-bold text-edith-amber px-1.5 py-0.5 rounded"
+                <span className="absolute top-2 right-2 text-[7px] font-mono font-bold text-amber-500 px-1.5 py-0.5 rounded"
                   style={{ background: 'rgba(255,170,0,0.1)', border: '1px solid rgba(255,170,0,0.2)' }}>
                   SOON
                 </span>
               )}
-              <tool.icon className={`w-8 h-8 mx-auto mb-2 ${activeTool === tool.id ? 'text-edith-cyan' : 'text-[var(--edith-text-dim)]'}`} />
-              <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--edith-text)' }}>
+              <tool.icon className={`w-8 h-8 mx-auto mb-2 ${activeTool === tool.id ? 'text-accent' : 'text-[var(--text-secondary)]'}`} />
+              <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--foreground)' }}>
                 {tool.name}
               </h3>
-              <p className="text-[8px] font-mono text-[var(--edith-text-dim)] mt-1">{tool.description}</p>
+              <p className="text-[8px] font-mono text-[var(--text-secondary)] mt-1">{tool.description}</p>
             </button>
           ))}
         </div>
@@ -162,12 +162,12 @@ export default function ToolsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Controls */}
             <div className="card p-6 space-y-5">
-              <h2 className="text-sm font-display font-bold uppercase tracking-wider text-edith-cyan flex items-center gap-2">
+              <h2 className="text-sm font-semibold font-bold uppercase tracking-wider text-accent flex items-center gap-2">
                 <Wand2 className="w-4 h-4" /> AI Image Generator
               </h2>
 
               <div>
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60 mb-1.5 block">Prompt</label>
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent/60 mb-1.5 block">Prompt</label>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -177,7 +177,7 @@ export default function ToolsPage() {
               </div>
 
               <div>
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60 mb-1.5 block">Negative Prompt (optional)</label>
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent/60 mb-1.5 block">Negative Prompt (optional)</label>
                 <input
                   type="text"
                   value={negativePrompt}
@@ -188,7 +188,7 @@ export default function ToolsPage() {
               </div>
 
               <div>
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60 mb-2 block">Style</label>
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent/60 mb-2 block">Style</label>
                 <div className="grid grid-cols-4 gap-2">
                   {AI_STYLES.map((s) => (
                     <button
@@ -196,8 +196,8 @@ export default function ToolsPage() {
                       onClick={() => setStyle(s.id)}
                       className={`p-2 rounded text-center transition-all text-[9px] font-mono ${
                         style === s.id
-                          ? 'text-edith-cyan border border-edith-cyan/30'
-                          : 'text-[var(--edith-text-dim)] border border-[var(--edith-border)]'
+                          ? 'text-accent border border-accent/30'
+                          : 'text-[var(--text-secondary)] border border-[var(--border)]'
                       }`}
                       style={style === s.id ? { background: 'rgba(0,212,255,0.08)' } : {}}
                     >
@@ -210,7 +210,7 @@ export default function ToolsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60 mb-1.5 block">Width</label>
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent/60 mb-1.5 block">Width</label>
                   <select value={width} onChange={(e) => setWidth(Number(e.target.value))} className="input-field">
                     <option value={512}>512px</option>
                     <option value={768}>768px</option>
@@ -218,7 +218,7 @@ export default function ToolsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-edith-cyan/60 mb-1.5 block">Height</label>
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-accent/60 mb-1.5 block">Height</label>
                   <select value={height} onChange={(e) => setHeight(Number(e.target.value))} className="input-field">
                     <option value={512}>512px</option>
                     <option value={768}>768px</option>
@@ -241,8 +241,8 @@ export default function ToolsPage() {
             <div className="card p-6 flex items-center justify-center min-h-[400px]">
               {isGenerating ? (
                 <div className="text-center">
-                  <Loader2 className="w-12 h-12 text-edith-cyan animate-spin mx-auto mb-3" />
-                  <p className="text-xs font-mono text-edith-cyan/60">Generating image...</p>
+                  <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto mb-3" />
+                  <p className="text-xs font-mono text-accent/60">Generating image...</p>
                 </div>
               ) : generatedImage ? (
                 <div className="w-full">
@@ -250,7 +250,7 @@ export default function ToolsPage() {
                     src={generatedImage}
                     alt="AI Generated"
                     className="w-full rounded-lg border"
-                    style={{ borderColor: 'var(--edith-border)' }}
+                    style={{ borderColor: 'var(--border)' }}
                   />
                   <div className="flex gap-2 mt-4">
                     <a
@@ -267,8 +267,8 @@ export default function ToolsPage() {
                 </div>
               ) : (
                 <div className="text-center">
-                  <Image className="w-16 h-16 text-edith-cyan/20 mx-auto mb-3" />
-                  <p className="text-xs font-mono text-[var(--edith-text-dim)]">
+                  <Image className="w-16 h-16 text-accent/20 mx-auto mb-3" />
+                  <p className="text-xs font-mono text-[var(--text-secondary)]">
                     Your generated image will appear here
                   </p>
                 </div>

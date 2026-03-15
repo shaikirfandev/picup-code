@@ -19,14 +19,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className="block text-[10px] font-mono tracking-wider uppercase"
-            style={{ color: 'var(--edith-text-dim)' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-edith-cyan/40">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-accent/40">
               {icon}
             </div>
           )}
@@ -36,19 +36,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className={clsx(
               'input-field',
               icon && 'pl-10',
-              error && 'border-edith-error/50 focus:border-edith-error',
+              error && 'border-error/50 focus:border-error',
               className
             )}
             {...props}
           />
         </div>
         {error && (
-          <p className="text-[10px] font-mono" style={{ color: 'var(--edith-error)' }}>
+          <p className="text-[10px] font-mono" style={{ color: 'var(--error)' }}>
             {error}
           </p>
         )}
         {hint && !error && (
-          <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
             {hint}
           </p>
         )}

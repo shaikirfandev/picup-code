@@ -12,29 +12,29 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, { bg: string; border: string; text: string }> = {
   default: {
-    bg: 'var(--edith-accent-muted)',
-    border: 'var(--edith-border)',
-    text: 'var(--edith-text-dim)',
+    bg: 'var(--accent-muted)',
+    border: 'var(--border)',
+    text: 'var(--text-secondary)',
   },
   success: {
-    bg: 'var(--edith-success-bg)',
+    bg: 'var(--success-bg)',
     border: 'rgba(0, 230, 118, 0.2)',
-    text: 'var(--edith-success)',
+    text: 'var(--success)',
   },
   warning: {
-    bg: 'var(--edith-warning-bg)',
+    bg: 'var(--warning-bg)',
     border: 'rgba(255, 170, 0, 0.2)',
-    text: 'var(--edith-warning)',
+    text: 'var(--warning)',
   },
   error: {
-    bg: 'var(--edith-error-bg)',
+    bg: 'var(--error-bg)',
     border: 'rgba(255, 51, 51, 0.2)',
-    text: 'var(--edith-error)',
+    text: 'var(--error)',
   },
   info: {
-    bg: 'var(--edith-accent-muted)',
+    bg: 'var(--accent-muted)',
     border: 'rgba(0, 200, 255, 0.2)',
-    text: 'var(--edith-cyan)',
+    text: 'var(--accent)',
   },
 };
 

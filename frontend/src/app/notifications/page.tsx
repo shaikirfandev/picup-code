@@ -27,14 +27,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { Notification } from '@/types';
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
-  like: { icon: Heart, color: 'text-edith-red', bg: 'bg-edith-red/10', label: 'Like' },
-  comment: { icon: MessageCircle, color: 'text-edith-cyan', bg: 'bg-edith-cyan/10', label: 'Comment' },
-  reply: { icon: Reply, color: 'text-edith-purple', bg: 'bg-edith-purple/10', label: 'Reply' },
-  follow: { icon: UserPlus, color: 'text-edith-green', bg: 'bg-edith-green/10', label: 'Follow' },
-  save: { icon: Bookmark, color: 'text-edith-yellow', bg: 'bg-edith-yellow/10', label: 'Save' },
-  mention: { icon: Info, color: 'text-edith-blue', bg: 'bg-edith-blue/10', label: 'Mention' },
-  report_resolved: { icon: AlertTriangle, color: 'text-edith-orange', bg: 'bg-edith-orange/10', label: 'Report' },
-  system: { icon: Info, color: 'text-edith-cyan', bg: 'bg-edith-cyan/10', label: 'System' },
+  like: { icon: Heart, color: 'text-error', bg: 'bg-error/10', label: 'Like' },
+  comment: { icon: MessageCircle, color: 'text-accent', bg: 'bg-accent/10', label: 'Comment' },
+  reply: { icon: Reply, color: 'text-accent', bg: 'bg-accent/10', label: 'Reply' },
+  follow: { icon: UserPlus, color: 'text-success', bg: 'bg-success/10', label: 'Follow' },
+  save: { icon: Bookmark, color: 'text-warning', bg: 'bg-warning/10', label: 'Save' },
+  mention: { icon: Info, color: 'text-accent', bg: 'bg-accent/10', label: 'Mention' },
+  report_resolved: { icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10', label: 'Report' },
+  system: { icon: Info, color: 'text-accent', bg: 'bg-accent/10', label: 'System' },
 };
 
 const ALL_TYPES = ['like', 'comment', 'reply', 'follow', 'save', 'mention', 'report_resolved', 'system'];
@@ -67,12 +67,12 @@ function NotificationRow({
       }`}
     >
       <div
-        className={`flex items-start gap-4 p-4 rounded-lg transition-all duration-200 group-hover:border-edith-cyan/20 ${
-          !notification.isRead ? 'bg-edith-cyan/[0.03]' : ''
+        className={`flex items-start gap-4 p-4 rounded-lg transition-all duration-200 group-hover:border-accent/20 ${
+          !notification.isRead ? 'bg-accent/[0.03]' : ''
         }`}
         style={{
-          border: '1px solid var(--edith-border)',
-          background: !notification.isRead ? 'var(--edith-elevated)' : 'transparent',
+          border: '1px solid var(--border)',
+          background: !notification.isRead ? 'var(--surface-elevated)' : 'transparent',
         }}
       >
         {/* Type icon */}
@@ -87,12 +87,12 @@ function NotificationRow({
               src={notification.sender.avatar}
               alt={notification.sender.displayName}
               className="w-10 h-10 rounded object-cover"
-              style={{ border: '1px solid var(--edith-border)' }}
+              style={{ border: '1px solid var(--border)' }}
             />
           ) : (
             <div
-              className="w-10 h-10 rounded flex items-center justify-center text-xs font-mono font-bold text-edith-cyan"
-              style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border)' }}
+              className="w-10 h-10 rounded flex items-center justify-center text-xs font-mono font-bold text-accent"
+              style={{ background: 'var(--accent-muted)', border: '1px solid var(--border)' }}
             >
               {notification.sender?.displayName?.[0]?.toUpperCase() || 'S'}
             </div>
@@ -101,20 +101,20 @@ function NotificationRow({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-mono leading-relaxed" style={{ color: 'var(--edith-text)' }}>
-            <span className="font-semibold text-edith-cyan">
+          <p className="text-xs font-mono leading-relaxed" style={{ color: 'var(--foreground)' }}>
+            <span className="font-semibold text-accent">
               {notification.sender?.displayName || notification.sender?.username || 'System'}
             </span>{' '}
-            <span style={{ color: 'var(--edith-text-dim)' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
               {notification.message?.replace(notification.sender?.displayName || notification.sender?.username || '', '').trim() || config.label}
             </span>
           </p>
           {notification.post?.title && (
-            <p className="text-[11px] font-mono mt-0.5 truncate" style={{ color: 'var(--edith-text-muted)' }}>
+            <p className="text-[11px] font-mono mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>
               &ldquo;{notification.post.title}&rdquo;
             </p>
           )}
-          <p className="text-[10px] font-mono mt-1.5" style={{ color: 'var(--edith-text-muted)' }}>
+          <p className="text-[10px] font-mono mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
           </p>
         </div>
@@ -126,7 +126,7 @@ function NotificationRow({
               src={notification.post.image.url}
               alt=""
               className="w-12 h-12 rounded object-cover"
-              style={{ border: '1px solid var(--edith-border)' }}
+              style={{ border: '1px solid var(--border)' }}
             />
           </div>
         )}
@@ -134,7 +134,7 @@ function NotificationRow({
         {/* Unread dot */}
         {!notification.isRead && (
           <div className="shrink-0 mt-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-edith-cyan animate-pulse" />
+            <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
           </div>
         )}
       </div>
@@ -184,28 +184,28 @@ export default function NotificationsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-14">
-        <div className="w-5 h-5 border-2 border-edith-cyan border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-14" style={{ background: 'var(--edith-bg)' }}>
+    <div className="min-h-screen pt-14" style={{ background: 'var(--background)' }}>
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border)' }}
+              style={{ background: 'var(--accent-muted)', border: '1px solid var(--border)' }}
             >
-              <Bell className="w-5 h-5 text-edith-cyan" />
+              <Bell className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h1 className="text-lg font-display font-bold tracking-wider" style={{ color: 'var(--edith-text)' }}>
+              <h1 className="text-lg font-semibold font-bold tracking-wider" style={{ color: 'var(--foreground)' }}>
                 NOTIFICATIONS
               </h1>
-              <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+              <p className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                 {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
               </p>
             </div>
@@ -215,8 +215,8 @@ export default function NotificationsPage() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-wider text-edith-cyan hover:bg-edith-cyan/10 rounded transition-colors"
-                style={{ border: '1px solid var(--edith-border)' }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-wider text-accent hover:bg-accent/10 rounded transition-colors"
+                style={{ border: '1px solid var(--border)' }}
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 MARK ALL READ
@@ -225,8 +225,8 @@ export default function NotificationsPage() {
             {items.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-wider text-edith-red/60 hover:text-edith-red hover:bg-edith-red/10 rounded transition-colors"
-                style={{ border: '1px solid var(--edith-border)' }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono tracking-wider text-error/60 hover:text-error hover:bg-error/10 rounded transition-colors"
+                style={{ border: '1px solid var(--border)' }}
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 CLEAR
@@ -237,17 +237,17 @@ export default function NotificationsPage() {
 
         {/* Type filter pills */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <Filter className="w-3.5 h-3.5" style={{ color: 'var(--edith-text-muted)' }} />
+          <Filter className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} />
           <button
             onClick={() => setTypeFilter('all')}
             className={`px-3 py-1 text-[10px] font-mono rounded-full transition-all ${
               typeFilter === 'all'
-                ? 'bg-edith-cyan/20 text-edith-cyan border-edith-cyan/30'
-                : 'hover:bg-edith-cyan/5'
+                ? 'bg-accent/20 text-accent border-accent/30'
+                : 'hover:bg-accent/5'
             }`}
             style={{
-              border: `1px solid ${typeFilter === 'all' ? '' : 'var(--edith-border)'}`,
-              color: typeFilter === 'all' ? '' : 'var(--edith-text-dim)',
+              border: `1px solid ${typeFilter === 'all' ? '' : 'var(--border)'}`,
+              color: typeFilter === 'all' ? '' : 'var(--text-secondary)',
             }}
           >
             ALL
@@ -264,11 +264,11 @@ export default function NotificationsPage() {
                 className={`flex items-center gap-1 px-3 py-1 text-[10px] font-mono rounded-full transition-all ${
                   typeFilter === t
                     ? `${cfg.bg} ${cfg.color}`
-                    : 'hover:bg-edith-cyan/5'
+                    : 'hover:bg-accent/5'
                 }`}
                 style={{
-                  border: `1px solid ${typeFilter === t ? '' : 'var(--edith-border)'}`,
-                  color: typeFilter === t ? '' : 'var(--edith-text-dim)',
+                  border: `1px solid ${typeFilter === t ? '' : 'var(--border)'}`,
+                  color: typeFilter === t ? '' : 'var(--text-secondary)',
                 }}
               >
                 <Icon className="w-3 h-3" />
@@ -283,13 +283,13 @@ export default function NotificationsPage() {
           {filtered.length === 0 && !isLoading ? (
             <div
               className="flex flex-col items-center justify-center py-16 rounded-lg"
-              style={{ border: '1px solid var(--edith-border)', background: 'var(--edith-elevated)' }}
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)' }}
             >
-              <Bell className="w-12 h-12 mb-3" style={{ color: 'var(--edith-text-muted)' }} />
-              <p className="text-sm font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+              <Bell className="w-12 h-12 mb-3" style={{ color: 'var(--text-tertiary)' }} />
+              <p className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>
                 {typeFilter !== 'all' ? `No ${typeConfig[typeFilter]?.label.toLowerCase()} notifications` : 'No notifications yet'}
               </p>
-              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
+              <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
                 When someone interacts with your content, you&apos;ll see it here.
               </p>
             </div>
@@ -303,12 +303,12 @@ export default function NotificationsPage() {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoading}
-                  className="w-full py-3 text-[11px] font-mono text-edith-cyan hover:bg-edith-cyan/5 rounded-lg transition-colors"
-                  style={{ border: '1px solid var(--edith-border)' }}
+                  className="w-full py-3 text-[11px] font-mono text-accent hover:bg-accent/5 rounded-lg transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <div className="w-3 h-3 border border-edith-cyan border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
                       Loading...
                     </span>
                   ) : (

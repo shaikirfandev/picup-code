@@ -8,7 +8,7 @@ import { selectSearchPosts, selectSearchMeta, selectSearchLoading, selectCategor
 import PostCard from '@/components/feed/PostCard';
 import {
   Search as SearchIcon, SlidersHorizontal, X,
-  TrendingUp, Crosshair, Hash, Loader2,
+  TrendingUp, Compass, Hash, Loader2,
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import { useInfiniteScroll } from '@/hooks';
@@ -81,16 +81,16 @@ export default function SearchPage() {
         {/* Search form */}
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mb-8">
           <div className="relative group">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-edith-cyan/30 group-focus-within:text-edith-cyan/60 transition-colors" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/30 group-focus-within:text-accent/60 transition-colors" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="SEARCH TARGETS, PRODUCTS, TAGS..."
+              placeholder="Search products, tags..."
               className="w-full pl-11 pr-28 py-3.5 rounded text-[12px] font-mono tracking-wider outline-none transition-all duration-300"
               style={{
-                background: 'var(--edith-input-bg)',
-                border: '1px solid var(--edith-input-border)',
-                color: 'var(--edith-text)',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--foreground)',
               }}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
@@ -98,19 +98,19 @@ export default function SearchPage() {
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
                 className={`p-2 rounded transition-all duration-300 ${
-                  showFilters ? 'text-edith-cyan bg-edith-cyan/10' : 'hover:text-edith-cyan/50'
+                  showFilters ? 'text-accent bg-accent/10' : 'hover:text-accent/50'
                 }`}
-                style={{ color: showFilters ? undefined : 'var(--edith-text-muted)' }}
+                style={{ color: showFilters ? undefined : 'var(--text-tertiary)' }}
               >
                 <SlidersHorizontal className="w-4 h-4" />
               </button>
               <button type="submit" className="btn-primary px-4 py-1.5 text-[10px]">
-                SCAN
+                SEARCH
               </button>
             </div>
             <div
               className="absolute bottom-0 left-0 right-0 h-[1px] opacity-0 group-focus-within:opacity-100 transition-opacity"
-              style={{ background: 'linear-gradient(90deg, transparent, var(--edith-border-strong), transparent)' }}
+              style={{ background: 'linear-gradient(90deg, transparent, var(--border-strong), transparent)' }}
             />
           </div>
         </form>
@@ -119,15 +119,15 @@ export default function SearchPage() {
         {tag && (
           <div className="flex items-center justify-center gap-2 mb-6">
             <span
-              className="px-3 py-1.5 rounded text-[11px] font-mono font-bold text-edith-cyan tracking-wider flex items-center gap-1.5"
-              style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border-strong)' }}
+              className="px-3 py-1.5 rounded text-[11px] font-mono font-bold text-accent tracking-wider flex items-center gap-1.5"
+              style={{ background: 'var(--accent-muted)', border: '1px solid var(--border-strong)' }}
             >
               <Hash className="w-3 h-3" />{tag}
             </span>
             <button
               onClick={() => { setTag(''); dispatch(clearSearch()); }}
-              className="p-1 hover:text-edith-red/60 transition-colors"
-              style={{ color: 'var(--edith-text-muted)' }}
+              className="p-1 hover:text-error/60 transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -163,8 +163,8 @@ export default function SearchPage() {
         {/* Trending tags */}
         {!query && !tag && trending.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-sm font-display font-bold mb-3 flex items-center gap-2 tracking-wider" style={{ color: 'var(--edith-text-dim)' }}>
-              <TrendingUp className="w-4 h-4 text-edith-cyan/50" />
+            <h2 className="text-sm font-semibold font-bold mb-3 flex items-center gap-2 tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+              <TrendingUp className="w-4 h-4 text-accent/50" />
               TRENDING TAGS
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -172,8 +172,8 @@ export default function SearchPage() {
                 <button
                   key={t}
                   onClick={() => handleTagClick(t)}
-                  className="px-3 py-1.5 rounded text-[10px] font-mono tracking-wider transition-all duration-300 hover:text-edith-cyan/60 hover:border-edith-cyan/15 flex items-center gap-1"
-                  style={{ background: 'var(--edith-tag-bg)', border: '1px solid var(--edith-tag-border)', color: 'var(--edith-tag-text)' }}
+                  className="px-3 py-1.5 rounded text-[10px] font-mono tracking-wider transition-all duration-300 hover:text-accent/60 hover:border-accent/15 flex items-center gap-1"
+                  style={{ background: 'var(--tag-bg)', border: '1px solid var(--tag-border)', color: 'var(--tag-text)' }}
                 >
                   <Hash className="w-2.5 h-2.5" />{t}
                 </button>
@@ -196,12 +196,12 @@ export default function SearchPage() {
         ) : (
           !isLoading && (query || tag) && (
             <div className="text-center py-20">
-              <Crosshair className="w-12 h-12 text-edith-cyan/15 mx-auto mb-3" />
-              <p className="text-sm font-display font-medium tracking-wider" style={{ color: 'var(--edith-text-secondary)' }}>
-                NO TARGETS FOUND
+              <Compass className="w-12 h-12 text-accent/15 mx-auto mb-3" />
+              <p className="text-sm font-semibold font-medium tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                NO RESULTS FOUND
               </p>
-              <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
-                // Try different scan parameters
+              <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                Try different search terms
               </p>
             </div>
           )
@@ -209,9 +209,9 @@ export default function SearchPage() {
 
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <Loader2 className="w-5 h-5 text-edith-cyan/40 animate-spin" />
-            <span className="text-[10px] font-mono text-edith-cyan/20 tracking-wider">
-              SCANNING...
+            <Loader2 className="w-5 h-5 text-accent/40 animate-spin" />
+            <span className="text-[10px] font-mono text-accent/20 tracking-wider">
+              SEARCHING...
             </span>
           </div>
         )}

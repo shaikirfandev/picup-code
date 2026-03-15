@@ -31,8 +31,8 @@ export default function Avatar({ src, alt = '', fallback, size = 'md', className
           className
         )}
         style={{
-          border: '1px solid var(--edith-border)',
-          boxShadow: 'var(--edith-shadow-sm)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       />
     );
@@ -42,12 +42,12 @@ export default function Avatar({ src, alt = '', fallback, size = 'md', className
     <div
       className={clsx(
         sizeMap[size],
-        'rounded flex items-center justify-center font-mono font-bold text-edith-cyan',
+        'rounded flex items-center justify-center font-mono font-bold text-accent',
         className
       )}
       style={{
-        background: 'var(--edith-accent-muted)',
-        border: '1px solid var(--edith-border)',
+        background: 'var(--accent-muted)',
+        border: '1px solid var(--border)',
       }}
     >
       {letter}

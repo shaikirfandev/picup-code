@@ -185,7 +185,7 @@ export default function PostDetailPage() {
                   <MoreHorizontal className="w-5 h-5" />
                   {showMoreMenu && (
                     <div className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden shadow-lg z-50"
-                      style={{ background: 'var(--edith-card-bg)', border: '1px solid var(--edith-border)' }}>
+                      style={{ background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

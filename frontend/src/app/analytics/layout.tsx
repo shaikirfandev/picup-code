@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Creator Analytics — E.D.I.T.H.',
+  title: 'Creator Analytics — Picup',
   description: 'Track your content performance, engagement, affiliate revenue, and audience insights.',
 };
 

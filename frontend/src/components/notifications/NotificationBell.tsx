@@ -27,14 +27,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { Notification } from '@/types';
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
-  like: { icon: Heart, color: 'text-edith-red', label: 'Liked' },
-  comment: { icon: MessageCircle, color: 'text-edith-cyan', label: 'Commented' },
-  reply: { icon: Reply, color: 'text-edith-purple', label: 'Replied' },
-  follow: { icon: UserPlus, color: 'text-edith-green', label: 'Followed' },
-  save: { icon: Bookmark, color: 'text-edith-yellow', label: 'Saved' },
-  mention: { icon: Info, color: 'text-edith-blue', label: 'Mentioned' },
-  report_resolved: { icon: AlertTriangle, color: 'text-edith-orange', label: 'Report' },
-  system: { icon: Info, color: 'text-edith-cyan', label: 'System' },
+  like: { icon: Heart, color: 'text-error', label: 'Liked' },
+  comment: { icon: MessageCircle, color: 'text-accent', label: 'Commented' },
+  reply: { icon: Reply, color: 'text-accent', label: 'Replied' },
+  follow: { icon: UserPlus, color: 'text-success', label: 'Followed' },
+  save: { icon: Bookmark, color: 'text-warning', label: 'Saved' },
+  mention: { icon: Info, color: 'text-accent', label: 'Mentioned' },
+  report_resolved: { icon: AlertTriangle, color: 'text-warning', label: 'Report' },
+  system: { icon: Info, color: 'text-accent', label: 'System' },
 };
 
 function NotificationItem({
@@ -60,10 +60,10 @@ function NotificationItem({
       onClick={() => {
         if (!notification.isRead) onRead(notification._id);
       }}
-      className={`flex items-start gap-3 px-4 py-3 transition-all duration-200 hover:bg-edith-cyan/5 ${
-        !notification.isRead ? 'bg-edith-cyan/[0.03]' : ''
+      className={`flex items-start gap-3 px-4 py-3 transition-all duration-200 hover:bg-accent/5 ${
+        !notification.isRead ? 'bg-accent/[0.03]' : ''
       }`}
-      style={{ borderBottom: '1px solid var(--edith-border)' }}
+      style={{ borderBottom: '1px solid var(--border)' }}
     >
       {/* Sender avatar */}
       <div className="relative shrink-0">
@@ -72,19 +72,19 @@ function NotificationItem({
             src={notification.sender.avatar}
             alt={notification.sender.displayName}
             className="w-8 h-8 rounded object-cover"
-            style={{ border: '1px solid var(--edith-border)' }}
+            style={{ border: '1px solid var(--border)' }}
           />
         ) : (
           <div
-            className="w-8 h-8 rounded flex items-center justify-center text-[10px] font-mono font-bold text-edith-cyan"
-            style={{ background: 'var(--edith-accent-muted)', border: '1px solid var(--edith-border)' }}
+            className="w-8 h-8 rounded flex items-center justify-center text-[10px] font-mono font-bold text-accent"
+            style={{ background: 'var(--accent-muted)', border: '1px solid var(--border)' }}
           >
             {notification.sender?.displayName?.[0]?.toUpperCase() || 'S'}
           </div>
         )}
         <div
           className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center ${config.color}`}
-          style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+          style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
         >
           <Icon className="w-2.5 h-2.5" />
         </div>
@@ -92,23 +92,23 @@ function NotificationItem({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-mono leading-relaxed" style={{ color: 'var(--edith-text)' }}>
-          <span className="font-semibold text-edith-cyan">
+        <p className="text-[11px] font-mono leading-relaxed" style={{ color: 'var(--foreground)' }}>
+          <span className="font-semibold text-accent">
             {notification.sender?.displayName || notification.sender?.username || 'System'}
           </span>{' '}
-          <span style={{ color: 'var(--edith-text-dim)' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             {notification.message?.replace(notification.sender?.displayName || notification.sender?.username || '', '').trim() || config.label}
           </span>
         </p>
         {notification.post?.title && (
           <p
             className="text-[10px] font-mono truncate mt-0.5"
-            style={{ color: 'var(--edith-text-muted)' }}
+            style={{ color: 'var(--text-tertiary)' }}
           >
             {notification.post.title}
           </p>
         )}
-        <p className="text-[9px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
+        <p className="text-[9px] font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
           {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
         </p>
       </div>
@@ -116,7 +116,7 @@ function NotificationItem({
       {/* Unread indicator */}
       {!notification.isRead && (
         <div className="shrink-0 mt-2">
-          <div className="w-2 h-2 rounded-full bg-edith-cyan animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
         </div>
       )}
     </Link>
@@ -170,13 +170,13 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 hover:text-edith-cyan transition-all duration-300 hover:bg-edith-cyan/5 rounded"
-        style={{ color: 'var(--edith-text-muted)' }}
+        className="relative p-2 hover:text-accent transition-all duration-300 hover:bg-accent/5 rounded"
+        style={{ color: 'var(--text-tertiary)' }}
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center px-1 text-[9px] font-mono font-bold rounded-full bg-edith-red text-white animate-pulse"
+            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center px-1 text-[9px] font-mono font-bold rounded-full bg-error text-white animate-pulse"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
@@ -187,10 +187,10 @@ export default function NotificationBell() {
         <div
           className="absolute right-0 top-full mt-2 w-80 sm:w-96 animate-scale-in origin-top-right overflow-hidden rounded-md z-50"
           style={{
-            background: 'var(--edith-dropdown-bg)',
+            background: 'var(--dropdown-bg)',
             backdropFilter: 'blur(30px)',
-            border: '1px solid var(--edith-border-strong)',
-            boxShadow: 'var(--edith-dropdown-shadow)',
+            border: '1px solid var(--border-strong)',
+            boxShadow: 'var(--dropdown-shadow)',
             maxHeight: '480px',
           }}
         >
@@ -198,22 +198,22 @@ export default function NotificationBell() {
           <div
             className="h-[1px] dark:opacity-100 opacity-50"
             style={{
-              background: 'linear-gradient(90deg, transparent, var(--edith-accent-muted), transparent)',
+              background: 'linear-gradient(90deg, transparent, var(--accent-muted), transparent)',
             }}
           />
 
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-2.5"
-            style={{ borderBottom: '1px solid var(--edith-border)' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
           >
             <div className="flex items-center gap-2">
-              <Bell className="w-3.5 h-3.5 text-edith-cyan" />
-              <span className="text-[11px] font-mono font-semibold tracking-wider" style={{ color: 'var(--edith-text)' }}>
+              <Bell className="w-3.5 h-3.5 text-accent" />
+              <span className="text-[11px] font-mono font-semibold tracking-wider" style={{ color: 'var(--foreground)' }}>
                 NOTIFICATIONS
               </span>
               {unreadCount > 0 && (
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-edith-cyan/10 text-edith-cyan">
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent/10 text-accent">
                   {unreadCount} new
                 </span>
               )}
@@ -222,8 +222,8 @@ export default function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="p-1 hover:text-edith-cyan transition-colors"
-                  style={{ color: 'var(--edith-text-muted)' }}
+                  className="p-1 hover:text-accent transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
                   title="Mark all as read"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -231,8 +231,8 @@ export default function NotificationBell() {
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="p-1 hover:text-edith-cyan transition-colors"
-                style={{ color: 'var(--edith-text-muted)' }}
+                className="p-1 hover:text-accent transition-colors"
+                style={{ color: 'var(--text-tertiary)' }}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -243,8 +243,8 @@ export default function NotificationBell() {
           <div className="overflow-y-auto" style={{ maxHeight: '380px' }}>
             {items.length === 0 && !isLoading ? (
               <div className="flex flex-col items-center justify-center py-10">
-                <Bell className="w-8 h-8 mb-2" style={{ color: 'var(--edith-text-muted)' }} />
-                <p className="text-[11px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+                <Bell className="w-8 h-8 mb-2" style={{ color: 'var(--text-tertiary)' }} />
+                <p className="text-[11px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                   No notifications yet
                 </p>
               </div>
@@ -257,7 +257,7 @@ export default function NotificationBell() {
                   <button
                     onClick={handleLoadMore}
                     disabled={isLoading}
-                    className="w-full py-2.5 text-[10px] font-mono text-edith-cyan hover:bg-edith-cyan/5 transition-colors"
+                    className="w-full py-2.5 text-[10px] font-mono text-accent hover:bg-accent/5 transition-colors"
                   >
                     {isLoading ? 'Loading...' : 'Load more'}
                   </button>
@@ -267,11 +267,11 @@ export default function NotificationBell() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid var(--edith-border)' }}>
+          <div style={{ borderTop: '1px solid var(--border)' }}>
             <Link
               href="/notifications"
               onClick={() => setOpen(false)}
-              className="block text-center py-2.5 text-[10px] font-mono font-medium text-edith-cyan hover:bg-edith-cyan/5 transition-colors tracking-wider"
+              className="block text-center py-2.5 text-[10px] font-mono font-medium text-accent hover:bg-accent/5 transition-colors tracking-wider"
             >
               VIEW ALL NOTIFICATIONS
             </Link>

@@ -49,9 +49,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', h
       <div
         className={`w-full ${sizeClasses[size]} rounded-lg overflow-hidden`}
         style={{
-          background: 'var(--edith-surface)',
-          border: '1px solid var(--edith-border-strong)',
-          boxShadow: 'var(--edith-shadow-xl)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border-strong)',
+          boxShadow: 'var(--shadow-lg)',
           animation: 'scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
@@ -59,7 +59,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', h
         <div
           className="h-[1px]"
           style={{
-            background: 'linear-gradient(90deg, transparent, var(--edith-accent-muted), transparent)',
+            background: 'linear-gradient(90deg, transparent, var(--accent-muted), transparent)',
           }}
         />
 
@@ -67,18 +67,18 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', h
         {(title || !hideClose) && (
           <div
             className="flex items-center justify-between px-5 py-3"
-            style={{ borderBottom: '1px solid var(--edith-border)' }}
+            style={{ borderBottom: '1px solid var(--border)' }}
           >
             {title && (
-              <h2 className="text-sm font-display font-bold tracking-wider" style={{ color: 'var(--edith-text)' }}>
+              <h2 className="text-sm font-semibold font-bold tracking-wider" style={{ color: 'var(--foreground)' }}>
                 {title}
               </h2>
             )}
             {!hideClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded hover:bg-edith-cyan/10 transition-colors ml-auto"
-                style={{ color: 'var(--edith-text-dim)' }}
+                className="p-1.5 rounded hover:bg-accent/10 transition-colors ml-auto"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <X className="w-4 h-4" />
               </button>
