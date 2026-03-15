@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import {
@@ -10,26 +10,28 @@ import {
   fetchUnreadCount,
 } from '@/store/slices/notificationSlice';
 import { Notification } from '@/types';
+import { SocketContext } from './SocketContext';
 
 const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500').replace('/api', '');
 
-const SocketContext = createContext<Socket | null>(null);
+export { useSocket } from './SocketContext';
 
-export function useSocket() {
-  return useContext(SocketContext);
-}
-
+/**
+ * Wraps children with live socket context.
+ * Must be loaded via next/dynamic({ ssr: false }) to avoid SSR issues with socket.io-client.
+ */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
+  const [socket, setSocket] = useState<Socket | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      // Disconnect if logged out
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
+        setSocket(null);
       }
       return;
     }
@@ -37,7 +39,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) return;
 
-    const socket = io(SOCKET_URL, {
+    const s = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -45,43 +47,46 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       reconnectionDelay: 2000,
     });
 
-    socket.on('connect', () => {
+    s.on('connect', () => {
       console.log('🔌 Socket connected');
-      // Fetch initial unread count on connect
       dispatch(fetchUnreadCount());
     });
 
-    socket.on('new-notification', (notification: Notification) => {
+    s.on('new-notification', (notification: Notification) => {
       dispatch(addNotification(notification));
     });
 
-    socket.on('notification-read', (data: { _id: string }) => {
+    s.on('notification-read', (data: { _id: string }) => {
       dispatch(notificationRead(data._id));
     });
 
-    socket.on('all-notifications-read', () => {
+    s.on('all-notifications-read', () => {
       dispatch(allNotificationsRead());
     });
 
-    socket.on('disconnect', (reason) => {
+    s.on('disconnect', (reason) => {
       console.log('🔌 Socket disconnected:', reason);
     });
 
-    socket.on('connect_error', (err) => {
+    s.on('connect_error', (err) => {
       console.error('Socket connection error:', err.message);
     });
 
-    socketRef.current = socket;
+    socketRef.current = s;
+    setSocket(s);
 
     return () => {
-      socket.disconnect();
+      s.disconnect();
       socketRef.current = null;
+      setSocket(null);
     };
   }, [isAuthenticated, dispatch]);
 
   return (
-    <SocketContext.Provider value={socketRef.current}>
+    <SocketContext.Provider value={socket}>
       {children}
     </SocketContext.Provider>
   );
 }
+
+export default SocketProvider;

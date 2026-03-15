@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -13,23 +13,18 @@ import {
   Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3, Activity,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import NotificationBell from '@/components/notifications/NotificationBell';
+import dynamic from 'next/dynamic';
 
-export default function Header() {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+/* Lazy-load NotificationBell — only rendered for authenticated users */
+const NotificationBell = dynamic(
+  () => import('@/components/notifications/NotificationBell'),
+  { ssr: false, loading: () => <div className="w-8 h-8" /> }
+);
+
+/* ── Isolated clock — re-renders every 1s WITHOUT touching rest of Header ── */
+const LiveClock = memo(function LiveClock() {
   const [time, setTime] = useState('');
 
-  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () =>
-    setShowUserMenu(false)
-  );
-
-  /* Live HUD clock */
   useEffect(() => {
     const tick = () => {
       const d = new Date();
@@ -47,6 +42,37 @@ export default function Header() {
     return () => clearInterval(id);
   }, []);
 
+  return (
+    <div className="hidden lg:flex items-center gap-2 mr-2">
+      <span className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>
+        {time}
+      </span>
+      <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
+    </div>
+  );
+});
+
+/* ── Shared constants (deduped with MobileSidebar) ── */
+const NAV_ITEMS = [
+  { href: '/', label: 'HOME', icon: Home },
+  { href: '/explore', label: 'EXPLORE', icon: Zap },
+  { href: '/tools', label: 'TOOLS', icon: Wrench },
+  { href: '/blog', label: 'BLOG', icon: FileText },
+] as const;
+
+export default function Header() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(userMenuRef as React.RefObject<HTMLElement>, () =>
+    setShowUserMenu(false)
+  );
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -61,12 +87,7 @@ export default function Header() {
     setShowUserMenu(false);
   };
 
-  const navItems = [
-    { href: '/', label: 'HOME', icon: Home },
-    { href: '/explore', label: 'EXPLORE', icon: Zap },
-    { href: '/tools', label: 'TOOLS', icon: Wrench },
-    { href: '/blog', label: 'BLOG', icon: FileText },
-  ];
+  const navItems = NAV_ITEMS;
 
   const isPaid = user?.accountType === 'paid' || user?.role === 'admin';
 
@@ -169,13 +190,8 @@ export default function Header() {
 
         {/* ── Right side ── */}
         <div className="flex items-center gap-2 ml-auto">
-          {/* Live clock */}
-          <div className="hidden lg:flex items-center gap-2 mr-2">
-            <span className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>
-              {time}
-            </span>
-            <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
-          </div>
+          {/* Live clock — isolated component, no parent re-render */}
+          <LiveClock />
 
           {/* Mobile search toggle */}
           <button
@@ -210,7 +226,10 @@ export default function Header() {
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.displayName}
+                      alt={user.displayName || ''}
+                      width={28}
+                      height={28}
+                      loading="eager" decoding="async"
                       className="w-7 h-7 rounded object-cover"
                       style={{
                         border: '1px solid var(--edith-border)',

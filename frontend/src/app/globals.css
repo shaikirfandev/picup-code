@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+/* Fonts are now self-hosted via next/font/google in layout.tsx — no render-blocking @import */
 
 /* ═══════════════════════════════════════════════════
    E.D.I.T.H  —  Even Dead I'm The Hero
@@ -81,10 +81,10 @@
   --edith-radial-hero: rgba(0,212,255,0.08);
   --edith-gradient-text: rgba(255,255,255,0.9);
 
-  /* Typography */
-  --edith-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --edith-display: 'Orbitron', sans-serif;
-  --edith-body: 'Rajdhani', 'Inter', sans-serif;
+  /* Typography — use next/font CSS variables with fallback */
+  --edith-mono: var(--font-mono, 'JetBrains Mono'), 'Fira Code', monospace;
+  --edith-display: var(--font-display, 'Orbitron'), sans-serif;
+  --edith-body: var(--font-body, 'Rajdhani'), 'Inter', sans-serif;
 }
 
 /* ── Light Mode — Stark Industries Clean UI ────── */

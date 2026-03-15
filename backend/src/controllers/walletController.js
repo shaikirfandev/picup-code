@@ -98,7 +98,7 @@ exports.exportTransactions = async (req, res) => {
 
     if (format === 'csv') {
       // Convert to CSV
-      const csv = this._jsonToCSV(data.transactions);
+      const csv = _jsonToCSV(data.transactions);
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
       return res.send(csv);
@@ -252,8 +252,8 @@ exports.setupAutoRecharge = async (req, res) => {
   }
 };
 
-// Helper method to convert JSON to CSV
-_jsonToCSV(transactions) {
+// Helper function to convert JSON to CSV
+function _jsonToCSV(transactions) {
   if (!transactions || transactions.length === 0) {
     return 'No transactions';
   }

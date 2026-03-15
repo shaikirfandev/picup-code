@@ -123,22 +123,36 @@ exports.getMyPayments = async (req, res, next) => {
 // Get wallet
 exports.getWallet = async (req, res, next) => {
   try {
+    const Transaction = require('../models/Transaction');
+
     let wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
       wallet = await Wallet.create({ user: req.user._id });
     }
 
-    // Last 20 transactions
-    const recentTransactions = wallet.transactions
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, 20);
+    // Fetch last 20 transactions from Transaction collection
+    const recentTransactions = await Transaction.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    // Map transactions to the shape the frontend expects
+    const mappedTransactions = recentTransactions.map((tx) => ({
+      type: ['purchase', 'bonus', 'refund'].includes(tx.type) ? 'credit' : 'debit',
+      amount: tx.amount,
+      description: tx.description || tx.source,
+      balanceAfter: tx.balanceAfter,
+      createdAt: tx.createdAt,
+      status: tx.status,
+      source: tx.source,
+    }));
 
     ApiResponse.success(res, {
       balance: wallet.balance,
       currency: wallet.currency,
-      totalCredits: wallet.totalCredits,
-      totalDebits: wallet.totalDebits,
-      transactions: recentTransactions,
+      totalCredits: wallet.totalPurchased + (wallet.bonusCredits || 0),
+      totalDebits: wallet.totalUsed,
+      transactions: mappedTransactions,
     });
   } catch (error) {
     next(error);
@@ -177,14 +191,14 @@ exports.topUpWallet = async (req, res, next) => {
     if (!wallet) {
       wallet = await Wallet.create({ user: req.user._id, currency });
     }
-    await wallet.addCredit(amount, 'Wallet top-up', payment._id.toString());
+    const result = await wallet.addCredit(amount, 'Wallet top-up', payment._id.toString());
 
     ApiResponse.created(res, {
       paymentId: payment._id,
       amount,
       currency,
       gateway: payment.gateway,
-      newBalance: wallet.balance,
+      newBalance: result.wallet.balance,
     }, 'Wallet topped up successfully');
   } catch (error) {
     next(error);

@@ -977,30 +977,10 @@ export interface AdPricing {
   } | null;
 }
 
+/* Advertisement type is already declared above — extended fields merged here */
 export interface Advertisement {
-  _id: string;
-  title: string;
-  description: string;
-  image?: { url: string; fileId?: string; width?: number; height?: number };
-  redirectUrl: string;
-  advertiser: { _id: string; username: string; displayName: string; avatar?: string };
-  campaign: {
-    name?: string;
-    startDate: string;
-    endDate?: string;
-    budget: number;
-    spent: number;
-    currency: string;
-  };
-  placement: 'feed' | 'sidebar' | 'banner' | 'search';
-  status: 'draft' | 'pending' | 'active' | 'paused' | 'completed' | 'rejected';
-  isPaid: boolean;
-  creditsCost: number;
-  validityDays: number;
+  creditsCost?: number;
+  validityDays?: number;
   expiresAt?: string;
-  impressions: number;
-  clicks: number;
-  ctr: number;
-  createdAt: string;
 }
 

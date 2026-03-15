@@ -59,6 +59,7 @@ module.exports = {
         'glow-pulse': 'glowPulse 2s ease-in-out infinite',
         'hud-boot': 'hudBoot 0.6s ease-out',
         'edith-flicker': 'edithFlicker 4s ease-in-out infinite',
+        'fade-slide-up': 'fadeSU 0.5s ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -67,6 +68,10 @@ module.exports = {
         },
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeSU: {
+          '0%': { opacity: '0', transform: 'translateY(30px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         scaleIn: {

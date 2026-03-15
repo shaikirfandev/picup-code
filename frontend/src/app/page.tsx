@@ -15,6 +15,14 @@ import {
 
 type SortOption = 'recent' | 'popular' | 'trending' | 'featured';
 
+/* Hoisted to module scope — avoids recreating icons every render */
+const SORT_OPTIONS: { key: SortOption; label: string; icon: React.ReactNode }[] = [
+  { key: 'recent', label: 'LATEST', icon: <Clock className="w-3 h-3" /> },
+  { key: 'popular', label: 'POPULAR', icon: <Flame className="w-3 h-3" /> },
+  { key: 'trending', label: 'TRENDING', icon: <TrendingUp className="w-3 h-3" /> },
+  { key: 'featured', label: 'FEATURED', icon: <Star className="w-3 h-3" /> },
+];
+
 export default function HomePage() {
   const dispatch = useAppDispatch();
   const posts = useAppSelector(selectFeedPosts);
@@ -49,12 +57,7 @@ export default function HomePage() {
     }
   }, [dispatch, isLoading, feedMeta, sort, selectedCategory, selectedTag]);
 
-  const sortOptions: { key: SortOption; label: string; icon: React.ReactNode }[] = [
-    { key: 'recent', label: 'LATEST', icon: <Clock className="w-3 h-3" /> },
-    { key: 'popular', label: 'POPULAR', icon: <Flame className="w-3 h-3" /> },
-    { key: 'trending', label: 'TRENDING', icon: <TrendingUp className="w-3 h-3" /> },
-    { key: 'featured', label: 'FEATURED', icon: <Star className="w-3 h-3" /> },
-  ];
+  const sortOptions = SORT_OPTIONS;
 
   return (
     <div className="min-h-screen">

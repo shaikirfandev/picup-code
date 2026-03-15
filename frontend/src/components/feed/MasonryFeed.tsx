@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Masonry from 'react-masonry-css';
 import PostCard from './PostCard';
 import { Post } from '@/types';
@@ -23,9 +24,9 @@ const breakpointColumns = {
 
 /**
  * Standard masonry grid with infinite scroll.
- * Uses react-masonry-css for clean layout + IntersectionObserver for loading.
+ * Memoized to prevent re-renders when parent state changes but posts haven't.
  */
-export default function MasonryFeed({
+const MasonryFeed = memo(function MasonryFeed({
   posts,
   hasMore,
   onLoadMore,
@@ -64,4 +65,6 @@ export default function MasonryFeed({
       )}
     </div>
   );
-}
+});
+
+export default MasonryFeed;

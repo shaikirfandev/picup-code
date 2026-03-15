@@ -179,8 +179,9 @@ export default function CyberHoverModal({
           {/* Image section */}
           <div className="relative h-40 overflow-hidden group/media">
             {thumbUrl && (
-              <img src={thumbUrl} alt={post.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover/media:scale-105" />
+              <img src={thumbUrl} alt={post.title || ''}
+                loading="eager" decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/media:scale-105" />
             )}
             <div className="absolute inset-0"
               style={{ background: 'linear-gradient(180deg, var(--edith-overlay-from) 0%, transparent 30%, var(--edith-overlay-to) 100%)' }} />
@@ -243,6 +244,7 @@ export default function CyberHoverModal({
               className="flex items-center gap-2 pt-2 hover:opacity-80 transition-opacity" style={{ borderTop: '1px solid var(--edith-border)' }}>
               {post.author?.avatar ? (
                 <img src={post.author.avatar} alt=""
+                  width={20} height={20} loading="lazy" decoding="async"
                   className="w-5 h-5 rounded-full object-cover" style={{ boxShadow: '0 0 0 1px var(--edith-border)' }} />
               ) : (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-cyan-400 font-mono"

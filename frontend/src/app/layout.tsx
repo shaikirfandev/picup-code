@@ -1,8 +1,40 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { JetBrains_Mono, Orbitron, Rajdhani } from 'next/font/google';
 import { Providers } from './providers';
 import Header from '@/components/layout/Header';
-import MobileSidebar from '@/components/layout/MobileSidebar';
+import dynamic from 'next/dynamic';
 import './globals.css';
+
+/* ── Self-hosted fonts via next/font (no render-blocking @import) ── */
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-mono',
+  display: 'swap',
+  preload: true,
+});
+
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-display',
+  display: 'swap',
+  preload: true,
+});
+
+const rajdhani = Rajdhani({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-body',
+  display: 'swap',
+  preload: false,
+});
+
+/* ── Lazy-load MobileSidebar (only needed on interaction) ── */
+const MobileSidebar = dynamic(() => import('@/components/layout/MobileSidebar'), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: {
@@ -90,18 +122,28 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${jetbrainsMono.variable} ${orbitron.variable} ${rajdhani.variable}`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen">
+      <body className="min-h-screen font-mono">
         <Providers>
           <Header />
-          <MobileSidebar />
-          <main className="pt-14">{children}</main>
+          <Suspense fallback={null}>
+            <MobileSidebar />
+          </Suspense>
+          <main className="pt-14">
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-6 h-6 border-2 border-edith-cyan border-t-transparent rounded-full animate-spin" />
+              </div>
+            }>
+              {children}
+            </Suspense>
+          </main>
         </Providers>
       </body>
     </html>

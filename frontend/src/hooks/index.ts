@@ -59,10 +59,13 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 export function useClickOutside(ref: React.RefObject<HTMLElement>, handler: () => void) {
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler;
+
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) return;
-      handler();
+      handlerRef.current();
     };
 
     document.addEventListener('mousedown', listener);
@@ -71,5 +74,5 @@ export function useClickOutside(ref: React.RefObject<HTMLElement>, handler: () =
       document.removeEventListener('mousedown', listener);
       document.removeEventListener('touchstart', listener);
     };
-  }, [ref, handler]);
+  }, [ref]);
 }

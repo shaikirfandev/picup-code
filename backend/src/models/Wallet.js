@@ -94,7 +94,91 @@ walletSchema.virtual('availableBalance').get(function () {
   return Math.max(0, this.balance - this.reservedCredits);
 });
 
-// Indexes for performance
+// ---- Instance Methods ----
+
+/**
+ * Add credits to the wallet and record a transaction.
+ * @param {Number} amount   - credits to add (must be > 0)
+ * @param {String} description - human-readable reason
+ * @param {String} referenceId - related payment / entity ID
+ * @returns {Object} { wallet, transaction }
+ */
+walletSchema.methods.addCredit = async function (amount, description, referenceId) {
+  if (this.isFrozen) {
+    throw new Error('Wallet is frozen – credits cannot be added');
+  }
+  if (!amount || amount <= 0) {
+    throw new Error('Amount must be greater than zero');
+  }
+
+  const Transaction = mongoose.model('Transaction');
+  const balanceBefore = this.balance;
+
+  this.balance += amount;
+  this.totalPurchased += amount;
+  this.lastCreditPurchaseAt = new Date();
+  await this.save();
+
+  const transaction = await Transaction.create({
+    user: this.user,
+    type: 'purchase',
+    source: 'wallet_topup',
+    amount,
+    status: 'completed',
+    balanceBefore,
+    balanceAfter: this.balance,
+    description: description || 'Credit added',
+    referenceId: referenceId || undefined,
+    referenceType: 'payment',
+  });
+
+  return { wallet: this, transaction };
+};
+
+/**
+ * Deduct credits from the wallet and record a transaction.
+ * @param {Number} amount      - credits to deduct
+ * @param {String} description - reason
+ * @param {String} source      - transaction source enum value
+ * @param {String} referenceId - related entity ID
+ * @returns {Object} { wallet, transaction }
+ */
+walletSchema.methods.deductCredit = async function (amount, description, source, referenceId) {
+  if (this.isFrozen) {
+    throw new Error('Wallet is frozen – credits cannot be deducted');
+  }
+  if (!amount || amount <= 0) {
+    throw new Error('Amount must be greater than zero');
+  }
+  if (this.availableBalance < amount) {
+    throw new Error('Insufficient credits');
+  }
+
+  const Transaction = mongoose.model('Transaction');
+  const balanceBefore = this.balance;
+
+  this.balance -= amount;
+  this.totalUsed += amount;
+  this.lastCreditUsedAt = new Date();
+  await this.save();
+
+  const transaction = await Transaction.create({
+    user: this.user,
+    type: 'usage',
+    source: source || 'other',
+    amount,
+    status: 'completed',
+    balanceBefore,
+    balanceAfter: this.balance,
+    description: description || 'Credit deducted',
+    referenceId: referenceId || undefined,
+    referenceType: referenceId ? 'payment' : undefined,
+  });
+
+  return { wallet: this, transaction };
+};
+
+// ---- Indexes ----
 walletSchema.index({ user: 1, updatedAt: -1 });
 walletSchema.index({ isFrozen: 1 });
 walletSchema.index({ balance: 1 });

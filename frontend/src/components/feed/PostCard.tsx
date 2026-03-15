@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   Heart, Bookmark, ExternalLink, Share2, Sparkles,
   Play, Volume2, VolumeX, Eye, MoreHorizontal, Flag,
@@ -14,15 +14,24 @@ import { likePost, savePost, sharePost as sharePostThunk, trackClick } from '@/s
 import toast from 'react-hot-toast';
 import GlassTilt from '@/components/ui/GlassTilt';
 import MatrixText from '@/components/ui/MatrixText';
-import CyberHoverModal from '@/components/ui/CyberHoverModal';
-import ReportModal from '@/components/shared/ReportModal';
+
+/* Lazy-load heavy modals — only mounted when actually shown */
+const CyberHoverModal = dynamic(() => import('@/components/ui/CyberHoverModal'), { ssr: false });
+const ReportModal = dynamic(() => import('@/components/shared/ReportModal'), { ssr: false });
 
 interface PostCardProps {
   post: Post;
   index?: number;
 }
 
-export default function PostCard({ post, index = 0 }: PostCardProps) {
+/* Deterministic pseudo-random from string (replaces Math.random in render) */
+function hashAspect(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return 1 + (Math.abs(h) % 80) / 100;  // 1.0 – 1.8
+}
+
+const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
   const { isAuthenticated } = useAppSelector((s) => s.auth);
   const dispatch = useAppDispatch();
 
@@ -49,11 +58,10 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
 
-  // Keep cardRect in sync while hovering (handles scroll/resize)
+  // Keep cardRect in sync while hovering (single update, no RAF loop)
   const updateCardRect = useCallback(() => {
     if (cardRef.current) {
       setCardRect(cardRef.current.getBoundingClientRect());
-      rafRef.current = requestAnimationFrame(updateCardRect);
     }
   }, []);
 
@@ -188,17 +196,18 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
 
   const aspectRatio = isVideo
     ? (post.video?.height && post.video?.width ? post.video.height / post.video.width : 1.33)
-    : (post.image?.height && post.image?.width ? post.image.height / post.image.width : 1 + Math.random() * 0.8);
+    : (post.image?.height && post.image?.width ? post.image.height / post.image.width : hashAspect(post._id));
 
   const thumbnailUrl = isVideo ? (post.video?.thumbnailUrl || post.image?.url) : post.image?.url;
 
+  /* Stagger delay for CSS entrance animation (capped at 250ms) */
+  const animDelay = useMemo(() => `${Math.min(index * 40, 250)}ms`, [index]);
+
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.04, 0.25) }}
-      className="pin-card group"
+      className="pin-card group animate-fade-slide-up"
+      style={{ animationDelay: animDelay, animationFillMode: 'both' }}
     >
       {/* GlassTilt gives 3D perspective tilt on mouse move */}
       <GlassTilt tiltAmount={10} glareOpacity={0.12} scale={1.03}>
@@ -250,9 +259,10 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
               </>
             ) : (
               <img
-                src={post.image?.url}
-                alt={post.title}
-                loading="lazy"
+                src={post.image?.url || ''}
+                alt={post.title || ''}
+                loading={index < 6 ? 'eager' : 'lazy'}
+                decoding="async"
                 onLoad={() => setImageLoaded(true)}
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-700
                   ${imageLoaded ? 'opacity-100' : 'opacity-0'}
@@ -394,7 +404,8 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
               <Link href={`/profile/${post.author?.username}`} onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-2 group/author">
                 {post.author?.avatar ? (
-                  <img src={post.author.avatar} alt={post.author.displayName}
+                  <img src={post.author.avatar} alt={post.author.displayName || ''}
+                    width={20} height={20} loading="lazy" decoding="async"
                     className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-700" />
                 ) : (
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-cyan-400" style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' }}>
@@ -417,22 +428,28 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
         </Link>
       </GlassTilt>
 
-      {/* CyberHoverModal — interactive, user can move mouse to it */}
-      <CyberHoverModal
-        post={post}
-        cardRect={cardRect}
-        isVisible={showModal}
-        onModalMouseEnter={handleModalMouseEnter}
-        onModalMouseLeave={handleModalMouseLeave}
-      />
+      {/* CyberHoverModal — lazy loaded, only mounted when visible */}
+      {showModal && (
+        <CyberHoverModal
+          post={post}
+          cardRect={cardRect}
+          isVisible={showModal}
+          onModalMouseEnter={handleModalMouseEnter}
+          onModalMouseLeave={handleModalMouseLeave}
+        />
+      )}
 
-      {/* Report Modal */}
-      <ReportModal
-        postId={post._id}
-        postTitle={post.title}
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-      />
-    </motion.div>
+      {/* Report Modal — lazy loaded, only mounted when open */}
+      {showReportModal && (
+        <ReportModal
+          postId={post._id}
+          postTitle={post.title}
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+    </div>
   );
-}
+});
+
+export default PostCard;
