@@ -3,6 +3,7 @@ const router = express.Router();
 const walletController = require('../controllers/walletController');
 const paymentController = require('../controllers/paymentController');
 const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
+const { validateWalletTopup, validateDeductCredits } = require('../middleware/validate');
 
 // user endpoints
 router.get('/', ensureAuthenticated, walletController.getWallet);
@@ -10,8 +11,8 @@ router.get('/balance', ensureAuthenticated, walletController.getBalance);
 router.get('/transactions', ensureAuthenticated, walletController.getTransactions);
 router.get('/transactions/analytics', ensureAuthenticated, walletController.getTransactionAnalytics);
 router.get('/transactions/export', ensureAuthenticated, walletController.exportTransactions);
-router.post('/deduct', ensureAuthenticated, walletController.deductCredits);
-router.post('/credits', ensureAuthenticated, walletController.addCredits);
+router.post('/deduct', ensureAuthenticated, validateDeductCredits, walletController.deductCredits);
+router.post('/credits', ensureAuthenticated, validateWalletTopup, walletController.addCredits);
 router.post('/check-balance', ensureAuthenticated, walletController.checkBalance);
 router.get('/rules', ensureAuthenticated, walletController.getCreditRules);
 router.get('/stats', ensureAuthenticated, walletController.getWalletStats);

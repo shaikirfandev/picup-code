@@ -5,11 +5,12 @@ const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
 const notificationService = require('../services/notificationService');
+const { trackAffiliateClick } = require('../services/analyticsEventService');
 
 // Create post — files go to MongoDB GridFS
 exports.createPost = async (req, res, next) => {
   try {
-    const { title, description, productUrl, tags, category, price, isAiGenerated, aiImageUrl, aiMetadata, mediaType, videoData } = req.body;
+    const { title, description, productUrl, tags, category, price, isAiGenerated, aiImageUrl, aiMetadata, mediaType, videoData, affiliateLinks } = req.body;
 
     let imageData;
     let videoDataResult;
@@ -60,6 +61,13 @@ exports.createPost = async (req, res, next) => {
       }
     }
 
+    // Parse affiliate links if provided
+    let parsedAffiliateLinks = [];
+    if (affiliateLinks) {
+      parsedAffiliateLinks = typeof affiliateLinks === 'string' ? JSON.parse(affiliateLinks) : affiliateLinks;
+    }
+    const hasAffiliateContent = !!(productUrl?.trim()) || parsedAffiliateLinks.length > 0;
+
     const post = await Post.create({
       title,
       description,
@@ -67,6 +75,8 @@ exports.createPost = async (req, res, next) => {
       image: imageData || undefined,
       video: videoDataResult || undefined,
       productUrl: productUrl || undefined,
+      affiliateLinks: parsedAffiliateLinks,
+      isAffiliate: hasAffiliateContent,
       tags: tags ? (Array.isArray(tags) ? tags : JSON.parse(tags)) : [],
       category: category || undefined,
       price: price ? (typeof price === 'string' ? JSON.parse(price) : price) : undefined,
@@ -264,11 +274,77 @@ exports.toggleSave = async (req, res, next) => {
   }
 };
 
-// Track click on product URL
+// Track click on product/affiliate URL
 exports.trackClick = async (req, res, next) => {
   try {
-    await Post.findByIdAndUpdate(req.params.id, { $inc: { clicksCount: 1 } });
+    const { linkIndex } = req.body; // optional: which affiliate link was clicked
+    const post = await Post.findById(req.params.id);
+    if (!post) return ApiResponse.notFound(res, 'Post not found');
+
+    // Increment total clicksCount
+    post.clicksCount = (post.clicksCount || 0) + 1;
+
+    // If a specific affiliate link was clicked, increment its counter
+    let clickedUrl = post.productUrl;
+    if (linkIndex !== undefined && post.affiliateLinks?.[linkIndex]) {
+      post.affiliateLinks[linkIndex].clicks = (post.affiliateLinks[linkIndex].clicks || 0) + 1;
+      clickedUrl = post.affiliateLinks[linkIndex].url;
+    }
+    await post.save();
+
+    // Record detailed AffiliateClick for analytics (non-blocking)
+    if (clickedUrl) {
+      trackAffiliateClick({
+        postId: post._id,
+        ownerId: post.author,
+        clickerId: req.user?._id || null,
+        productUrl: clickedUrl,
+        req,
+        metadata: {
+          referrer: req.body.referrer || 'unknown',
+          country: req.body.country || null,
+        },
+      }).catch(() => {}); // fire and forget
+    }
+
     ApiResponse.success(res, null, 'Click tracked');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Redirect endpoint: /posts/:id/r/:linkIndex — track and redirect
+exports.affiliateRedirect = async (req, res, next) => {
+  try {
+    const { id, linkIndex } = req.params;
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).send('Not found');
+
+    let targetUrl;
+    const idx = parseInt(linkIndex, 10);
+    if (!isNaN(idx) && post.affiliateLinks?.[idx]) {
+      targetUrl = post.affiliateLinks[idx].url;
+      post.affiliateLinks[idx].clicks = (post.affiliateLinks[idx].clicks || 0) + 1;
+    } else {
+      targetUrl = post.productUrl;
+    }
+
+    if (!targetUrl) return res.status(404).send('No affiliate URL');
+
+    post.clicksCount = (post.clicksCount || 0) + 1;
+    await post.save();
+
+    // Record AffiliateClick (non-blocking)
+    trackAffiliateClick({
+      postId: post._id,
+      ownerId: post.author,
+      clickerId: req.user?._id || null,
+      productUrl: targetUrl,
+      req,
+      metadata: { referrer: req.query.ref || 'direct' },
+    }).catch(() => {});
+
+    return res.redirect(302, targetUrl);
   } catch (error) {
     next(error);
   }
@@ -375,11 +451,16 @@ exports.updatePost = async (req, res, next) => {
       return ApiResponse.forbidden(res, 'Not authorized');
     }
 
-    const { title, description, productUrl, tags, category, price } = req.body;
+    const { title, description, productUrl, tags, category, price, affiliateLinks } = req.body;
 
     if (title) post.title = title;
     if (description !== undefined) post.description = description;
-    if (productUrl) post.productUrl = productUrl;
+    if (productUrl !== undefined) post.productUrl = productUrl;
+    if (affiliateLinks !== undefined) {
+      post.affiliateLinks = typeof affiliateLinks === 'string' ? JSON.parse(affiliateLinks) : affiliateLinks;
+    }
+    // Recalculate isAffiliate flag
+    post.isAffiliate = !!(post.productUrl?.trim()) || (post.affiliateLinks?.length > 0);
     if (tags) post.tags = Array.isArray(tags) ? tags : JSON.parse(tags);
     if (category) post.category = category;
     if (price) post.price = typeof price === 'string' ? JSON.parse(price) : price;

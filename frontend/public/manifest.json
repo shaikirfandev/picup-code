@@ -1,0 +1,31 @@
+{
+  "name": "E.D.I.T.H — Visual Discovery & Target Analysis",
+  "short_name": "E.D.I.T.H",
+  "description": "Visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050510",
+  "theme_color": "#00d4ff",
+  "orientation": "portrait-primary",
+  "categories": ["social", "photo", "design"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

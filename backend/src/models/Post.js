@@ -53,6 +53,15 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    affiliateLinks: [{
+      url: { type: String, required: true },
+      label: { type: String, default: '' },
+      clicks: { type: Number, default: 0 },
+    }],
+    isAffiliate: {
+      type: Boolean,
+      default: false,
+    },
     price: {
       amount: { type: Number, min: 0 },
       currency: { type: String, default: 'USD' },
@@ -120,6 +129,7 @@ postSchema.index({ likesCount: -1 });
 postSchema.index({ viewsCount: -1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ isFeatured: 1, createdAt: -1 });
+postSchema.index({ isAffiliate: 1, createdAt: -1 });
 postSchema.index({ isDeleted: 1 });
 postSchema.index({ deletedAt: 1 });
 

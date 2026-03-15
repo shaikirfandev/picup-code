@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { commentsAPI, downloadAPI } from '@/lib/api';
+import { commentsAPI, downloadAPI, affiliateAPI } from '@/lib/api';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchPost, likePost, savePost, trackClick } from '@/store/slices/postSlice';
 import { PostDetailSkeleton } from '@/components/shared/Skeletons';
@@ -14,7 +14,7 @@ import { formatPrice, formatNumber, timeAgo } from '@/lib/utils';
 import {
   Heart, Bookmark, ExternalLink, Share2, MessageCircle, Send,
   ArrowLeft, Flag, MoreHorizontal, Sparkles, Eye, MousePointerClick,
-  Calendar, Tag, Play, Video, Volume2, VolumeX, Download,
+  Calendar, Tag, Play, Video, Volume2, VolumeX, Download, Link2,
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import toast from 'react-hot-toast';
@@ -106,6 +106,12 @@ export default function PostDetailPage() {
 
   const handleProductClick = async () => {
     if (post) dispatch(trackClick(post._id));
+  };
+
+  const handleAffiliateLinkClick = async (linkIndex: number) => {
+    if (post) {
+      affiliateAPI.trackClick(post._id, { linkIndex, referrer: 'post_detail' }).catch(() => {});
+    }
   };
 
   if (isLoading || !post) return <PostDetailSkeleton />;
@@ -225,6 +231,29 @@ export default function PostDetailPage() {
                       {post.price?.amount ? 'Buy Now' : 'Visit Product'}
                     </div>
                   </a>
+                )}
+
+                {/* Affiliate Links */}
+                {post.affiliateLinks && post.affiliateLinks.length > 0 && (
+                  <div className="space-y-2">
+                    {post.affiliateLinks.map((link, idx) => (
+                      <a
+                        key={idx}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleAffiliateLinkClick(idx)}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 hover:shadow-md transition-all group"
+                      >
+                        <Link2 className="w-4 h-4 text-brand-500" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{link.label || `Product Link ${idx + 1}`}</p>
+                          <p className="text-xs text-surface-500 truncate">{link.url}</p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-surface-400 group-hover:text-brand-500 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
                 )}
 
                 {/* Meta info */}

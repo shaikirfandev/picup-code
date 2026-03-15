@@ -12,7 +12,7 @@ const jwt = require('jsonwebtoken');
 const connectDB = require('./config/db');
 const { initGridFS } = require('./config/gridfs');
 const configurePassport = require('./config/passport');
-const { globalLimiter } = require('./middleware/rateLimiter');
+const { globalLimiter, walletLimiter, adsLimiter, adminLimiter, notificationsLimiter } = require('./middleware/rateLimiter');
 const notificationService = require('./services/notificationService');
 
 // Route imports
@@ -36,7 +36,10 @@ const adminBlogRoutes = require('./routes/adminBlogs');
 const analyticsRoutes = require('./routes/analytics');
 const creatorAnalyticsRoutes = require('./routes/creatorAnalytics');
 const walletRoutes = require('./routes/wallet');
-const walletRoutes = require('./routes/wallet');
+const adminWalletRoutes = require('./routes/adminWallet');
+const adsInsightRoutes = require('./routes/adsInsight');
+const businessRoutes = require('./routes/business');
+const affiliateRoutes = require('./routes/affiliate');
 
 const app = express();
 const server = http.createServer(app);
@@ -116,21 +119,25 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api/comments', commentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/admin/posts-manage', adminPostRoutes);
-app.use('/api/admin/blogs-manage', adminBlogRoutes);
-app.use('/api/admin/analytics', analyticsRoutes);
+app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/admin/posts-manage', adminLimiter, adminPostRoutes);
+app.use('/api/admin/blogs-manage', adminLimiter, adminBlogRoutes);
+app.use('/api/admin/analytics', adminLimiter, analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/blog', blogRoutes);
-app.use('/api/ads', adRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/ads', adsLimiter, adRoutes);
+app.use('/api/payments', walletLimiter, paymentRoutes);
+app.use('/api/notifications', notificationsLimiter, notificationRoutes);
 app.use('/api/creator-analytics', creatorAnalyticsRoutes);
-app.use('/api/wallet', walletRoutes);
+app.use('/api/wallet', walletLimiter, walletRoutes);
+app.use('/api/admin/wallet', adminLimiter, adminWalletRoutes);
+app.use('/api/ads-insight', adsLimiter, adsInsightRoutes);
+app.use('/api/business', adsLimiter, businessRoutes);
+app.use('/api/affiliate', affiliateRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -173,12 +180,27 @@ server.listen(PORT, () => {
 
   // Schedule daily stats computation — runs every hour, computes yesterday's stats
   const { computeDailyStats, resetDailyActiveFlags } = require('./utils/dailyStatsComputer');
-  setInterval(() => {
+  const Advertisement = require('./models/Advertisement');
+
+  setInterval(async () => {
     const now = new Date();
     // At midnight (0th hour), reset active flags and compute yesterday's stats
     if (now.getHours() === 0 && now.getMinutes() < 5) {
       resetDailyActiveFlags();
       computeDailyStats(); // defaults to yesterday
+    }
+
+    // Expire ads whose validity has ended (runs every 5 minutes)
+    try {
+      const result = await Advertisement.updateMany(
+        { status: 'active', expiresAt: { $lte: now } },
+        { $set: { status: 'completed' } }
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`⏰ Auto-expired ${result.modifiedCount} ads`);
+      }
+    } catch (err) {
+      console.error('Ad expiry check error:', err.message);
     }
   }, 5 * 60 * 1000); // Check every 5 minutes
 

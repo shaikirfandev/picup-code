@@ -10,7 +10,7 @@ import { selectCategories } from '@/store/selectors';
 import {
   Upload, X, ImagePlus, Sparkles, Tag, DollarSign, ExternalLink,
   Loader2, Wand2, ChevronRight, AlertCircle, FileImage, Palette,
-  Video, Play, Clock,
+  Video, Play, Clock, Plus, Link2, Trash2,
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
@@ -29,6 +29,7 @@ export default function CreatePostPage() {
   const [tagInput, setTagInput] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [productUrl, setProductUrl] = useState('');
+  const [affiliateLinks, setAffiliateLinks] = useState<{ url: string; label: string }[]>([]);
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('USD');
 
@@ -194,6 +195,7 @@ export default function CreatePostPage() {
         if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
         if (categoryId) formData.append('category', categoryId);
         if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+        if (affiliateLinks.length > 0) formData.append('affiliateLinks', JSON.stringify(affiliateLinks.filter(l => l.url.trim())));
         if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
         formData.append('mediaType', 'image');
         if (aiUrl) {
@@ -212,6 +214,7 @@ export default function CreatePostPage() {
         if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
         if (categoryId) formData.append('category', categoryId);
         if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+        if (affiliateLinks.length > 0) formData.append('affiliateLinks', JSON.stringify(affiliateLinks.filter(l => l.url.trim())));
         if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
         formData.append('mediaType', 'video');
 
@@ -261,6 +264,7 @@ export default function CreatePostPage() {
           if (tags.length > 0) formData.append('tags', JSON.stringify(tags));
           if (categoryId) formData.append('category', categoryId);
           if (productUrl.trim()) formData.append('productUrl', productUrl.trim());
+          if (affiliateLinks.length > 0) formData.append('affiliateLinks', JSON.stringify(affiliateLinks.filter(l => l.url.trim())));
           if (price) formData.append('price', JSON.stringify({ amount: parseFloat(price), currency }));
           formData.append('mediaType', 'image');
           formData.append('media', imageFiles[i]);
@@ -592,6 +596,56 @@ export default function CreatePostPage() {
                 className="input-field"
                 type="url"
               />
+            </div>
+
+            {/* Affiliate Links */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Link2 className="w-3.5 h-3.5" />
+                  Affiliate Links
+                  <span className="text-xs font-normal text-[var(--text-muted)]">(optional)</span>
+                </span>
+              </label>
+              {affiliateLinks.map((link, idx) => (
+                <div key={idx} className="flex gap-2 mb-2">
+                  <input
+                    value={link.label}
+                    onChange={(e) => {
+                      const updated = [...affiliateLinks];
+                      updated[idx] = { ...updated[idx], label: e.target.value };
+                      setAffiliateLinks(updated);
+                    }}
+                    placeholder="Label (e.g. Amazon)"
+                    className="input-field w-1/3"
+                  />
+                  <input
+                    value={link.url}
+                    onChange={(e) => {
+                      const updated = [...affiliateLinks];
+                      updated[idx] = { ...updated[idx], url: e.target.value };
+                      setAffiliateLinks(updated);
+                    }}
+                    placeholder="https://affiliate-link.com/..."
+                    className="input-field flex-1"
+                    type="url"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAffiliateLinks(affiliateLinks.filter((_, i) => i !== idx))}
+                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setAffiliateLinks([...affiliateLinks, { url: '', label: '' }])}
+                className="text-xs flex items-center gap-1 text-[var(--accent)] hover:underline mt-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add affiliate link
+              </button>
             </div>
 
             {/* Price */}

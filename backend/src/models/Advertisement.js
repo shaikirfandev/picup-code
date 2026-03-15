@@ -52,10 +52,21 @@ const advertisementSchema = new mongoose.Schema(
       default: 'pending',
     },
     isPaid: { type: Boolean, default: false },
+    // Credits charged from wallet (admin-preset amount)
+    creditsCost: { type: Number, default: 0 },
+    // Ad validity in days (user-specified)
+    validityDays: { type: Number, default: 7, min: 1, max: 365 },
+    // Auto-computed expiry date
+    expiresAt: { type: Date },
     // Payment reference
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Payment',
+    },
+    // Wallet transaction reference
+    walletTransactionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Transaction',
     },
     // Analytics
     impressions: { type: Number, default: 0 },
@@ -78,11 +89,18 @@ const advertisementSchema = new mongoose.Schema(
 advertisementSchema.index({ advertiser: 1, createdAt: -1 });
 advertisementSchema.index({ status: 1, placement: 1 });
 advertisementSchema.index({ 'campaign.startDate': 1, 'campaign.endDate': 1 });
+advertisementSchema.index({ expiresAt: 1, status: 1 });
 
-// Calculate CTR on save
+// Calculate CTR on save + compute expiresAt
 advertisementSchema.pre('save', function (next) {
   if (this.impressions > 0) {
     this.ctr = ((this.clicks / this.impressions) * 100).toFixed(2);
+  }
+  // Auto-compute expiresAt when validityDays or campaign.startDate changes
+  if (this.isModified('validityDays') || this.isModified('campaign.startDate') || this.isNew) {
+    const start = this.campaign?.startDate || this.createdAt || new Date();
+    this.expiresAt = new Date(start.getTime() + (this.validityDays || 7) * 24 * 60 * 60 * 1000);
+    this.campaign.endDate = this.expiresAt;
   }
   next();
 });

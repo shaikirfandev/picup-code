@@ -16,6 +16,7 @@ router.delete('/:id', authenticate, postController.deletePost);
 router.post('/:id/like', authenticate, postController.toggleLike);
 router.post('/:id/save', authenticate, postController.toggleSave);
 router.post('/:id/click', postController.trackClick);
+router.get('/:id/r/:linkIndex', postController.affiliateRedirect);
 router.post('/:id/share', postController.sharePost);
 router.post('/:id/report', authenticate, reportLimiter, validateReport, postController.reportPost);
 

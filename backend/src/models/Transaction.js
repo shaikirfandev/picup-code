@@ -29,6 +29,8 @@ const transactionSchema = new mongoose.Schema(
         'admin_grant',
         'monthly_free',
         'refund_usage',
+        'wallet_topup',
+        'ad_posting',
         'other'
       ],
       required: true,

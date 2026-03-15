@@ -66,16 +66,21 @@ export default function Header() {
     { href: '/explore', label: 'EXPLORE', icon: Zap },
     { href: '/tools', label: 'TOOLS', icon: Wrench },
     { href: '/blog', label: 'BLOG', icon: FileText },
-    ...(isAuthenticated ? [{ href: '/create', label: 'CREATE', icon: Plus }] : []),
   ];
+
+  const isPaid = user?.accountType === 'paid' || user?.role === 'admin';
 
   const menuLinks = [
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
     { href: '/saved', label: 'Saved Intel', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
-    { href: '/analytics', label: 'Creator Analytics', icon: Activity },
-    { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
-    { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
+    ...(isPaid
+      ? [
+          { href: '/analytics', label: 'Creator Analytics', icon: Activity },
+          { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
+          { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
+        ]
+      : []),
     ...(user?.role === 'admin'
       ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
       : []),

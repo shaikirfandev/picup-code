@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
 import {
   LayoutDashboard, Users, FileImage, Flag, FolderTree, Sparkles,
-  Shield, ChevronRight, BookOpen, BarChart3, Crown,
+  Shield, ChevronRight, BookOpen, BarChart3, Crown, Wallet, Megaphone,
 } from 'lucide-react';
 
 const navItems = [
@@ -14,6 +14,8 @@ const navItems = [
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/paid-users', label: 'Paid Users', icon: Crown },
+  { href: '/admin/wallet-recharges', label: 'Wallet Recharges', icon: Wallet },
+  { href: '/admin/ad-pricing', label: 'Ad Pricing', icon: Megaphone },
   { href: '/admin/posts', label: 'Posts', icon: FileImage },
   { href: '/admin/blogs', label: 'Blog Posts', icon: BookOpen },
   { href: '/admin/reports', label: 'Reports', icon: Flag },
@@ -22,15 +24,23 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+  const { user, isAuthenticated, isLoading } = useAppSelector((s) => s.auth);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'moderator')) {
+    if (!isLoading && (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'moderator'))) {
       router.push('/');
     }
-  }, [isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950">
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'moderator')) return null;
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Providers } from './providers';
 import Header from '@/components/layout/Header';
+import MobileSidebar from '@/components/layout/MobileSidebar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'E.D.I.T.H Team' }],
   creator: 'E.D.I.T.H',
   publisher: 'E.D.I.T.H',
+  manifest: '/manifest.json',
   robots: {
     index: true,
     follow: true,
@@ -55,6 +57,11 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   category: 'technology',
+  other: {
+    'theme-color': '#00d4ff',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+  },
 };
 
 const jsonLd = {
@@ -93,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <Providers>
           <Header />
+          <MobileSidebar />
           <main className="pt-14">{children}</main>
         </Providers>
       </body>

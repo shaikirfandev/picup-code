@@ -1,20 +1,55 @@
 const Advertisement = require('../models/Advertisement');
 const Payment = require('../models/Payment');
 const Wallet = require('../models/Wallet');
+const CreditRule = require('../models/CreditRule');
+const WalletService = require('../services/walletService');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS } = require('../config/gridfs');
 
-// Create advertisement
+// Create advertisement — charges wallet automatically
 exports.createAd = async (req, res, next) => {
   try {
-    const { title, description, redirectUrl, placement, campaign, targetCategories, targetTags } = req.body;
+    const { title, description, redirectUrl, placement, campaign, targetCategories, targetTags, validityDays } = req.body;
 
+    // 1. Look up the admin-set ad posting price
+    const adRule = await CreditRule.findOne({ feature: 'ad_posting', isActive: true });
+    if (!adRule) {
+      return ApiResponse.error(res, 'Ad posting pricing not configured. Contact admin.', 400);
+    }
+
+    const creditsCost = adRule.baseCost;
+    if (creditsCost <= 0) {
+      return ApiResponse.error(res, 'Invalid ad posting price configured.', 400);
+    }
+
+    // 2. Check wallet balance
+    const hasCredits = await WalletService.hasEnoughCredits(req.user._id, creditsCost);
+    if (!hasCredits) {
+      const balance = await WalletService.getBalance(req.user._id);
+      return ApiResponse.error(res, `Insufficient credits. Required: ${creditsCost}, Available: ${balance}. Please top up your wallet.`, 400);
+    }
+
+    // 3. Deduct credits from wallet
+    const deduction = await WalletService.deductCredits(
+      req.user._id,
+      creditsCost,
+      `Ad posting: ${title}`,
+      'ad_posting',
+      { ip: req.ip, userAgent: req.get('user-agent') }
+    );
+
+    if (!deduction.success) {
+      return ApiResponse.error(res, deduction.error || 'Wallet deduction failed', 400);
+    }
+
+    // 4. Upload image if provided
     let image;
     if (req.file) {
       const result = await uploadImageToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
       image = { url: result.url, fileId: result.fileId, width: result.width, height: result.height };
     }
 
+    // 5. Create the ad
     const ad = await Advertisement.create({
       title,
       description,
@@ -25,9 +60,13 @@ exports.createAd = async (req, res, next) => {
       campaign: campaign ? (typeof campaign === 'string' ? JSON.parse(campaign) : campaign) : undefined,
       targetCategories: targetCategories ? (Array.isArray(targetCategories) ? targetCategories : JSON.parse(targetCategories)) : [],
       targetTags: targetTags ? (Array.isArray(targetTags) ? targetTags : JSON.parse(targetTags)) : [],
+      validityDays: parseInt(validityDays) || 7,
+      creditsCost,
+      isPaid: true,
+      walletTransactionId: deduction.transaction,
     });
 
-    ApiResponse.created(res, ad, 'Advertisement created. Pending approval.');
+    ApiResponse.created(res, ad, `Advertisement created. ${creditsCost} credits charged. Valid for ${ad.validityDays} days. Pending approval.`);
   } catch (error) {
     next(error);
   }
@@ -229,13 +268,75 @@ exports.moderateAd = async (req, res, next) => {
 
     switch (action) {
       case 'approve': ad.status = 'active'; break;
-      case 'reject': ad.status = 'rejected'; break;
+      case 'reject':
+        ad.status = 'rejected';
+        // Refund credits on rejection
+        if (ad.creditsCost > 0 && ad.walletTransactionId) {
+          try {
+            await WalletService.refundCredits(
+              ad.advertiser,
+              ad.creditsCost,
+              `Refund for rejected ad: ${ad.title}`,
+              ad._id.toString(),
+              {}
+            );
+          } catch (refundErr) {
+            console.error('Ad refund error:', refundErr.message);
+          }
+        }
+        break;
       case 'pause': ad.status = 'paused'; break;
       default: return ApiResponse.error(res, 'Invalid action', 400);
     }
 
     await ad.save();
     ApiResponse.success(res, ad, `Advertisement ${action}d`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get ad posting price for users
+exports.getAdPricing = async (req, res, next) => {
+  try {
+    const adRule = await CreditRule.findOne({ feature: 'ad_posting', isActive: true });
+    const balance = await WalletService.getBalance(req.user._id);
+
+    ApiResponse.success(res, {
+      creditsCost: adRule ? adRule.baseCost : null,
+      isConfigured: !!adRule,
+      walletBalance: balance,
+      canAfford: adRule ? balance >= adRule.baseCost : false,
+      rule: adRule ? {
+        description: adRule.description,
+        minCredits: adRule.minCredits,
+        maxCredits: adRule.maxCredits,
+        isDynamic: adRule.isDynamic,
+      } : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Expire ads whose validity has ended
+exports.expireAds = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const result = await Advertisement.updateMany(
+      {
+        status: 'active',
+        expiresAt: { $lte: now },
+      },
+      {
+        $set: { status: 'completed' },
+      }
+    );
+
+    ApiResponse.success(res, {
+      expiredCount: result.modifiedCount,
+      checkedAt: now,
+    }, `${result.modifiedCount} ads expired`);
   } catch (error) {
     next(error);
   }

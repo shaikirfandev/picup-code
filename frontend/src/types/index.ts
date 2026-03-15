@@ -59,6 +59,8 @@ export interface Post {
     large?: string;
   };
   productUrl: string;
+  affiliateLinks?: { url: string; label: string; clicks?: number }[];
+  isAffiliate?: boolean;
   price?: {
     amount: number;
     currency: string;
@@ -593,6 +595,30 @@ export interface AffiliateAnalytics {
   urlPerformance: { url: string; clicks: number; uniqueClicks: number; postsCount: number }[];
 }
 
+export interface AffiliateSummary {
+  totalAffiliatePosts: number;
+  isPaid: boolean;
+  totalClicks?: number;
+  uniqueClicks?: number;
+  suspiciousClicks?: number;
+  conversionEstimate?: number;
+  revenueEstimate?: number;
+  topPosts?: Post[];
+  recentClicks?: { date: string; clicks: number; uniqueClicks: number }[];
+}
+
+export interface AffiliatePostStats {
+  postId: string;
+  title: string;
+  productUrl: string;
+  affiliateLinks: { url: string; label: string; clicks: number }[];
+  totalClicks: number;
+  clicksByDay: { date: string; clicks: number; uniqueClicks: number }[];
+  deviceBreakdown: Record<string, number>;
+  geoBreakdown: { country: string; count: number }[];
+  referrerBreakdown: { source: string; count: number }[];
+}
+
 export interface AudienceInsights {
   locationDistribution: { country: string; count: number }[];
   deviceUsage: Record<string, number>;
@@ -618,5 +644,363 @@ export interface CreatorAccessCheck {
   accountType: string;
   plan: string;
   isActive: boolean;
+}
+
+// ─── Ads Insight Platform Types ──────────────────────────────────────────────
+
+export interface CampaignBudget {
+  total: number;
+  daily: number;
+  spent: number;
+  currency: 'USD' | 'INR';
+}
+
+export interface CampaignSchedule {
+  startDate: string;
+  endDate?: string;
+  timezone: string;
+}
+
+export interface TargetAudience {
+  ageMin: number;
+  ageMax: number;
+  genders: string[];
+  locations: string[];
+  interests: string[];
+  languages: string[];
+  devices: string[];
+}
+
+export interface CampaignCreative {
+  type: 'image' | 'video' | 'carousel' | 'text';
+  title: string;
+  description: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  callToAction: string;
+  redirectUrl: string;
+}
+
+export interface CampaignMetrics {
+  impressions: number;
+  reach: number;
+  clicks: number;
+  conversions: number;
+  engagement: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  costPerConversion: number;
+  roi: number;
+}
+
+export interface Campaign {
+  _id: string;
+  name: string;
+  owner: string;
+  business?: string;
+  adAccount?: string;
+  objective: 'awareness' | 'traffic' | 'engagement' | 'leads' | 'conversions' | 'sales';
+  budget: CampaignBudget;
+  schedule: CampaignSchedule;
+  targetAudience: TargetAudience;
+  creatives: CampaignCreative[];
+  placement: string[];
+  status: 'draft' | 'pending' | 'active' | 'paused' | 'completed' | 'archived' | 'rejected';
+  metrics: CampaignMetrics;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdGroup {
+  _id: string;
+  name: string;
+  campaign: string;
+  owner: string;
+  budget: { daily: number; spent: number; currency: string };
+  targetAudience: Partial<TargetAudience>;
+  placement: string[];
+  status: 'active' | 'paused' | 'archived' | 'deleted';
+  metrics: Partial<CampaignMetrics>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdAccountOverview {
+  totalCampaigns: number;
+  activeCampaigns: number;
+  adSpend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  roi: number;
+  totalBudget: number;
+  period: string;
+}
+
+export interface ReportDataPoint {
+  _id: string;
+  impressions: number;
+  reach: number;
+  clicks: number;
+  conversions: number;
+  engagement: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  costPerConversion: number;
+}
+
+export interface CampaignReport {
+  report: ReportDataPoint[];
+  totals: ReportDataPoint;
+  groupBy: string;
+}
+
+export interface AdReportTemplate {
+  _id: string;
+  name: string;
+  owner: string;
+  description: string;
+  metrics: string[];
+  filters: {
+    campaignIds: string[];
+    adGroupIds: string[];
+    audienceSegments: string[];
+    dateRange: { start?: string; end?: string; preset: string };
+  };
+  groupBy: string;
+  exportFormat: 'csv' | 'pdf' | 'json';
+  isTemplate: boolean;
+  createdAt: string;
+}
+
+export interface AdRecommendation {
+  campaignId: string;
+  campaignName: string;
+  type: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  impact: string;
+}
+
+export interface MediaPlanEstimate {
+  audienceSize: number;
+  estimatedImpressions: number;
+  estimatedReach: number;
+  estimatedClicks: number;
+  estimatedConversions: number;
+  estimatedCPC: number;
+  estimatedCPM: number;
+  dailyBudget: number;
+  totalBudget: number;
+  duration: number;
+}
+
+export interface AdActivityLog {
+  _id: string;
+  owner: string;
+  actionType: string;
+  entityType: string;
+  entityId: string;
+  description: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+}
+
+export interface AdAccount {
+  _id: string;
+  name: string;
+  owner: string;
+  business?: string;
+  currency: string;
+  timezone: string;
+  status: 'active' | 'suspended' | 'closed';
+  totalSpend: number;
+  totalBudget: number;
+  metrics: Partial<CampaignMetrics>;
+  campaignCount?: number;
+  activeCampaignCount?: number;
+  createdAt: string;
+}
+
+export interface BusinessMember {
+  user: { _id: string; username: string; displayName: string; avatar: string; email?: string };
+  role: 'admin' | 'manager' | 'analyst' | 'viewer';
+  joinedAt: string;
+}
+
+export interface Business {
+  _id: string;
+  name: string;
+  owner: string;
+  description: string;
+  logo?: { url: string };
+  website?: string;
+  industry?: string;
+  members: BusinessMember[];
+  adAccounts: AdAccount[];
+  billing?: { companyName?: string; address?: string; taxId?: string; email?: string };
+  status: 'active' | 'suspended' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CatalogProduct {
+  _id?: string;
+  externalId?: string;
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  imageUrl?: string;
+  productUrl?: string;
+  category?: string;
+  tags: string[];
+  availability: 'in_stock' | 'out_of_stock' | 'preorder';
+  status: 'active' | 'archived';
+}
+
+export interface ProductGroup {
+  _id?: string;
+  name: string;
+  description?: string;
+  filters: { category?: string; priceMin?: number; priceMax?: number; tags?: string[] };
+}
+
+export interface Catalog {
+  _id: string;
+  name: string;
+  business: string | { _id: string; name: string };
+  owner: string;
+  description: string;
+  productGroups: ProductGroup[];
+  products: CatalogProduct[];
+  feedUrl?: string;
+  feedType: 'manual' | 'csv' | 'xml' | 'api';
+  lastSyncAt?: string;
+  status: 'active' | 'archived';
+  createdAt: string;
+}
+
+// ─── Admin Wallet / Recharge Types ─────────────────────────────────────────
+
+export interface AdminRecharge {
+  _id: string;
+  user: { _id: string; username: string; displayName: string; avatar?: string; email: string };
+  type: 'purchase' | 'bonus';
+  source: string;
+  amount: number;
+  status: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface RechargeStats {
+  summary: {
+    totalAmount: number;
+    totalCount: number;
+    avgAmount: number;
+    uniqueUserCount: number;
+    maxRecharge: number;
+  };
+  dailyRecharges: { _id: string; totalAmount: number; count: number }[];
+  topRechargers: {
+    user: { _id: string; username: string; displayName: string; avatar?: string; email: string };
+    totalRecharged: number;
+    rechargeCount: number;
+    lastRecharge: string;
+  }[];
+  bySource: { _id: string; totalAmount: number; count: number }[];
+  period: string;
+}
+
+export interface AdminTransaction {
+  _id: string;
+  user: { _id: string; username: string; displayName: string; avatar?: string; email: string };
+  type: 'purchase' | 'usage' | 'refund' | 'bonus' | 'adjustment';
+  source: string;
+  amount: number;
+  status: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  description?: string;
+  referenceId?: string;
+  referenceType?: string;
+  createdAt: string;
+}
+
+export interface AdminWallet {
+  _id: string;
+  user: string;
+  userInfo: { _id: string; username: string; displayName: string; avatar?: string; email: string; role: string };
+  balance: number;
+  totalPurchased: number;
+  totalUsed: number;
+  bonusCredits: number;
+  isFrozen: boolean;
+  createdAt: string;
+}
+
+export interface CreditRule {
+  _id: string;
+  feature: string;
+  baseCost: number;
+  description?: string;
+  isDynamic: boolean;
+  dynamicFormula?: Record<string, unknown>;
+  category: string;
+  isActive: boolean;
+  minCredits: number;
+  maxCredits: number;
+  updatedBy?: { _id: string; username: string; displayName: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdPricing {
+  creditsCost: number | null;
+  isConfigured: boolean;
+  walletBalance: number;
+  canAfford: boolean;
+  rule: {
+    description?: string;
+    minCredits: number;
+    maxCredits: number;
+    isDynamic: boolean;
+  } | null;
+}
+
+export interface Advertisement {
+  _id: string;
+  title: string;
+  description: string;
+  image?: { url: string; fileId?: string; width?: number; height?: number };
+  redirectUrl: string;
+  advertiser: { _id: string; username: string; displayName: string; avatar?: string };
+  campaign: {
+    name?: string;
+    startDate: string;
+    endDate?: string;
+    budget: number;
+    spent: number;
+    currency: string;
+  };
+  placement: 'feed' | 'sidebar' | 'banner' | 'search';
+  status: 'draft' | 'pending' | 'active' | 'paused' | 'completed' | 'rejected';
+  isPaid: boolean;
+  creditsCost: number;
+  validityDays: number;
+  expiresAt?: string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  createdAt: string;
 }
 
