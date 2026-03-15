@@ -30,13 +30,6 @@ const nextConfig = {
       '@reduxjs/toolkit',
     ],
   },
-  // Tree-shake server-only code and optimize chunks
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-      skipDefaultConversion: true,
-    },
-  },
 };
 
 module.exports = nextConfig;

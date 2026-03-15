@@ -224,27 +224,9 @@ export const uploadAPI = {
     }),
 };
 
-// Ads API
-export const adsAPI = {
-  getActiveAds: (params?: { placement?: string; limit?: number }) =>
-    api.get('/ads/active', { params }),
-  createAd: (formData: FormData) =>
-    api.post('/ads', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  getMyAds: (params?: { page?: number; limit?: number; status?: string }) =>
-    api.get('/ads/my', { params }),
-  getAd: (id: string) => api.get(`/ads/${id}`),
-  updateAd: (id: string, formData: FormData) =>
-    api.put(`/ads/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  deleteAd: (id: string) => api.delete(`/ads/${id}`),
-  trackClick: (id: string) => api.post(`/ads/${id}/click`),
-  trackImpression: (id: string) => api.post(`/ads/${id}/impression`),
-  getAnalytics: (id: string) => api.get(`/ads/${id}/analytics`),
-  getPricing: () => api.get('/ads/pricing'),
-};
-
 // Payment API
 export const paymentAPI = {
-  createPayment: (data: { amount: number; currency: string; type: string; advertisementId?: string; description?: string }) =>
+  createPayment: (data: { amount: number; currency: string; type: string; description?: string }) =>
     api.post('/payments/create', data),
   confirmPayment: (data: { paymentId: string; gatewayPaymentId?: string; gatewaySignature?: string }) =>
     api.post('/payments/confirm', data),
@@ -355,11 +337,6 @@ export const adminAPI = {
     api.get('/admin/analytics/activity/recent', { params }),
   triggerStatsCompute: (data?: { date?: string; backfill?: number }) =>
     api.post('/admin/analytics/stats/compute', data),
-  // Ads management
-  getAllAds: (params?: { page?: number; status?: string }) =>
-    api.get('/ads/admin/all', { params }),
-  moderateAd: (id: string, action: string) =>
-    api.put(`/ads/admin/${id}/moderate`, { action }),
   // Payments
   getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
     api.get('/payments/admin/all', { params }),
@@ -396,11 +373,6 @@ export const adminWalletAPI = {
   getAllWallets: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; frozen?: string }) =>
     api.get('/admin/wallet/wallets', { params }),
 
-  // Ad Pricing
-  getAdPricing: () => api.get('/admin/wallet/ad-pricing'),
-  setAdPricing: (data: { baseCost: number; description?: string; isDynamic?: boolean; dynamicFormula?: Record<string, unknown>; isActive?: boolean; minCredits?: number; maxCredits?: number }) =>
-    api.put('/admin/wallet/ad-pricing', data),
-
   // Credit Rules
   getAllCreditRules: () => api.get('/admin/wallet/credit-rules'),
   updateCreditRule: (id: string, data: { baseCost?: number; description?: string; isDynamic?: boolean; isActive?: boolean; minCredits?: number; maxCredits?: number }) =>
@@ -417,96 +389,6 @@ export const affiliateAPI = {
     api.get(`/affiliate/posts/${postId}/stats`, { params }),
   trackClick: (postId: string, data?: { linkIndex?: number; referrer?: string }) =>
     api.post(`/posts/${postId}/click`, data),
-};
-
-// ─── Ads Insight Platform API ────────────────────────────────────────────────
-
-export const adsInsightAPI = {
-  // Campaigns
-  createCampaign: (data: any) => api.post('/ads-insight/campaigns', data),
-  getCampaigns: (params?: { page?: number; limit?: number; status?: string; search?: string; sort?: string }) =>
-    api.get('/ads-insight/campaigns', { params }),
-  getCampaign: (id: string) => api.get(`/ads-insight/campaigns/${id}`),
-  updateCampaign: (id: string, data: any) => api.put(`/ads-insight/campaigns/${id}`, data),
-  togglePauseCampaign: (id: string) => api.patch(`/ads-insight/campaigns/${id}/toggle-pause`),
-  deleteCampaign: (id: string) => api.delete(`/ads-insight/campaigns/${id}`),
-
-  // Ad Groups
-  createAdGroup: (data: any) => api.post('/ads-insight/ad-groups', data),
-  getAdGroups: (campaignId: string) => api.get(`/ads-insight/ad-groups/campaign/${campaignId}`),
-  updateAdGroup: (id: string, data: any) => api.put(`/ads-insight/ad-groups/${id}`, data),
-  deleteAdGroup: (id: string) => api.delete(`/ads-insight/ad-groups/${id}`),
-
-  // Overview
-  getAccountOverview: (params?: { period?: string }) =>
-    api.get('/ads-insight/overview', { params }),
-
-  // Reporting
-  getCampaignReport: (params?: {
-    campaignId?: string; startDate?: string; endDate?: string;
-    adGroupId?: string; groupBy?: string;
-  }) => api.get('/ads-insight/reports', { params }),
-  exportReport: (params?: { campaignId?: string; startDate?: string; endDate?: string; format?: string }) =>
-    api.get('/ads-insight/reports/export', { params, responseType: params?.format === 'csv' ? 'blob' as any : undefined }),
-
-  // Report Templates
-  saveReportTemplate: (data: any) => api.post('/ads-insight/report-templates', data),
-  getReportTemplates: () => api.get('/ads-insight/report-templates'),
-  deleteReportTemplate: (id: string) => api.delete(`/ads-insight/report-templates/${id}`),
-
-  // Recommendations
-  getRecommendations: () => api.get('/ads-insight/recommendations'),
-
-  // Media Planner
-  estimateMediaPlan: (data: { budget: number; audience?: any; duration: number; placement?: string[] }) =>
-    api.post('/ads-insight/media-planner/estimate', data),
-
-  // Bulk Operations
-  bulkUpdateCampaigns: (data: { campaignIds: string[]; updates: any }) =>
-    api.put('/ads-insight/bulk/campaigns', data),
-  bulkUpdateStatus: (data: { campaignIds: string[]; status: string }) =>
-    api.put('/ads-insight/bulk/status', data),
-
-  // History
-  getActivityTimeline: (params?: {
-    page?: number; limit?: number; actionType?: string;
-    entityType?: string; startDate?: string; endDate?: string;
-  }) => api.get('/ads-insight/history', { params }),
-  getActivityStats: () => api.get('/ads-insight/history/stats'),
-};
-
-// ─── Business Manager API ────────────────────────────────────────────────────
-
-export const businessAPI = {
-  // Business
-  createBusiness: (data: any) => api.post('/business', data),
-  getMyBusinesses: () => api.get('/business'),
-  getBusiness: (id: string) => api.get(`/business/${id}`),
-  updateBusiness: (id: string, data: any) => api.put(`/business/${id}`, data),
-
-  // Members
-  addMember: (businessId: string, data: { userId: string; role?: string }) =>
-    api.post(`/business/${businessId}/members`, data),
-  removeMember: (businessId: string, userId: string) =>
-    api.delete(`/business/${businessId}/members/${userId}`),
-  updateMemberRole: (businessId: string, userId: string, role: string) =>
-    api.put(`/business/${businessId}/members/${userId}/role`, { role }),
-
-  // Ad Accounts
-  createAdAccount: (data: any) => api.post('/business/ad-accounts', data),
-  getMyAdAccounts: () => api.get('/business/ad-accounts/my'),
-  getAdAccount: (id: string) => api.get(`/business/ad-accounts/${id}`),
-
-  // Catalogs
-  createCatalog: (data: any) => api.post('/business/catalogs', data),
-  getCatalogs: (params?: { businessId?: string }) => api.get('/business/catalogs', { params }),
-  getCatalog: (id: string) => api.get(`/business/catalogs/${id}`),
-  updateCatalog: (id: string, data: any) => api.put(`/business/catalogs/${id}`, data),
-  addProduct: (catalogId: string, data: any) => api.post(`/business/catalogs/${catalogId}/products`, data),
-  updateProduct: (catalogId: string, productId: string, data: any) =>
-    api.put(`/business/catalogs/${catalogId}/products/${productId}`, data),
-  addProductGroup: (catalogId: string, data: any) =>
-    api.post(`/business/catalogs/${catalogId}/product-groups`, data),
 };
 
 export default api;

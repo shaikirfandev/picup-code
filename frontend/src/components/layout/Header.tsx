@@ -10,7 +10,7 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3, Activity,
+  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, Activity,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import dynamic from 'next/dynamic';
@@ -98,7 +98,6 @@ export default function Header() {
     ...(isPaid
       ? [
           { href: '/analytics', label: 'Creator Analytics', icon: Activity },
-          { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
           { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
         ]
       : []),

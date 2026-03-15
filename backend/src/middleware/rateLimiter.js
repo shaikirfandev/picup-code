@@ -130,19 +130,6 @@ const walletLimiter = rateLimit({
   },
 });
 
-// Ads rate limiter (per-user)
-const adsLimiter = rateLimit({
-  ...sharedOpts,
-  windowMs: 15 * 60 * 1000,
-  max: 40,
-  keyGenerator: userOrIpKey,
-  store: getStore('ads'),
-  message: {
-    success: false,
-    message: 'Too many ad requests. Please try again later.',
-  },
-});
-
 // Admin rate limiter (per-user, generous)
 const adminLimiter = rateLimit({
   ...sharedOpts,
@@ -177,7 +164,6 @@ module.exports = {
   searchLimiter,
   reportLimiter,
   walletLimiter,
-  adsLimiter,
   adminLimiter,
   notificationsLimiter,
 };

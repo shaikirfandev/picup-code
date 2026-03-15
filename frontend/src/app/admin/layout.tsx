@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
 import {
   LayoutDashboard, Users, FileImage, Flag, FolderTree, Sparkles,
-  Shield, ChevronRight, BookOpen, BarChart3, Crown, Wallet, Megaphone,
+  Shield, ChevronRight, BookOpen, BarChart3, Crown, Wallet,
 } from 'lucide-react';
 
 const navItems = [
@@ -15,7 +15,6 @@ const navItems = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/paid-users', label: 'Paid Users', icon: Crown },
   { href: '/admin/wallet-recharges', label: 'Wallet Recharges', icon: Wallet },
-  { href: '/admin/ad-pricing', label: 'Ad Pricing', icon: Megaphone },
   { href: '/admin/posts', label: 'Posts', icon: FileImage },
   { href: '/admin/blogs', label: 'Blog Posts', icon: BookOpen },
   { href: '/admin/reports', label: 'Reports', icon: Flag },

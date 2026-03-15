@@ -229,67 +229,6 @@ exports.getAllTransactions = async (req, res, next) => {
   }
 };
 
-// ─── Admin: Ad Pricing Management ─────────────────────────────────────────────
-
-/**
- * Get the current ad posting price
- */
-exports.getAdPricing = async (req, res, next) => {
-  try {
-    const adRule = await CreditRule.findOne({ feature: 'ad_posting' });
-    ApiResponse.success(res, adRule || { message: 'Ad posting price not set' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Set or update ad posting price (admin only)
- */
-exports.setAdPricing = async (req, res, next) => {
-  try {
-    const { baseCost, description, isDynamic, dynamicFormula, minCredits, maxCredits, isActive } = req.body;
-
-    if (baseCost === undefined || baseCost < 0) {
-      return ApiResponse.error(res, 'baseCost is required and must be >= 0', 400);
-    }
-
-    let adRule = await CreditRule.findOne({ feature: 'ad_posting' });
-
-    if (adRule) {
-      // Update existing rule
-      adRule.baseCost = baseCost;
-      if (description !== undefined) adRule.description = description;
-      if (isDynamic !== undefined) adRule.isDynamic = isDynamic;
-      if (dynamicFormula !== undefined) adRule.dynamicFormula = dynamicFormula;
-      if (minCredits !== undefined) adRule.minCredits = minCredits;
-      if (maxCredits !== undefined) adRule.maxCredits = maxCredits;
-      if (isActive !== undefined) adRule.isActive = isActive;
-      adRule.category = 'promotion';
-      adRule.updatedBy = req.user._id;
-      await adRule.save();
-    } else {
-      // Create new rule
-      adRule = await CreditRule.create({
-        feature: 'ad_posting',
-        baseCost,
-        description: description || 'Credit cost for posting a paid advertisement',
-        isDynamic: isDynamic || false,
-        dynamicFormula: dynamicFormula || null,
-        category: 'promotion',
-        isActive: isActive !== undefined ? isActive : true,
-        minCredits: minCredits || 1,
-        maxCredits: maxCredits || 100000,
-        updatedBy: req.user._id,
-      });
-    }
-
-    ApiResponse.success(res, adRule, 'Ad posting price updated');
-  } catch (error) {
-    next(error);
-  }
-};
-
 /**
  * Get all credit rules (admin overview)
  */

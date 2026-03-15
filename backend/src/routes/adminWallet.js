@@ -16,9 +16,6 @@ router.get('/transactions', adminWalletController.getAllTransactions);
 // ── All Wallets ─────────────────────────────────────────────────
 router.get('/wallets', adminWalletController.getAllWallets);
 
-// ── Ad Pricing ──────────────────────────────────────────────────
-router.get('/ad-pricing', adminWalletController.getAdPricing);
-router.put('/ad-pricing', adminWalletController.setAdPricing);
 
 // ── Credit Rules ────────────────────────────────────────────────
 router.get('/credit-rules', adminWalletController.getAllCreditRules);

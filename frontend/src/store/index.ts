@@ -7,7 +7,6 @@ import userReducer from './slices/userSlice';
 import analyticsReducer from './slices/analyticsSlice';
 import creatorAnalyticsReducer from './slices/creatorAnalyticsSlice';
 import boardReducer from './slices/boardSlice';
-import adsInsightReducer from './slices/adsInsightSlice';
 import affiliateReducer from './slices/affiliateSlice';
 import { errorToastMiddleware, attachOnlineListeners } from './middleware';
 
@@ -21,7 +20,6 @@ export const store = configureStore({
     analytics: analyticsReducer,
     creatorAnalytics: creatorAnalyticsReducer,
     boards: boardReducer,
-    adsInsight: adsInsightReducer,
     affiliate: affiliateReducer,
   },
   middleware: (getDefaultMiddleware) =>

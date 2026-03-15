@@ -1,6 +1,5 @@
 const Payment = require('../models/Payment');
 const Wallet = require('../models/Wallet');
-const Advertisement = require('../models/Advertisement');
 const User = require('../models/User');
 const PaymentService = require('../services/paymentService');
 const WalletService = require('../services/walletService');
@@ -8,10 +7,10 @@ const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiRespon
 const crypto = require('crypto');
 const apiResponse = require('../utils/apiResponse');
 
-// Create payment intent (for ad posting)
+// Create payment intent
 exports.createPayment = async (req, res, next) => {
   try {
-    const { amount, currency = 'USD', type = 'ad_payment', advertisementId, description } = req.body;
+    const { amount, currency = 'USD', type = 'wallet_topup', description } = req.body;
 
     if (!['USD', 'INR'].includes(currency)) {
       return ApiResponse.error(res, 'Only USD and INR currencies are supported', 400);
@@ -27,7 +26,6 @@ exports.createPayment = async (req, res, next) => {
       amount,
       currency,
       gateway: currency === 'INR' ? 'razorpay' : 'stripe',
-      advertisement: advertisementId || undefined,
       description: description || `Payment for ${type}`,
       status: 'pending',
     });
@@ -69,15 +67,6 @@ exports.confirmPayment = async (req, res, next) => {
     payment.paidAt = new Date();
     await payment.save();
 
-    // If ad payment, activate the ad
-    if (payment.advertisement) {
-      await Advertisement.findByIdAndUpdate(payment.advertisement, {
-        isPaid: true,
-        status: 'active',
-        paymentId: payment._id,
-      });
-    }
-
     // Add credits to wallet
     let wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
@@ -109,7 +98,6 @@ exports.getMyPayments = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
-        .populate('advertisement', 'title status')
         .lean(),
       Payment.countDocuments(filter),
     ]);
@@ -221,7 +209,6 @@ exports.getAllPayments = async (req, res, next) => {
         .skip(skip)
         .limit(parseInt(limit))
         .populate('user', 'username email displayName')
-        .populate('advertisement', 'title')
         .lean(),
       Payment.countDocuments(filter),
     ]);

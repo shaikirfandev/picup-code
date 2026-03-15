@@ -8,7 +8,7 @@ import { closeSidebar } from '@/store/slices/uiSlice';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import {
   X, Home, Zap, Wrench, FileText, Plus,
-  User, Bookmark, LayoutDashboard, Activity, BarChart3, CreditCard,
+  User, Bookmark, LayoutDashboard, Activity, CreditCard,
   Shield, Settings, LogOut, Search, Crosshair,
 } from 'lucide-react';
 
@@ -59,7 +59,6 @@ export default function MobileSidebar() {
     ...(isPaid
       ? [
           { href: '/analytics', label: 'Creator Analytics', icon: Activity },
-          { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
           { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
         ]
       : []),

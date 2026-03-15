@@ -12,7 +12,6 @@ const creditRuleSchema = new mongoose.Schema(
         'ai_caption',
         'bulk_upload',
         'custom_domain',
-        'ad_posting',
       ],
       required: true,
       unique: true,

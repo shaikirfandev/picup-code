@@ -6,7 +6,6 @@ const Category = require('../models/Category');
 const AIGeneration = require('../models/AIGeneration');
 const Comment = require('../models/Comment');
 const LoginLog = require('../models/LoginLog');
-const Advertisement = require('../models/Advertisement');
 const Payment = require('../models/Payment');
 const Wallet = require('../models/Wallet');
 const { Like, Save } = require('../models/Interaction');

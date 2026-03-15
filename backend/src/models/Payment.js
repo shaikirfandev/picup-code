@@ -10,7 +10,7 @@ const paymentSchema = new mongoose.Schema(
     // Payment type
     type: {
       type: String,
-      enum: ['ad_payment', 'subscription', 'wallet_topup', 'refund'],
+      enum: ['subscription', 'wallet_topup', 'refund'],
       required: true,
     },
     // Amount
@@ -39,11 +39,6 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed', 'refunded', 'cancelled'],
       default: 'pending',
-    },
-    // Reference
-    advertisement: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Advertisement',
     },
     // Metadata
     description: { type: String, default: '' },

@@ -118,49 +118,6 @@ const validateObjectId = [
   handleValidation,
 ];
 
-// ── Ad validation ────────────────────────────────────────────────────────────
-const validateAd = [
-  body('title')
-    .trim()
-    .isLength({ min: 1, max: 150 })
-    .withMessage('Ad title is required and must be under 150 characters'),
-  body('description')
-    .optional()
-    .trim()
-    .isLength({ max: 2000 })
-    .withMessage('Description must be under 2000 characters'),
-  body('targetUrl')
-    .optional({ values: 'falsy' })
-    .isURL()
-    .withMessage('Please provide a valid target URL'),
-  body('adType')
-    .optional()
-    .isIn(['banner', 'feed', 'sponsored', 'popup', 'sidebar'])
-    .withMessage('Invalid ad type'),
-  body('budget')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Budget must be a positive number'),
-  handleValidation,
-];
-
-const validateAdUpdate = [
-  body('title')
-    .optional()
-    .trim()
-    .isLength({ min: 1, max: 150 })
-    .withMessage('Ad title must be under 150 characters'),
-  body('description')
-    .optional()
-    .trim()
-    .isLength({ max: 2000 }),
-  body('targetUrl')
-    .optional({ values: 'falsy' })
-    .isURL()
-    .withMessage('Please provide a valid target URL'),
-  handleValidation,
-];
-
 // ── Wallet / Payment validation ──────────────────────────────────────────────
 const validateWalletTopup = [
   body('amount')
@@ -283,8 +240,6 @@ module.exports = {
   validateReport,
   validateCategory,
   validateObjectId,
-  validateAd,
-  validateAdUpdate,
   validateWalletTopup,
   validateDeductCredits,
   validatePaymentCreate,
