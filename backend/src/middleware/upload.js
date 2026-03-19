@@ -53,6 +53,15 @@ const videoUpload = multer({
   },
 });
 
+const videoWithThumbnailUpload = multer({
+  storage,
+  fileFilter: mediaFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB
+    files: 2,
+  },
+});
+
 const mediaUpload = multer({
   storage,
   fileFilter: mediaFilter,
@@ -93,4 +102,4 @@ const handleUploadError = (err, req, res, next) => {
   next();
 };
 
-module.exports = { upload, videoUpload, mediaUpload, handleUploadError };
+module.exports = { upload, videoUpload, videoWithThumbnailUpload, mediaUpload, handleUploadError };

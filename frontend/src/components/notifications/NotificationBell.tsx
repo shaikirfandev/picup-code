@@ -139,11 +139,11 @@ export default function NotificationBell() {
     }
   }, [open, isAuthenticated, dispatch]);
 
-  // Poll unread count every 30s
+  // Poll unread count every 60s
   useEffect(() => {
     if (!isAuthenticated) return;
     dispatch(fetchUnreadCount());
-    const interval = setInterval(() => dispatch(fetchUnreadCount()), 30000);
+    const interval = setInterval(() => dispatch(fetchUnreadCount()), 60_000);
     return () => clearInterval(interval);
   }, [isAuthenticated, dispatch]);
 

@@ -218,3 +218,102 @@ exports.getAllPayments = async (req, res, next) => {
     next(error);
   }
 };
+
+// Subscribe to a plan
+const PLAN_PRICES = {
+  basic: { amount: 4.99, label: 'Basic' },
+  pro: { amount: 9.99, label: 'Pro' },
+  enterprise: { amount: 29.99, label: 'Enterprise' },
+};
+
+exports.subscribe = async (req, res, next) => {
+  try {
+    const { plan, currency = 'USD' } = req.body;
+
+    if (!['basic', 'pro', 'enterprise'].includes(plan)) {
+      return ApiResponse.error(res, 'Invalid plan. Choose basic, pro, or enterprise.', 400);
+    }
+
+    const planInfo = PLAN_PRICES[plan];
+
+    // Create subscription payment record
+    const payment = await Payment.create({
+      user: req.user._id,
+      type: 'subscription',
+      amount: planInfo.amount,
+      currency,
+      gateway: currency === 'INR' ? 'razorpay' : 'stripe',
+      description: `${planInfo.label} plan subscription`,
+      status: 'completed',
+      gatewayPaymentId: `sub_${Date.now()}`,
+      gatewaySignature: `sig_${Date.now()}`,
+      paidAt: new Date(),
+    });
+
+    // Upgrade user
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        accountType: 'paid',
+        subscription: {
+          plan,
+          startDate: now,
+          endDate,
+          isActive: true,
+        },
+      },
+      { new: true }
+    ).select('-password -refreshToken');
+
+    ApiResponse.success(res, {
+      user,
+      payment: {
+        id: payment._id,
+        amount: planInfo.amount,
+        currency,
+        plan,
+      },
+    }, `Successfully subscribed to ${planInfo.label} plan!`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get my subscription
+exports.getSubscription = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('accountType subscription').lean();
+    ApiResponse.success(res, {
+      accountType: user.accountType,
+      subscription: user.subscription || { plan: 'none', isActive: false },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Cancel subscription
+exports.cancelSubscription = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user.accountType !== 'paid' || !user.subscription?.isActive) {
+      return ApiResponse.error(res, 'No active subscription to cancel', 400);
+    }
+
+    // Keep access until the end date, just mark as not renewing
+    user.subscription.isActive = false;
+    await user.save();
+
+    ApiResponse.success(res, {
+      accountType: user.accountType,
+      subscription: user.subscription,
+    }, 'Subscription cancelled. You\'ll retain access until the current period ends.');
+  } catch (error) {
+    next(error);
+  }
+};

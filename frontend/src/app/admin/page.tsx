@@ -38,15 +38,15 @@ export default function AdminDashboardPage() {
     <div className="p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-surface-500 mt-1">Overview of your platform&apos;s metrics</p>
+        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Overview of your platform&apos;s metrics</p>
       </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="card p-5 animate-pulse">
-              <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-24 mb-3" />
-              <div className="h-8 bg-surface-200 dark:bg-surface-700 rounded w-16" />
+              <div className="h-4 rounded w-24 mb-3" style={{ background: 'var(--surface-hover)' }} />
+              <div className="h-8 rounded w-16" style={{ background: 'var(--surface-hover)' }} />
             </div>
           ))}
         </div>
@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
             {statCards.map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="card p-5 hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-surface-500">{label}</span>
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</span>
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center`}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
@@ -75,19 +75,19 @@ export default function AdminDashboardPage() {
               </h2>
               <div className="space-y-3">
                 {stats?.recentPosts?.slice(0, 5).map((post: any) => (
-                  <div key={post._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800">
+                  <div key={post._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" style={{ cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     {post.image?.url && (
                       <img src={post.image.url} alt="" className="w-12 h-12 rounded-lg object-cover" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{post.title}</p>
-                      <p className="text-xs text-surface-500">by {post.author?.displayName}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{post.title}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>by {post.author?.displayName}</p>
                     </div>
-                    <span className="text-xs text-surface-400">{new Date(post.createdAt).toLocaleDateString()}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
                   </div>
                 ))}
                 {(!stats?.recentPosts || stats.recentPosts.length === 0) && (
-                  <p className="text-sm text-surface-400 text-center py-4">No recent activity</p>
+                  <p className="text-sm text-center py-4" style={{ color: 'var(--text-tertiary)' }}>No recent activity</p>
                 )}
               </div>
             </div>
@@ -99,8 +99,8 @@ export default function AdminDashboardPage() {
               </h2>
               <div className="space-y-3">
                 {stats?.topUsers?.slice(0, 5).map((u: any, i: number) => (
-                  <div key={u._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800">
-                    <span className="w-6 h-6 rounded-full bg-surface-100 dark:bg-surface-700 text-xs font-bold flex items-center justify-center">
+                  <div key={u._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center" style={{ background: 'var(--surface-secondary)', color: 'var(--foreground)' }}>
                       {i + 1}
                     </span>
                     {u.avatar ? (
@@ -112,13 +112,13 @@ export default function AdminDashboardPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{u.displayName}</p>
-                      <p className="text-xs text-surface-500">@{u.username}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>@{u.username}</p>
                     </div>
                     <span className="text-sm font-semibold">{u.postsCount} pins</span>
                   </div>
                 ))}
                 {(!stats?.topUsers || stats.topUsers.length === 0) && (
-                  <p className="text-sm text-surface-400 text-center py-4">No users yet</p>
+                  <p className="text-sm text-center py-4" style={{ color: 'var(--text-tertiary)' }}>No users yet</p>
                 )}
               </div>
             </div>

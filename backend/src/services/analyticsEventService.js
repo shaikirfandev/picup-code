@@ -144,11 +144,11 @@ async function trackEvent({
       createdAt: new Date(),
     };
 
-    // ── Buffer event in Redis ──
+    // ── Buffer event in Redis for batch write ──
     if (isRedisConnected()) {
       await safeRedis.lpush(KEYS.EVENT_BUFFER, JSON.stringify(event));
 
-      // ── Update real-time counters ──
+      // ── Update real-time counters instantly ──
       const pipe = await safeRedis.pipeline();
       if (pipe) {
         const rtPostKey = KEYS.REALTIME_POST(postId);
@@ -182,7 +182,7 @@ async function trackEvent({
         await pipe.exec();
       }
     } else {
-      // Fallback: direct write to MongoDB
+      // Fallback: direct write to MongoDB if Redis is down
       await PostEvent.create(event);
     }
 

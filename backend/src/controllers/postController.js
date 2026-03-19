@@ -5,7 +5,7 @@ const Report = require('../models/Report');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
 const { uploadImageToGridFS, uploadThumbnailToGridFS, uploadVideoToGridFS } = require('../config/gridfs');
 const notificationService = require('../services/notificationService');
-const { trackAffiliateClick } = require('../services/analyticsEventService');
+const { trackAffiliateClick, trackEvent } = require('../services/analyticsEventService');
 
 // Create post — files go to MongoDB GridFS
 exports.createPost = async (req, res, next) => {
@@ -30,7 +30,14 @@ exports.createPost = async (req, res, next) => {
           bytes: result.size,
         };
       } else if (videoData) {
-        videoDataResult = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
+        const parsed = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
+        videoDataResult = {
+          url: parsed.url,
+          fileId: parsed.fileId,
+          bytes: parsed.bytes,
+          thumbnailUrl: parsed.thumbnailUrl || undefined,
+          duration: parsed.duration || undefined,
+        };
       } else {
         return ApiResponse.error(res, 'Video is required for video posts', 400);
       }
@@ -163,6 +170,15 @@ exports.getPost = async (req, res, next) => {
     // Increment views
     await Post.findByIdAndUpdate(post._id, { $inc: { viewsCount: 1 } });
 
+    // Track view event for analytics
+    trackEvent({
+      postId: post._id.toString(),
+      ownerId: post.author._id?.toString() || post.author.toString(),
+      viewerId: req.user?._id?.toString() || null,
+      eventType: 'view',
+      req,
+    }).catch(() => {}); // Non-blocking
+
     let isLiked = false;
     let isSaved = false;
     let isFollowingAuthor = false;
@@ -212,15 +228,17 @@ exports.toggleLike = async (req, res, next) => {
     if (existing) {
       await existing.deleteOne();
       await Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } });
+      trackEvent({ postId, ownerId: (await Post.findById(postId).select('author').lean())?.author?.toString(), viewerId: req.user._id.toString(), eventType: 'unlike', req }).catch(() => {});
       return ApiResponse.success(res, { isLiked: false }, 'Post unliked');
     }
 
     await Like.create({ user: req.user._id, post: postId });
     await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
 
-    // Notify post author about the like
+    // Track like event for analytics
     const likedPost = await Post.findById(postId).select('author title');
     if (likedPost) {
+      trackEvent({ postId, ownerId: likedPost.author.toString(), viewerId: req.user._id.toString(), eventType: 'like', req }).catch(() => {});
       notificationService.createNotification({
         recipient: likedPost.author,
         sender: req.user._id,
@@ -246,6 +264,7 @@ exports.toggleSave = async (req, res, next) => {
     if (existing) {
       await existing.deleteOne();
       await Post.findByIdAndUpdate(postId, { $inc: { savesCount: -1 } });
+      trackEvent({ postId, ownerId: (await Post.findById(postId).select('author').lean())?.author?.toString(), viewerId: req.user._id.toString(), eventType: 'unsave', req }).catch(() => {});
       return ApiResponse.success(res, { isSaved: false }, 'Post unsaved');
     }
 
@@ -259,6 +278,7 @@ exports.toggleSave = async (req, res, next) => {
     // Notify post author about the save
     const savedPost = await Post.findById(postId).select('author title');
     if (savedPost) {
+      trackEvent({ postId, ownerId: savedPost.author.toString(), viewerId: req.user._id.toString(), eventType: 'save', req }).catch(() => {});
       notificationService.createNotification({
         recipient: savedPost.author,
         sender: req.user._id,
@@ -283,6 +303,9 @@ exports.trackClick = async (req, res, next) => {
 
     // Increment total clicksCount
     post.clicksCount = (post.clicksCount || 0) + 1;
+
+    // Track click event for analytics
+    trackEvent({ postId: post._id.toString(), ownerId: post.author.toString(), viewerId: req.user?._id?.toString() || null, eventType: 'click', req }).catch(() => {});
 
     // If a specific affiliate link was clicked, increment its counter
     let clickedUrl = post.productUrl;
@@ -353,7 +376,10 @@ exports.affiliateRedirect = async (req, res, next) => {
 // Share post
 exports.sharePost = async (req, res, next) => {
   try {
-    await Post.findByIdAndUpdate(req.params.id, { $inc: { sharesCount: 1 } });
+    const post = await Post.findByIdAndUpdate(req.params.id, { $inc: { sharesCount: 1 } }, { new: true }).select('author');
+    if (post) {
+      trackEvent({ postId: req.params.id, ownerId: post.author.toString(), viewerId: req.user?._id?.toString() || null, eventType: 'share', req }).catch(() => {});
+    }
     ApiResponse.success(res, null, 'Share tracked');
   } catch (error) {
     next(error);

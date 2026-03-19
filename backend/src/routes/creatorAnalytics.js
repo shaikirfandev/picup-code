@@ -17,7 +17,7 @@ const ctrl = require('../controllers/creatorAnalyticsController');
 // ── Rate Limiters ────────────────────────────────────────────────────────────
 const analyticsLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 60,
+  max: 200,
   message: {
     success: false,
     message: 'Too many analytics requests. Please slow down.',

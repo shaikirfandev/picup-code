@@ -67,7 +67,7 @@ function getDateRange(period, customStart, customEnd) {
 async function getCreatorOverview(userId, period = '30d', customStart, customEnd) {
   const { startStr, endStr, prevStartStr, prevEndStr } = getDateRange(period, customStart, customEnd);
 
-  // Current period aggregation
+  // Current period aggregation from pre-aggregated daily data
   const [currentAgg] = await PostAnalyticsDaily.aggregate([
     {
       $match: {
@@ -89,6 +89,41 @@ async function getCreatorOverview(userId, period = '30d', customStart, customEnd
       },
     },
   ]);
+
+  // Also query raw PostEvent for today's events (not yet aggregated by nightly job)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [rawAgg] = await PostEvent.aggregate([
+    {
+      $match: {
+        ownerId: { $in: [userId.toString(), userId] },
+        isBot: { $ne: true },
+        createdAt: { $gte: new Date(todayStr + 'T00:00:00.000Z'), $lte: new Date(todayStr + 'T23:59:59.999Z') },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalImpressions: { $sum: { $cond: [{ $eq: ['$eventType', 'view'] }, 1, 0] } },
+        totalLikes: { $sum: { $cond: [{ $eq: ['$eventType', 'like'] }, 1, 0] } },
+        totalShares: { $sum: { $cond: [{ $eq: ['$eventType', 'share'] }, 1, 0] } },
+        totalSaves: { $sum: { $cond: [{ $eq: ['$eventType', 'save'] }, 1, 0] } },
+        totalComments: { $sum: { $cond: [{ $eq: ['$eventType', 'comment'] }, 1, 0] } },
+        totalClicks: { $sum: { $cond: [{ $eq: ['$eventType', 'click'] }, 1, 0] } },
+      },
+    },
+  ]);
+
+  // Merge: aggregated + raw events
+  const mergedCurrent = {
+    totalImpressions: (currentAgg?.totalImpressions || 0) + (rawAgg?.totalImpressions || 0),
+    totalUniqueViews: (currentAgg?.totalUniqueViews || 0),
+    totalLikes: (currentAgg?.totalLikes || 0) + (rawAgg?.totalLikes || 0),
+    totalShares: (currentAgg?.totalShares || 0) + (rawAgg?.totalShares || 0),
+    totalSaves: (currentAgg?.totalSaves || 0) + (rawAgg?.totalSaves || 0),
+    totalComments: (currentAgg?.totalComments || 0) + (rawAgg?.totalComments || 0),
+    totalClicks: (currentAgg?.totalClicks || 0) + (rawAgg?.totalClicks || 0),
+    postsWithData: currentAgg?.postsWithData || 0,
+  };
 
   // Previous period aggregation
   const [prevAgg] = await PostAnalyticsDaily.aggregate([
@@ -140,7 +175,7 @@ async function getCreatorOverview(userId, period = '30d', customStart, customEnd
     status: 'published',
   });
 
-  const cur = currentAgg || {};
+  const cur = mergedCurrent;
   const prev = prevAgg || {};
 
   const impressions = cur.totalImpressions || 0;
@@ -244,7 +279,55 @@ async function getEngagementTimeline(userId, period = '30d', customStart, custom
     { $sort: { _id: 1 } },
   ]);
 
-  return dailyData.map((d) => ({
+  // Also query raw PostEvent for today only (not yet aggregated by nightly job)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const rawDailyData = await PostEvent.aggregate([
+    {
+      $match: {
+        ownerId: { $in: [userId.toString(), userId] },
+        isBot: { $ne: true },
+        createdAt: { $gte: new Date(todayStr + 'T00:00:00.000Z'), $lte: new Date(todayStr + 'T23:59:59.999Z') },
+      },
+    },
+    {
+      $addFields: {
+        dateStr: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+      },
+    },
+    {
+      $group: {
+        _id: '$dateStr',
+        impressions: { $sum: { $cond: [{ $eq: ['$eventType', 'view'] }, 1, 0] } },
+        likes: { $sum: { $cond: [{ $eq: ['$eventType', 'like'] }, 1, 0] } },
+        shares: { $sum: { $cond: [{ $eq: ['$eventType', 'share'] }, 1, 0] } },
+        saves: { $sum: { $cond: [{ $eq: ['$eventType', 'save'] }, 1, 0] } },
+        comments: { $sum: { $cond: [{ $eq: ['$eventType', 'comment'] }, 1, 0] } },
+        clicks: { $sum: { $cond: [{ $eq: ['$eventType', 'click'] }, 1, 0] } },
+      },
+    },
+  ]);
+
+  // Merge aggregated + raw by date
+  const dateMap = {};
+  for (const d of dailyData) {
+    dateMap[d._id] = { ...d };
+  }
+  for (const r of rawDailyData) {
+    if (dateMap[r._id]) {
+      dateMap[r._id].impressions += r.impressions;
+      dateMap[r._id].likes += r.likes;
+      dateMap[r._id].shares += r.shares;
+      dateMap[r._id].saves += r.saves;
+      dateMap[r._id].comments += r.comments;
+      dateMap[r._id].clicks += r.clicks;
+    } else {
+      dateMap[r._id] = { _id: r._id, impressions: r.impressions, uniqueViews: 0, likes: r.likes, shares: r.shares, saves: r.saves, comments: r.comments, clicks: r.clicks };
+    }
+  }
+
+  const mergedDaily = Object.values(dateMap).sort((a, b) => a._id.localeCompare(b._id));
+
+  return mergedDaily.map((d) => ({
     date: d._id,
     impressions: d.impressions,
     uniqueViews: d.uniqueViews,
@@ -280,13 +363,37 @@ async function getPostAnalytics(postId, ownerId, period = '30d', customStart, cu
   const post = await Post.findOne({ _id: postId, author: ownerId }).select('title mediaType image video productUrl tags').lean();
   if (!post) return null;
 
-  // Daily breakdown
+  // Daily breakdown from pre-aggregated data
   const dailyData = await PostAnalyticsDaily.find({
     postId,
     date: { $gte: startStr, $lte: endStr },
   })
     .sort({ date: 1 })
     .lean();
+
+  // Raw PostEvent for today only (not yet aggregated by nightly job)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const rawEvents = await PostEvent.aggregate([
+    {
+      $match: {
+        postId: postId.toString(),
+        isBot: { $ne: true },
+        createdAt: { $gte: new Date(todayStr + 'T00:00:00.000Z'), $lte: new Date(todayStr + 'T23:59:59.999Z') },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        impressions: { $sum: { $cond: [{ $eq: ['$eventType', 'view'] }, 1, 0] } },
+        likes: { $sum: { $cond: [{ $eq: ['$eventType', 'like'] }, 1, 0] } },
+        shares: { $sum: { $cond: [{ $eq: ['$eventType', 'share'] }, 1, 0] } },
+        saves: { $sum: { $cond: [{ $eq: ['$eventType', 'save'] }, 1, 0] } },
+        comments: { $sum: { $cond: [{ $eq: ['$eventType', 'comment'] }, 1, 0] } },
+        clicks: { $sum: { $cond: [{ $eq: ['$eventType', 'click'] }, 1, 0] } },
+      },
+    },
+  ]);
+  const rawTotals = rawEvents[0] || {};
 
   // Aggregate totals
   const totals = dailyData.reduce(
@@ -341,6 +448,14 @@ async function getPostAnalytics(postId, ownerId, period = '30d', customStart, cu
     totals.avgWatchDuration = Math.round((totals.avgWatchDuration / totals.daysWithVideo) * 100) / 100;
     totals.avgCompletionRate = Math.round((totals.avgCompletionRate / totals.daysWithVideo) * 100) / 100;
   }
+
+  // Merge raw event counts into totals
+  totals.impressions += rawTotals.impressions || 0;
+  totals.likes += rawTotals.likes || 0;
+  totals.shares += rawTotals.shares || 0;
+  totals.saves += rawTotals.saves || 0;
+  totals.comments += rawTotals.comments || 0;
+  totals.clicks += rawTotals.clicks || 0;
 
   const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0;
   const engagementRate = totals.impressions > 0
@@ -443,10 +558,61 @@ async function getPostsPerformance(userId, {
     },
   ]);
 
-  // Build map of analytics by postId
+  // Also query raw PostEvent for today only (not yet aggregated by nightly job)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const rawEventAggs = await PostEvent.aggregate([
+    {
+      $match: {
+        postId: { $in: allPostIds.map(id => id.toString()) },
+        ownerId: { $in: [userId.toString(), userId] },
+        isBot: { $ne: true },
+        createdAt: { $gte: new Date(todayStr + 'T00:00:00.000Z'), $lte: new Date(todayStr + 'T23:59:59.999Z') },
+      },
+    },
+    {
+      $group: {
+        _id: '$postId',
+        impressions: { $sum: { $cond: [{ $eq: ['$eventType', 'view'] }, 1, 0] } },
+        uniqueViewers: { $addToSet: { $cond: [{ $eq: ['$eventType', 'view'] }, { $ifNull: ['$viewerId', '$sessionId'] }, '$$REMOVE'] } },
+        likes: { $sum: { $cond: [{ $eq: ['$eventType', 'like'] }, 1, 0] } },
+        shares: { $sum: { $cond: [{ $eq: ['$eventType', 'share'] }, 1, 0] } },
+        saves: { $sum: { $cond: [{ $eq: ['$eventType', 'save'] }, 1, 0] } },
+        comments: { $sum: { $cond: [{ $eq: ['$eventType', 'comment'] }, 1, 0] } },
+        clicks: { $sum: { $cond: [{ $eq: ['$eventType', 'click'] }, 1, 0] } },
+      },
+    },
+  ]);
+
+  // Build map of analytics by postId — merge pre-aggregated + raw events
   const analyticsMap = {};
   postAggs.forEach((agg) => {
     analyticsMap[agg._id.toString()] = agg;
+  });
+
+  // Merge raw events (add to existing or create new entries)
+  rawEventAggs.forEach((raw) => {
+    const key = raw._id.toString();
+    if (analyticsMap[key]) {
+      // Add raw data on top of aggregated data
+      analyticsMap[key].impressions += raw.impressions || 0;
+      analyticsMap[key].uniqueViews = (analyticsMap[key].uniqueViews || 0) + (raw.uniqueViewers?.length || 0);
+      analyticsMap[key].likes += raw.likes || 0;
+      analyticsMap[key].shares += raw.shares || 0;
+      analyticsMap[key].saves += raw.saves || 0;
+      analyticsMap[key].comments += raw.comments || 0;
+      analyticsMap[key].clicks += raw.clicks || 0;
+    } else {
+      analyticsMap[key] = {
+        _id: raw._id,
+        impressions: raw.impressions || 0,
+        uniqueViews: raw.uniqueViewers?.length || 0,
+        likes: raw.likes || 0,
+        shares: raw.shares || 0,
+        saves: raw.saves || 0,
+        comments: raw.comments || 0,
+        clicks: raw.clicks || 0,
+      };
+    }
   });
 
   // ── 3. Merge: every post gets a row, with analytics or zeros ─────────────

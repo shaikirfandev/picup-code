@@ -16,10 +16,11 @@ const DEFAULT_CONFIG: Required<RetryConfig> = {
   baseDelay: 500,
   maxDelay: 8000,
   retryCondition: (error: any) => {
-    // Don't retry auth errors or client-side errors (4xx except 408, 429)
+    // Don't retry auth errors or client-side errors (4xx except 408)
     const status = error?.response?.status;
     if (!status) return true;                      // network error → retry
-    if (status === 408 || status === 429) return true;  // timeout / rate-limited → retry
+    if (status === 408) return true;               // timeout → retry
+    if (status === 429) return false;              // rate-limited → DON'T retry (let limit window reset)
     if (status >= 400 && status < 500) return false;    // other 4xx → don't retry
     return true;                                   // 5xx → retry
   },

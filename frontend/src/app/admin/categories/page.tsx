@@ -65,7 +65,7 @@ export default function AdminCategoriesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-surface-500">Manage post categories</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Manage post categories</p>
         </div>
         <button onClick={() => setShowCreate(true)} className="btn-primary gap-2">
           <Plus className="w-4 h-4" />
@@ -95,8 +95,8 @@ export default function AdminCategoriesPage() {
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card p-5 animate-pulse">
-                <div className="h-5 bg-surface-200 dark:bg-surface-700 rounded w-24 mb-2" />
-                <div className="h-3 bg-surface-200 dark:bg-surface-700 rounded w-16" />
+                <div className="h-5 rounded w-24 mb-2" style={{ background: 'var(--surface-hover)' }} />
+                <div className="h-3 rounded w-16" style={{ background: 'var(--surface-hover)' }} />
               </div>
             ))
           : categories.map((cat) => (
@@ -120,10 +120,10 @@ export default function AdminCategoriesPage() {
                         <span className="text-xl">{cat.icon}</span>
                         <span className="font-semibold">{cat.name}</span>
                       </div>
-                      {cat.description && <p className="text-sm text-surface-500">{cat.description}</p>}
+                      {cat.description && <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{cat.description}</p>}
                       <div className="flex items-center gap-2 mt-2">
                         <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }} />
-                        <span className="text-xs text-surface-400">{cat.postsCount || 0} posts</span>
+                        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{cat.postsCount || 0} posts</span>
                       </div>
                     </div>
                     <div className="flex gap-1">

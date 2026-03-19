@@ -13,6 +13,11 @@ router.get('/my', authenticate, paymentController.getMyPayments);
 router.get('/wallet', authenticate, paymentController.getWallet);
 router.post('/wallet/topup', authenticate, validateWalletTopup, paymentController.topUpWallet);
 
+// Subscription
+router.post('/subscribe', authenticate, paymentController.subscribe);
+router.get('/subscription', authenticate, paymentController.getSubscription);
+router.post('/subscription/cancel', authenticate, paymentController.cancelSubscription);
+
 // Admin
 router.get('/admin/all', authenticate, isAdmin, paymentController.getAllPayments);
 

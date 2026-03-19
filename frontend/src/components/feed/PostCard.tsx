@@ -11,6 +11,7 @@ import { Post } from '@/types';
 import { formatNumber, formatPrice, timeAgo } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { likePost, savePost, sharePost as sharePostThunk, trackClick } from '@/store/slices/postSlice';
+import { creatorAnalyticsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const ReportModal = dynamic(() => import('@/components/shared/ReportModal'), { ssr: false });
@@ -39,11 +40,29 @@ const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const isVideo = post.mediaType === 'video' && post.video?.url;
+
+  // Track impression when card enters viewport
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          creatorAnalyticsAPI.trackEvent({ postId: post._id, eventType: 'view', referrer: 'feed' }).catch(() => {});
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [post._id]);
 
   const handleMouseEnter = useCallback(() => {
     setIsHovering(true);
@@ -126,6 +145,7 @@ const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
 
   return (
     <div
+      ref={cardRef}
       className="pin-card group animate-fade-slide-up"
       style={{ animationDelay: animDelay, animationFillMode: 'both' }}
     >
@@ -154,8 +174,9 @@ const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
                 <img src={thumbnailUrl} alt={post.title} loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover" />
               )}
-              <video ref={videoRef} src={post.video!.url} muted={isMuted} loop playsInline preload="none"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'}`} />
+              <video ref={videoRef} src={post.video!.url} muted={isMuted} loop playsInline
+                preload={thumbnailUrl ? 'none' : 'metadata'}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovering || !thumbnailUrl ? 'opacity-100' : 'opacity-0'}`} />
               {!isHovering && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
@@ -243,7 +264,8 @@ const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
                 <a href={post.productUrl} target="_blank" rel="noopener noreferrer" onClick={handleProductClick}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all">
                   <ExternalLink className="w-3 h-3" />
-                  {post.price?.amount ? formatPrice(post.price.amount) : 'Visit'}
+                  {/* {post.price?.amount ? formatPrice(post.price.amount) : 'Visit'} */}
+                  {'Visit'}
                 </a>
               ) : (
                 <div className="flex items-center gap-1.5 text-xs text-white/70">
@@ -268,13 +290,7 @@ const PostCard = memo(function PostCard({ post, index = 0 }: PostCardProps) {
           </div>
 
           {/* Persistent price tag */}
-          {post.price?.amount && !isHovering && (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-xs font-medium">
-                {formatPrice(post.price.amount)}
-              </span>
-            </div>
-          )}
+          {/* Persistent price tag removed from pins */}
         </div>
 
         {/* Info below media */}

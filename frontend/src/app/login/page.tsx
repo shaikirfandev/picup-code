@@ -29,7 +29,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await dispatch(login({ email, password })).unwrap();
-      toast.success('Welcome to Picup!');
+      toast.success('Welcome to mepiks!');
       router.push('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Authentication failed');
@@ -61,7 +61,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
               <Camera className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>Picup</span>
+            <span className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>mepiks</span>
           </div>
 
           <h2 className="text-4xl font-semibold mb-4 leading-tight" style={{ color: 'var(--foreground)' }}>
@@ -94,7 +94,7 @@ export default function LoginPage() {
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                 <Camera className="w-4.5 h-4.5 text-white" />
               </div>
-              <span className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>Picup</span>
+              <span className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>mepiks</span>
             </div>
             <h1 className="text-2xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
               Welcome back
@@ -193,6 +193,16 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium transition-colors hover:opacity-80"
+                style={{ color: 'var(--accent)' }}
+              >
+                Forgot password?
+              </Link>
             </div>
 
             <button

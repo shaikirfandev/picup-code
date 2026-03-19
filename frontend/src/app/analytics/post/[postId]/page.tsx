@@ -42,12 +42,12 @@ export default function PostAnalyticsPage() {
     }
   }, [dispatch, postId, period, customRange.startDate, customRange.endDate]);
 
-  // Auto-refresh realtime every 5s
+  // Auto-refresh realtime every 30s
   useEffect(() => {
     if (!postId) return;
     const interval = setInterval(() => {
       dispatch(fetchRealtimePostStats(postId));
-    }, 5000);
+    }, 30_000);
     return () => clearInterval(interval);
   }, [dispatch, postId]);
 

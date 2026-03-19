@@ -1,0 +1,5 @@
+# One approved https://cdn.cosmos.so/... image URL per line.
+# Only include assets you have permission to import and seed.
+#
+# Example:
+# https://cdn.cosmos.so/957e103d-eeeb-41a8-b848-bb70604b0837?format=webp&w=400

@@ -45,7 +45,7 @@ const sharedOpts = {
 const globalLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: 1000,
   store: getStore('global'),
   message: {
     success: false,
@@ -57,7 +57,7 @@ const globalLimiter = rateLimit({
 const authLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 30,
   store: getStore('auth'),
   message: {
     success: false,
@@ -95,7 +95,7 @@ const uploadLimiter = rateLimit({
 const searchLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 60 * 1000,
-  max: 30,
+  max: 60,
   keyGenerator: userOrIpKey,
   store: getStore('search'),
   message: {

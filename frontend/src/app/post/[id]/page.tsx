@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { commentsAPI, downloadAPI, affiliateAPI } from '@/lib/api';
+import { commentsAPI, downloadAPI, affiliateAPI, creatorAnalyticsAPI } from '@/lib/api';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchPost, likePost, savePost, trackClick } from '@/store/slices/postSlice';
 import { PostDetailSkeleton } from '@/components/shared/Skeletons';
@@ -45,6 +45,13 @@ export default function PostDetailPage() {
     commentsAPI.getComments(params.id as string)
       .then(({ data }) => setComments(data.data))
       .catch(() => {});
+
+    // Track view event for analytics
+    creatorAnalyticsAPI.trackEvent({
+      postId: params.id as string,
+      eventType: 'view',
+      referrer: typeof document !== 'undefined' ? document.referrer || 'direct' : 'direct',
+    }).catch(() => {});
   }, [params.id, dispatch, router]);
 
   const handleLike = async () => {

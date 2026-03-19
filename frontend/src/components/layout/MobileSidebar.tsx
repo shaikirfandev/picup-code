@@ -9,7 +9,7 @@ import { logout as logoutAction } from '@/store/slices/authSlice';
 import {
   X, Home, Compass, Wrench, FileText, Plus,
   User, Bookmark, LayoutDashboard, Activity, CreditCard,
-  Shield, Settings, LogOut, Search,
+  Shield, Settings, LogOut, Search, Crown,
 } from 'lucide-react';
 
 export default function MobileSidebar() {
@@ -60,7 +60,9 @@ export default function MobileSidebar() {
           { href: '/analytics', label: 'Analytics', icon: Activity },
           { href: '/wallet', label: 'Wallet', icon: CreditCard },
         ]
-      : []),
+      : [
+          { href: '/upgrade', label: 'Upgrade', icon: Crown },
+        ]),
     ...(user?.role === 'admin'
       ? [{ href: '/admin', label: 'Admin', icon: Shield }]
       : []),
@@ -92,7 +94,7 @@ export default function MobileSidebar() {
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
           <Link href="/" onClick={close} className="flex items-center gap-2">
             <span className="text-base font-semibold" style={{ color: 'var(--foreground)' }}>
-              Picup
+              mepiks
             </span>
           </Link>
           <button

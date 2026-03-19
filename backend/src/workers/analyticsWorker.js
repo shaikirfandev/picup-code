@@ -33,7 +33,7 @@ function startAnalyticsWorkers() {
 
   console.log('🔧 Starting analytics background workers...');
 
-  // ── 1. Event buffer flush — every 60 seconds ──
+  // ── 1. Event buffer flush — every 5 seconds (batched for efficiency) ──
   flushInterval = setInterval(async () => {
     try {
       const [eventResult, affiliateResult] = await Promise.all([
@@ -47,7 +47,7 @@ function startAnalyticsWorkers() {
     } catch (error) {
       console.error('Worker flush error:', error.message);
     }
-  }, 60 * 1000); // 60 seconds
+  }, 5 * 1000); // 5 seconds — fast enough to feel instant, batched to save DB resources
 
   // ── 2. Daily aggregation — check every 5 minutes, run at midnight ──
   aggregationInterval = setInterval(async () => {

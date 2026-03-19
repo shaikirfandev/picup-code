@@ -45,7 +45,7 @@ export default function Footer() {
                 <Camera className="w-4 h-4 text-accent relative z-10" />
               </div>
               <span className="text-[15px] font-semibold font-bold tracking-[0.2em] text-accent">
-                Picup
+                mepiks
               </span>
             </Link>
             <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-xs">
@@ -92,10 +92,10 @@ export default function Footer() {
           style={{ borderColor: 'var(--border)' }}
         >
           <p className="text-[10px] text-[var(--text-secondary)]">
-            &copy; {currentYear} Picup — All rights reserved.
+            &copy; {currentYear} mepiks — All rights reserved.
           </p>
           <p className="text-[10px] text-[var(--text-secondary)] flex items-center gap-1">
-            Made with <Heart className="w-3 h-3 text-error" /> by Picup Team
+            Made with <Heart className="w-3 h-3 text-error" /> by mepiks Team
           </p>
         </div>
       </div>

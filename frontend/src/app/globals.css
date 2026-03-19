@@ -5,7 +5,7 @@
 /* Fonts are self-hosted via next/font/google in layout.tsx */
 
 /* ═══════════════════════════════════════════════════
-   Picup — Cosmos-inspired Minimal Design System
+   mepiks — Cosmos-inspired Minimal Design System
    Dual-mode: Light (default) + Dark
    ═══════════════════════════════════════════════════ */
 
@@ -80,6 +80,10 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
+  /* Typography weight — slightly heavier in light mode (Apple/Poppins style) */
+  --font-weight-body: 500;
+  --font-weight-ui: 500;
+
   color-scheme: light;
 }
 
@@ -136,6 +140,10 @@
   --tag-border: #2a2a2a;
   --tag-text: #a0a0a0;
 
+  /* Normal weight in dark mode — bolder feels heavy on dark backgrounds */
+  --font-weight-body: 400;
+  --font-weight-ui: 400;
+
   color-scheme: dark;
 }
 
@@ -156,10 +164,17 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    font-weight: var(--font-weight-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
     line-height: 1.6;
+  }
+
+  /* Ensure form elements inherit font settings (browsers don't always cascade these) */
+  input, button, select, textarea {
+    font-family: var(--font-sans);
+    font-weight: var(--font-weight-ui);
   }
 
   /* Clean scrollbar */
@@ -190,6 +205,25 @@
 
   p, li {
     color: var(--text-secondary);
+  }
+
+  /* Prose typography overrides for blog */
+  .prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-links: var(--accent);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--text-secondary);
+    --tw-prose-bullets: var(--text-tertiary);
+    --tw-prose-hr: var(--border);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--border-strong);
+    --tw-prose-captions: var(--text-tertiary);
+    --tw-prose-code: var(--foreground);
+    --tw-prose-pre-code: var(--foreground);
+    --tw-prose-pre-bg: var(--surface-secondary);
+    --tw-prose-th-borders: var(--border);
+    --tw-prose-td-borders: var(--border-subtle);
   }
 }
 

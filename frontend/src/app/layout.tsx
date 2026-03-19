@@ -30,11 +30,11 @@ const MobileSidebar = dynamic(() => import('@/components/layout/MobileSidebar'),
 
 export const metadata: Metadata = {
   title: {
-    default: 'Picup — Your Space for Inspiration',
-    template: '%s | Picup',
+    default: 'mepiks — Your Space for Inspiration',
+    template: '%s | mepiks',
   },
   description:
-    'Picup is a visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.',
+    'mepiks is a visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.',
   keywords: [
     'visual discovery',
     'image sharing',
@@ -45,11 +45,11 @@ export const metadata: Metadata = {
     'mood boards',
     'design inspiration',
     'photo sharing platform',
-    'picup',
+    'mepiks',
   ],
-  authors: [{ name: 'Picup Team' }],
-  creator: 'Picup',
-  publisher: 'Picup',
+  authors: [{ name: 'mepiks Team' }],
+  creator: 'mepiks',
+  publisher: 'mepiks',
   manifest: '/manifest.json',
   robots: {
     index: true,
@@ -64,15 +64,15 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: 'Picup',
-    title: 'Picup — Your Space for Inspiration',
+    siteName: 'mepiks',
+    title: 'mepiks — Your Space for Inspiration',
     description:
       'Discover, save, and share visual inspiration. Explore AI-generated art, products, creative ideas and more.',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Picup — Your Space for Inspiration',
+    title: 'mepiks — Your Space for Inspiration',
     description:
       'Discover, save, and share visual inspiration. Explore AI-generated art, products, creative ideas and more.',
   },
@@ -90,9 +90,9 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'Picup',
-  alternateName: 'Picup',
-  url: 'https://picup.app',
+  name: 'mepiks',
+  alternateName: 'mepiks',
+  url: 'https://mepiks.app',
   description:
     'Visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.',
   applicationCategory: 'DesignApplication',

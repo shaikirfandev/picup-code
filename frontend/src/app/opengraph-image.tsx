@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 export const contentType = 'image/png';
 export const size = { width: 1200, height: 630 };
-export const alt = 'Picup — Visual Discovery & Inspiration';
+export const alt = 'mepiks — Visual Discovery & Inspiration';
 
 export default async function Image() {
   return new ImageResponse(
@@ -69,7 +69,7 @@ export default async function Image() {
             marginBottom: 16,
           }}
         >
-          Picup
+          mepiks
         </div>
 
         {/* Subtitle */}

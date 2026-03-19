@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   BarChart3, Eye, Link2, Download, Brain, Globe2, Activity,
 } from 'lucide-react';
@@ -33,9 +33,17 @@ export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState('30d');
   const [customRange, setCustomRange] = useState<{ startDate?: string; endDate?: string }>({});
 
-  const periodParams = period === 'custom'
+  // Stable custom range handler to avoid re-creating the object on every render
+  const handleCustomRange = useCallback((range: { startDate?: string; endDate?: string }) => {
+    setCustomRange(prev => {
+      if (prev.startDate === range.startDate && prev.endDate === range.endDate) return prev;
+      return range;
+    });
+  }, []);
+
+  const periodParams = useMemo(() => period === 'custom'
     ? { period, ...customRange }
-    : { period };
+    : { period }, [period, customRange]);
 
   const {
     overview,
@@ -54,11 +62,11 @@ export default function AnalyticsDashboard() {
     dispatch(fetchRealtimeStats());
   }, [dispatch, period, customRange.startDate, customRange.endDate]);
 
-  // Auto-refresh realtime stats every 60s
+  // Auto-refresh realtime stats every 30s
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch(fetchRealtimeStats());
-    }, 60_000);
+    }, 30_000);
     return () => clearInterval(interval);
   }, [dispatch]);
 
@@ -110,7 +118,7 @@ export default function AnalyticsDashboard() {
       <PeriodSelector
         period={period}
         onPeriodChange={setPeriod}
-        onCustomRange={setCustomRange}
+        onCustomRange={handleCustomRange}
       />
 
       {/* Tab Navigation */}
@@ -234,7 +242,7 @@ function PostsTab({ periodParams }: { periodParams: any }) {
       limit: 20,
       mediaType: mediaType || undefined,
     }));
-  }, [dispatch, page, mediaType, periodParams.period, periodParams.startDate, periodParams.endDate]);
+  }, [dispatch, periodParams, page, mediaType]);
 
   return (
     <div className="space-y-4">

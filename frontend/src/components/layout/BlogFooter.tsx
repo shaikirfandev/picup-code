@@ -44,7 +44,7 @@ const SOCIAL_LINKS = [
   { icon: Linkedin, href: '#', label: 'LinkedIn' },
   { icon: Youtube, href: '#', label: 'YouTube' },
   { icon: Rss, href: '/blog', label: 'RSS' },
-  { icon: Mail, href: 'mailto:hello@picup.app', label: 'Email' },
+  { icon: Mail, href: 'mailto:hello@mepiks.app', label: 'Email' },
 ];
 
 export default function BlogFooter() {
@@ -100,7 +100,7 @@ export default function BlogFooter() {
                 <Camera className="w-4 h-4 text-accent relative z-10" />
               </div>
               <span className="text-[15px] font-semibold font-bold tracking-[0.2em] text-accent">
-                Picup
+                mepiks
               </span>
             </Link>
             <p className="text-xs mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -167,7 +167,7 @@ export default function BlogFooter() {
         <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderColor: 'var(--border)' }}>
           <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-            &copy; {year} Picup &mdash; All rights reserved.
+            &copy; {year} mepiks &mdash; All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="text-[10px] hover:text-accent transition-colors" style={{ color: 'var(--text-secondary)' }}>Privacy</Link>
@@ -175,7 +175,7 @@ export default function BlogFooter() {
             <Link href="/contact" className="text-[10px] hover:text-accent transition-colors" style={{ color: 'var(--text-secondary)' }}>Contact</Link>
           </div>
           <p className="text-[10px] flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
-            Built with <Heart className="w-3 h-3 text-error" /> by Picup Team
+            Built with <Heart className="w-3 h-3 text-error" /> by mepiks Team
           </p>
         </div>
       </div>

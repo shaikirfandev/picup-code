@@ -6,6 +6,8 @@ interface NotificationState {
   items: Notification[];
   unreadCount: number;
   isLoading: boolean;
+  isFetchingUnread: boolean;
+  lastFetchedUnread: number | null;
   page: number;
   hasMore: boolean;
 }
@@ -14,6 +16,8 @@ const initialState: NotificationState = {
   items: [],
   unreadCount: 0,
   isLoading: false,
+  isFetchingUnread: false,
+  lastFetchedUnread: null,
   page: 1,
   hasMore: true,
 };
@@ -31,6 +35,15 @@ export const fetchUnreadCount = createAsyncThunk(
   async () => {
     const { data } = await notificationsAPI.getUnreadCount();
     return data.data.count as number;
+  },
+  {
+    // Prevent concurrent requests and throttle to once per 10 seconds
+    condition: (_, { getState }) => {
+      const state = (getState() as { notifications: NotificationState }).notifications;
+      if (state.isFetchingUnread) return false;
+      if (state.lastFetchedUnread && Date.now() - state.lastFetchedUnread < 10_000) return false;
+      return true;
+    },
   }
 );
 
@@ -106,8 +119,16 @@ const notificationSlice = createSlice({
         state.isLoading = false;
       });
 
+    builder.addCase(fetchUnreadCount.pending, (state) => {
+      state.isFetchingUnread = true;
+    });
     builder.addCase(fetchUnreadCount.fulfilled, (state, action) => {
+      state.isFetchingUnread = false;
+      state.lastFetchedUnread = Date.now();
       state.unreadCount = action.payload;
+    });
+    builder.addCase(fetchUnreadCount.rejected, (state) => {
+      state.isFetchingUnread = false;
     });
 
     builder.addCase(markAsRead.fulfilled, (state, action) => {

@@ -159,14 +159,14 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="card p-5 animate-pulse">
-                <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-20 mb-3" />
-                <div className="h-8 bg-surface-200 dark:bg-surface-700 rounded w-14" />
+                <div className="h-4 rounded w-20 mb-3" style={{ background: 'var(--surface-hover)' }} />
+                <div className="h-8 rounded w-14" style={{ background: 'var(--surface-hover)' }} />
               </div>
             ))}
           </div>
           <div className="card p-6 animate-pulse">
-            <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-40 mb-4" />
-            <div className="h-40 bg-surface-200 dark:bg-surface-700 rounded" />
+            <div className="h-4 rounded w-40 mb-4" style={{ background: 'var(--surface-hover)' }} />
+            <div className="h-40 rounded" style={{ background: 'var(--surface-hover)' }} />
           </div>
         </div>
       ) : (
@@ -345,7 +345,7 @@ export default function AdminAnalyticsPage() {
 
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {activityTab === 'logins' && activity?.recentLogins?.map((l) => (
-                  <div key={l._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                  <div key={l._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     {l.user?.avatar ? (
                       <img src={l.user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
@@ -366,7 +366,7 @@ export default function AdminAnalyticsPage() {
                 ))}
 
                 {activityTab === 'posts' && activity?.recentPosts?.map((p) => (
-                  <div key={p._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                  <div key={p._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     {p.image?.url ? (
                       <img src={p.image.url} alt="" className="w-10 h-10 rounded-lg object-cover" />
                     ) : (
@@ -385,7 +385,7 @@ export default function AdminAnalyticsPage() {
                 ))}
 
                 {activityTab === 'reports' && activity?.recentReports?.map((r) => (
-                  <div key={r._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                  <div key={r._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
                       r.priority === 'critical' ? 'bg-red-500/10 text-red-500'
                         : r.priority === 'high' ? 'bg-orange-500/10 text-orange-500'
@@ -406,7 +406,7 @@ export default function AdminAnalyticsPage() {
                 ))}
 
                 {activityTab === 'ai' && activity?.recentAI?.map((a) => (
-                  <div key={a._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                  <div key={a._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
                       <Sparkles className="w-3.5 h-3.5 text-violet-500" />
                     </div>
@@ -469,7 +469,7 @@ export default function AdminAnalyticsPage() {
                 {topUsers.map((u, i) => {
                   const rankColors = ['text-amber-500', 'text-gray-400', 'text-orange-600'];
                   return (
-                    <div key={u._id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                    <div key={u._id} className="flex items-center gap-3 p-2 rounded-lg transition-colors" onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-hover)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         i < 3 ? rankColors[i] : ''
                       }`} style={i >= 3 ? { color: 'var(--text-tertiary)' } : {}}>

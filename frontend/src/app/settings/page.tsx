@@ -6,7 +6,8 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchUser } from '@/store/slices/authSlice';
 import { updateProfile } from '@/store/slices/userSlice';
 import { authAPI } from '@/lib/api';
-import { User, Save, Camera, Shield, Bell, Palette, Loader2 } from 'lucide-react';
+import { User, Save, Camera, Shield, Bell, Palette, Loader2, Crown, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -126,6 +127,39 @@ export default function SettingsPage() {
             </button>
           </div>
         </form>
+
+        {/* Subscription */}
+        <div className="card p-6 mb-6">
+          <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
+            <Crown className="w-5 h-5 text-amber-500" />
+            Subscription
+          </h2>
+          {user?.accountType === 'paid' && user?.subscription?.isActive ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--text-secondary)' }} className="text-sm">Plan</span>
+                <span className="font-semibold text-sm capitalize" style={{ color: 'var(--foreground)' }}>{user.subscription.plan}</span>
+              </div>
+              {user.subscription.endDate && (
+                <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-sm">Renews</span>
+                  <span className="font-medium text-sm" style={{ color: 'var(--foreground)' }}>{new Date(user.subscription.endDate).toLocaleDateString()}</span>
+                </div>
+              )}
+              <Link href="/upgrade" className="inline-flex items-center gap-1.5 text-sm font-medium mt-2" style={{ color: 'var(--accent)' }}>
+                Change plan <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>You&apos;re on the free plan. Upgrade to unlock analytics, affiliate tools, and more.</p>
+              <Link href="/upgrade" className="btn-primary inline-flex items-center gap-2 px-6 py-2.5">
+                <Crown className="w-4 h-4" />
+                Upgrade Now
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Account info */}
         <div className="card p-6">

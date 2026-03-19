@@ -11,6 +11,8 @@ router.post('/refresh-token', authController.refreshToken);
 router.get('/me', authenticate, authController.getMe);
 router.post('/logout', authenticate, authController.logout);
 router.put('/change-password', authenticate, authController.changePassword);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/reset-password', authLimiter, authController.resetPassword);
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));

@@ -240,12 +240,15 @@ export const fetchPostsPerformance = createAsyncThunk(
       return rejectWithValue(serializeError(err));
     }
   },
+  {
+    condition: (_, { getState }) => !(getState() as RootState).creatorAnalytics.postsPerformanceLoading,
+  },
 );
 
 // ── Single Post Analytics ────────────────────────────────────────────────────
 export const fetchPostAnalytics = createAsyncThunk(
   'creatorAnalytics/fetchPostAnalytics',
-  async ({ postId, params }: { postId: string; params?: PeriodParams }, { rejectWithValue }) => {
+  async ({ postId, params }: { postId: string; params?: PeriodParams }, { getState, rejectWithValue }) => {
     try {
       const { data } = await withRetry(() =>
         creatorAnalyticsAPI.getPostAnalytics(postId, params),
@@ -254,6 +257,9 @@ export const fetchPostAnalytics = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(serializeError(err));
     }
+  },
+  {
+    condition: ({ postId }, { getState }) => !(getState() as RootState).creatorAnalytics.postAnalyticsLoading[postId],
   },
 );
 

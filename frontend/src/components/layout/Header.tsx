@@ -10,7 +10,7 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Compass, Wrench, FileText, CreditCard, Activity, Shield,
+  Home, Compass, Wrench, FileText, CreditCard, Activity, Shield, Crown,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import dynamic from 'next/dynamic';
@@ -65,7 +65,9 @@ export default function Header() {
           { href: '/analytics', label: 'Analytics', icon: Activity },
           { href: '/wallet', label: 'Wallet', icon: CreditCard },
         ]
-      : []),
+      : [
+          { href: '/upgrade', label: 'Upgrade', icon: Crown },
+        ]),
     ...(user?.role === 'admin'
       ? [{ href: '/admin', label: 'Admin', icon: Shield }]
       : []),
@@ -84,7 +86,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-lg font-semibold tracking-tight" style={{ color: 'var(--foreground)' }}>
-            Picup
+            mepiks
           </span>
         </Link>
 
