@@ -64,6 +64,10 @@ export interface Post {
     currency: string;
     display?: string;
   };
+  affiliateLinks?: {
+    url: string;
+    label?: string;
+  }[];
   tags: string[];
   category?: Category;
   author: User;
@@ -1144,5 +1148,72 @@ export interface PaginationMeta {
   limit: number;
   totalPages: number;
   hasMore: boolean;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Affiliate Types
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface AffiliateSummary {
+  totalClicks: number;
+  uniqueClicks: number;
+  conversionEstimate: number;
+  revenueEstimate: number;
+  suspiciousClicks: number;
+  totalAffiliatePosts: number;
+  recentClicks: { date: string; clicks: number; uniqueClicks: number }[];
+  topPosts: Post[];
+}
+
+export interface AffiliatePostStats {
+  postId: string;
+  title: string;
+  productUrl: string;
+  totalClicks: number;
+  uniqueClicks: number;
+  dailyClicks: { date: string; clicks: number; uniqueClicks: number }[];
+  clicksByDay: { date: string; clicks: number; uniqueClicks: number }[];
+  geoBreakdown: { country: string; count: number }[];
+  referrerBreakdown: { source: string; count: number }[];
+  deviceBreakdown: Record<string, number>;
+  affiliateLinks: { url: string; label?: string; clicks: number }[];
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin Wallet Recharge Types
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface AdminRecharge {
+  _id: string;
+  user: {
+    _id: string;
+    username: string;
+    displayName: string;
+    email: string;
+    avatar?: string;
+  };
+  amount: number;
+  type: string;
+  source: string;
+  balanceAfter: number;
+  description?: string;
+  createdAt: string;
+}
+
+export interface RechargeStats {
+  summary: {
+    totalAmount: number;
+    totalCount: number;
+    uniqueUserCount: number;
+    avgAmount: number;
+  };
+  topRechargers: {
+    user: { _id: string; displayName: string; username: string; email: string };
+    totalRecharged: number;
+    rechargeCount: number;
+  }[];
+  bySource: { _id: string; totalAmount: number; count: number }[];
+  dailyRecharges: { _id: string; totalAmount: number; count: number }[];
+  period: string;
 }
 

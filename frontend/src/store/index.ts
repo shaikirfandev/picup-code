@@ -10,6 +10,7 @@ import creatorDashboardReducer from './slices/creatorDashboardSlice';
 import boardReducer from './slices/boardSlice';
 import adReducer from './slices/adSlice';
 import walletReducer from './slices/walletSlice';
+import affiliateReducer from './slices/affiliateSlice';
 import { errorToastMiddleware, attachOnlineListeners } from './middleware';
 
 export const store = configureStore({
@@ -25,6 +26,7 @@ export const store = configureStore({
     boards: boardReducer,
     ads: adReducer,
     wallet: walletReducer,
+    affiliate: affiliateReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
