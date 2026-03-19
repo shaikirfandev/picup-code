@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { adminAPI } from '@/lib/api';
+import { useDebounce } from '@/hooks';
 import { AnalyticsUser } from '@/types';
 import { timeAgo } from '@/lib/utils';
 import Link from 'next/link';
@@ -87,17 +88,21 @@ export default function AnalyticsUsersPage() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const gridRef = useRef<AgGridReact>(null);
   const picupTheme = usePicupGridTheme();
 
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
+
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: any = { page, limit: 25, sort: '-createdAt' };
-      if (search) params.search = search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (roleFilter) params.role = roleFilter;
       if (statusFilter) params.status = statusFilter;
       const { data } = await adminAPI.getAnalyticsUsers(params);
@@ -108,7 +113,7 @@ export default function AnalyticsUsersPage() {
       toast.error('Failed to load users');
     }
     setIsLoading(false);
-  }, [page, search, roleFilter, statusFilter]);
+  }, [page, debouncedSearch, roleFilter, statusFilter]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 

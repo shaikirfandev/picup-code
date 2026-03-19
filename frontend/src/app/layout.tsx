@@ -1,40 +1,60 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { Poppins, JetBrains_Mono } from 'next/font/google';
 import { Providers } from './providers';
 import Header from '@/components/layout/Header';
-import dynamic from 'next/dynamic';
+import ScrollHoverGuard from '@/components/ui/ScrollHoverGuard';
+import { JetBrains_Mono, Rajdhani, Lora, Source_Serif_4, Orbitron } from 'next/font/google';
 import './globals.css';
 
-/* ── Self-hosted fonts via next/font (no render-blocking @import) ── */
-const poppins = Poppins({
+/* ── Fonts via next/font — auto-preloaded, swap, no layout shift ── */
+const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-body',
+  variable: '--font-jetbrains',
   display: 'swap',
   preload: true,
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const rajdhani = Rajdhani({
   subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-mono',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-rajdhani',
   display: 'swap',
-  preload: false,
+  preload: true,
 });
 
-/* ── Lazy-load MobileSidebar (only needed on interaction) ── */
-const MobileSidebar = dynamic(() => import('@/components/layout/MobileSidebar'), {
-  ssr: false,
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-orbitron',
+  display: 'swap',
+  preload: true,
+});
+
+const lora = Lora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-lora',
+  display: 'swap',
+  preload: true,
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-source-serif',
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
   title: {
-    default: 'mepiks — Your Space for Inspiration',
-    template: '%s | mepiks',
+    default: 'E.D.I.T.H — Visual Discovery & Target Analysis',
+    template: '%s | E.D.I.T.H',
   },
   description:
-    'mepiks is a visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.',
+    'E.D.I.T.H (Even Dead I\'m The Hero) is a visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration. Powered by AI.',
   keywords: [
     'visual discovery',
     'image sharing',
@@ -45,12 +65,12 @@ export const metadata: Metadata = {
     'mood boards',
     'design inspiration',
     'photo sharing platform',
-    'mepiks',
+    'e.d.i.t.h',
+    'picup',
   ],
-  authors: [{ name: 'mepiks Team' }],
-  creator: 'mepiks',
-  publisher: 'mepiks',
-  manifest: '/manifest.json',
+  authors: [{ name: 'E.D.I.T.H Team' }],
+  creator: 'E.D.I.T.H',
+  publisher: 'E.D.I.T.H',
   robots: {
     index: true,
     follow: true,
@@ -64,15 +84,15 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: 'mepiks',
-    title: 'mepiks — Your Space for Inspiration',
+    siteName: 'E.D.I.T.H',
+    title: 'E.D.I.T.H — Visual Discovery & Target Analysis',
     description:
       'Discover, save, and share visual inspiration. Explore AI-generated art, products, creative ideas and more.',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'mepiks — Your Space for Inspiration',
+    title: 'E.D.I.T.H — Visual Discovery & Target Analysis',
     description:
       'Discover, save, and share visual inspiration. Explore AI-generated art, products, creative ideas and more.',
   },
@@ -80,19 +100,13 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   category: 'technology',
-  other: {
-    'theme-color': '#111111',
-    'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'default',
-  },
 };
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'mepiks',
-  alternateName: 'mepiks',
-  url: 'https://mepiks.app',
+  name: 'E.D.I.T.H',
+  alternateName: 'Picup',
   description:
     'Visual discovery platform to explore, save, and share images, AI art, products, and creative inspiration.',
   applicationCategory: 'DesignApplication',
@@ -114,28 +128,18 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${poppins.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen font-sans bg-background text-foreground antialiased">
+      <body className={`min-h-screen ${jetbrainsMono.variable} ${rajdhani.variable} ${orbitron.variable} ${lora.variable} ${sourceSerif.variable}`}>
+        <ScrollHoverGuard />
         <Providers>
           <Header />
-          <Suspense fallback={null}>
-            <MobileSidebar />
-          </Suspense>
-          <main className="pt-14">
-            <Suspense fallback={
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="w-6 h-6 border-2 border-neutral-300 border-t-transparent rounded-full animate-spin" />
-              </div>
-            }>
-              {children}
-            </Suspense>
-          </main>
+          <main className="pt-14">{children}</main>
         </Providers>
       </body>
     </html>

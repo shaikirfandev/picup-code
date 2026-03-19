@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchUser } from '@/store/slices/authSlice';
 import { updateProfile } from '@/store/slices/userSlice';
-import { authAPI } from '@/lib/api';
-import { User, Save, Camera, Shield, Bell, Palette, Loader2, Crown, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { authAPI, paymentAPI } from '@/lib/api';
+import { User, Save, Camera, Shield, Bell, Palette, Loader2, Crown, Check, Zap, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import type { SubscriptionPlan } from '@/types';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -25,6 +25,13 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+
+  const plans: SubscriptionPlan[] = [
+    { id: 'basic', name: 'Basic', price: 9.99, features: ['5 active campaigns', 'Basic analytics', 'Email support'] },
+    { id: 'pro', name: 'Pro', price: 29.99, features: ['25 active campaigns', 'Advanced analytics', 'Priority support', 'A/B testing'] },
+    { id: 'enterprise', name: 'Enterprise', price: 99.99, features: ['Unlimited campaigns', 'Real-time analytics', 'Dedicated support', 'API access', 'Custom targeting'] },
+  ];
 
   useEffect(() => {
     if (!isAuthenticated) { router.push('/login'); return; }
@@ -60,6 +67,18 @@ export default function SettingsPage() {
       toast.success('Password changed!');
     } catch (err: any) { toast.error(err.response?.data?.message || 'Failed'); }
     setIsChangingPassword(false);
+  };
+
+  const handleSubscribe = async (planId: string) => {
+    setSubscribing(true);
+    try {
+      await paymentAPI.subscribePlan({ plan: planId });
+      toast.success(`Subscribed to ${planId} plan!`);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Subscription failed. Check wallet balance.');
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   if (!isAuthenticated) return null;
@@ -128,37 +147,56 @@ export default function SettingsPage() {
           </div>
         </form>
 
-        {/* Subscription */}
+        {/* Subscription Plans */}
         <div className="card p-6 mb-6">
           <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
             <Crown className="w-5 h-5 text-amber-500" />
-            Subscription
+            Subscription Plans
           </h2>
-          {user?.accountType === 'paid' && user?.subscription?.isActive ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                <span style={{ color: 'var(--text-secondary)' }} className="text-sm">Plan</span>
-                <span className="font-semibold text-sm capitalize" style={{ color: 'var(--foreground)' }}>{user.subscription.plan}</span>
-              </div>
-              {user.subscription.endDate && (
-                <div className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ color: 'var(--text-secondary)' }} className="text-sm">Renews</span>
-                  <span className="font-medium text-sm" style={{ color: 'var(--foreground)' }}>{new Date(user.subscription.endDate).toLocaleDateString()}</span>
+          <p className="text-sm text-[var(--edith-text-dim)] mb-4">
+            Upgrade your ad platform capabilities. Plans are billed from your wallet balance.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                className={`p-5 rounded-lg border transition-all ${
+                  plan.id === 'pro'
+                    ? 'border-edith-cyan/40 bg-edith-cyan/5 relative'
+                    : 'border-[var(--edith-border)]'
+                }`}
+              >
+                {plan.id === 'pro' && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold px-2 py-0.5 bg-edith-cyan text-black rounded-full uppercase">
+                    Popular
+                  </span>
+                )}
+                <div className="flex items-center gap-2 mb-2">
+                  {plan.id === 'basic' && <Zap className="w-4 h-4 text-blue-400" />}
+                  {plan.id === 'pro' && <Star className="w-4 h-4 text-edith-cyan" />}
+                  {plan.id === 'enterprise' && <Crown className="w-4 h-4 text-amber-400" />}
+                  <span className="text-sm font-bold" style={{ color: 'var(--edith-text)' }}>{plan.name}</span>
                 </div>
-              )}
-              <Link href="/upgrade" className="inline-flex items-center gap-1.5 text-sm font-medium mt-2" style={{ color: 'var(--accent)' }}>
-                Change plan <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>You&apos;re on the free plan. Upgrade to unlock analytics, affiliate tools, and more.</p>
-              <Link href="/upgrade" className="btn-primary inline-flex items-center gap-2 px-6 py-2.5">
-                <Crown className="w-4 h-4" />
-                Upgrade Now
-              </Link>
-            </div>
-          )}
+                <p className="text-2xl font-display font-bold text-edith-cyan mb-3">
+                  ${plan.price}<span className="text-xs font-mono text-[var(--edith-text-dim)]">/mo</span>
+                </p>
+                <ul className="space-y-2 mb-4">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-xs font-mono text-[var(--edith-text-dim)]">
+                      <Check className="w-3 h-3 text-green-400 shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={subscribing}
+                  className={plan.id === 'pro' ? 'btn-primary w-full text-xs' : 'btn-ghost w-full text-xs'}
+                >
+                  {subscribing ? 'Processing...' : `Subscribe — $${plan.price}`}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Account info */}

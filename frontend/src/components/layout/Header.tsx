@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, memo } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -10,22 +10,39 @@ import { useClickOutside } from '@/hooks';
 import {
   Search, Plus, Menu, X, LogOut,
   User, Settings, LayoutDashboard, Bookmark, ChevronDown,
-  Home, Compass, Wrench, FileText, CreditCard, Activity, Shield, Crown,
+  Home, Shield, Zap, Crosshair, Wrench, FileText, CreditCard, BarChart3, Activity,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import dynamic from 'next/dynamic';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
-const NotificationBell = dynamic(
-  () => import('@/components/notifications/NotificationBell'),
-  { ssr: false, loading: () => <div className="w-8 h-8" /> }
-);
-
-const NAV_ITEMS = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/explore', label: 'Discover', icon: Compass },
-  { href: '/tools', label: 'Tools', icon: Wrench },
-  { href: '/blog', label: 'Blog', icon: FileText },
-] as const;
+/** Tiny isolated clock — re-renders every second WITHOUT re-rendering Header */
+const HudClock = memo(function HudClock() {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setTime(
+        d.toLocaleTimeString('en-US', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="hidden lg:flex items-center gap-2 mr-2">
+      <span className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--edith-text-muted)' }}>
+        {time}
+      </span>
+      <div className="w-1.5 h-1.5 rounded-full bg-edith-green/60 animate-pulse" />
+    </div>
+  );
+});
 
 export default function Header() {
   const router = useRouter();
@@ -54,83 +71,119 @@ export default function Header() {
     setShowUserMenu(false);
   };
 
-  const isPaid = user?.accountType === 'paid' || user?.role === 'admin';
+  const navItems = [
+    { href: '/', label: 'HOME', icon: Home },
+    { href: '/explore', label: 'EXPLORE', icon: Zap },
+    { href: '/tools', label: 'TOOLS', icon: Wrench },
+    { href: '/blog', label: 'BLOG', icon: FileText },
+    ...(isAuthenticated ? [{ href: '/create', label: 'CREATE', icon: Plus }] : []),
+  ];
 
   const menuLinks = [
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
-    { href: '/saved', label: 'Saved', icon: Bookmark },
+    { href: '/saved', label: 'Saved Intel', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
-    ...(isPaid
-      ? [
-          { href: '/analytics', label: 'Analytics', icon: Activity },
-          { href: '/wallet', label: 'Wallet', icon: CreditCard },
-        ]
-      : [
-          { href: '/upgrade', label: 'Upgrade', icon: Crown },
-        ]),
+    { href: '/analytics', label: 'Creator Analytics', icon: Activity },
+    { href: '/ad-manager', label: 'Ad Manager', icon: BarChart3 },
+    { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
     ...(user?.role === 'admin'
-      ? [{ href: '/admin', label: 'Admin', icon: Shield }]
+      ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
       : []),
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b"
+    <header
+      className="fixed top-0 left-0 right-0 z-50 h-14"
       style={{
-        background: 'var(--header-bg)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderColor: 'var(--header-border)',
+        background: 'var(--edith-header-bg)',
+        backdropFilter: 'blur(30px) saturate(1.2)',
+        WebkitBackdropFilter: 'blur(30px) saturate(1.2)',
+        borderBottom: `1px solid var(--edith-header-border)`,
+        boxShadow: 'var(--edith-header-shadow)',
       }}
     >
-      <div className="max-w-[2000px] mx-auto px-4 sm:px-6 h-full flex items-center gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-lg font-semibold tracking-tight" style={{ color: 'var(--foreground)' }}>
-            mepiks
-          </span>
+      {/* Top accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[1px] dark:opacity-100 opacity-40"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent 5%, var(--edith-accent-muted) 30%, var(--edith-accent-subtle) 50%, transparent 95%)',
+        }}
+      />
+
+      <div className="max-w-[2000px] mx-auto px-4 h-full flex items-center gap-3">
+        {/* ── Logo ── */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <div className="absolute inset-0 rounded border border-edith-cyan/30 rotate-45 group-hover:rotate-[225deg] transition-transform duration-700" />
+            <Crosshair
+              className="w-4 h-4 text-edith-cyan relative z-10 dark:drop-shadow-[0_0_6px_rgba(0,212,255,0.6)]"
+            />
+          </div>
+          <div className="hidden sm:flex flex-col leading-none">
+            <span
+              className="text-[15px] font-display font-bold tracking-[0.2em] text-edith-cyan dark:text-edith-glow"
+            >
+              E.D.I.T.H
+            </span>
+            <span className="text-[7px] font-mono text-edith-cyan/30 tracking-[0.3em] uppercase">
+              Visual Discovery
+            </span>
+          </div>
         </Link>
 
-        {/* Nav */}
-        <nav className="hidden md:flex items-center gap-1 ml-2">
-          {NAV_ITEMS.map((item) => (
+        {/* ── Nav ── */}
+        <nav className="hidden md:flex items-center gap-0.5 ml-3">
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-150 hover:bg-[var(--surface-secondary)]"
-              style={{ color: 'var(--text-secondary)' }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-medium tracking-wider transition-all duration-300 hover:text-edith-cyan hover:bg-edith-cyan/5 rounded" style={{ color: 'var(--edith-text-dim)' }}
             >
+              <item.icon className="w-3 h-3" />
               {item.label}
             </Link>
           ))}
         </nav>
 
-        {/* Search */}
-        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+        {/* ── Search ── */}
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-4">
+          <div className="relative w-full group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-edith-cyan/40 group-focus-within:text-edith-cyan/70 transition-colors" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="SEARCH TARGETS..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-full transition-all duration-200 outline-none"
+              className="w-full pl-9 pr-4 py-2 text-[11px] font-mono tracking-wider rounded transition-all duration-300 outline-none"
               style={{
-                background: 'var(--surface-secondary)',
-                border: '1px solid var(--border)',
-                color: 'var(--foreground)',
+                background: 'var(--edith-input-bg)',
+                border: '1px solid var(--edith-input-border)',
+                color: 'var(--edith-text)',
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 right-0 h-[1px] opacity-0 group-focus-within:opacity-100 transition-opacity"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent)',
               }}
             />
           </div>
         </form>
 
-        {/* Right side */}
+        {/* ── Right side ── */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* Live clock */}
+          <HudClock />
+
+          {/* Mobile search toggle */}
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="md:hidden p-2 rounded-lg transition-colors hover:bg-[var(--surface-secondary)]"
-            style={{ color: 'var(--text-secondary)' }}
+            className="md:hidden p-2 hover:text-edith-cyan transition-colors"
+            style={{ color: 'var(--edith-text-dim)' }}
           >
-            <Search className="w-4.5 h-4.5" />
+            <Search className="w-4 h-4" />
           </button>
 
           <ThemeToggle />
@@ -139,65 +192,71 @@ export default function Header() {
             <>
               <Link
                 href="/create"
-                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--foreground)',
-                  color: 'var(--background)',
-                }}
+                className="btn-primary gap-1.5 hidden sm:inline-flex text-[10px] py-1.5 px-3"
               >
-                <Plus className="w-4 h-4" />
-                <span className="hidden lg:inline">Create</span>
+                <Plus className="w-3 h-3" />
+                <span className="hidden lg:inline">CREATE</span>
               </Link>
 
+              {/* Notifications */}
               <NotificationBell />
 
               {/* User menu */}
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-[var(--surface-secondary)] transition-colors duration-150"
+                  className="flex items-center gap-2 p-1 rounded hover:bg-edith-cyan/5 transition-all duration-300"
                 >
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.displayName || ''}
-                      width={32}
-                      height={32}
-                      loading="eager"
-                      decoding="async"
-                      className="w-8 h-8 rounded-full object-cover border"
-                      style={{ borderColor: 'var(--border)' }}
+                      alt={user.displayName}
+                      className="w-7 h-7 rounded object-cover"
+                      style={{
+                        border: '1px solid var(--edith-border)',
+                        boxShadow: 'var(--edith-shadow-sm)',
+                      }}
                     />
                   ) : (
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
+                      className="w-7 h-7 rounded flex items-center justify-center text-[10px] font-mono font-bold text-edith-cyan"
                       style={{
-                        background: 'var(--surface-secondary)',
-                        color: 'var(--foreground)',
-                        border: '1px solid var(--border)',
+                        background: 'var(--edith-accent-muted)',
+                        border: '1px solid var(--edith-border)',
                       }}
                     >
                       {user?.displayName?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
-                  <ChevronDown className="w-3.5 h-3.5 hidden sm:block" style={{ color: 'var(--text-muted)' }} />
+                  <ChevronDown className="w-3 h-3 hidden sm:block" style={{ color: 'var(--edith-text-muted)' }} />
                 </button>
 
+                {/* Dropdown */}
                 {showUserMenu && (
                   <div
-                    className="absolute right-0 top-full mt-2 w-56 rounded-xl overflow-hidden animate-scale-in origin-top-right"
+                    className="absolute right-0 top-full mt-2 w-60 animate-scale-in origin-top-right overflow-hidden rounded-md"
                     style={{
-                      background: 'var(--dropdown-bg)',
-                      border: '1px solid var(--border)',
-                      boxShadow: 'var(--dropdown-shadow)',
+                      background: 'var(--edith-dropdown-bg)',
+                      backdropFilter: 'blur(30px)',
+                      border: '1px solid var(--edith-border-strong)',
+                      boxShadow: 'var(--edith-dropdown-shadow)',
                     }}
                   >
+                    {/* Top glow line */}
+                    <div
+                      className="h-[1px] dark:opacity-100 opacity-50"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, transparent, var(--edith-accent-muted), transparent)',
+                      }}
+                    />
+
                     {/* User info */}
-                    <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                    <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--edith-border)' }}>
+                      <p className="text-xs font-semibold" style={{ color: 'var(--edith-text)' }}>
                         {user?.displayName}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                      <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-dim)' }}>
                         @{user?.username}
                       </p>
                     </div>
@@ -209,33 +268,32 @@ export default function Header() {
                           key={item.href}
                           href={item.href}
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-secondary)]"
-                          style={{ color: 'var(--text-secondary)' }}
+                          className="flex items-center gap-3 px-4 py-2 text-[11px] font-mono hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
+                          style={{ color: 'var(--edith-text-dim)' }}
                         >
-                          <item.icon className="w-4 h-4" />
+                          <item.icon className="w-3.5 h-3.5" />
                           {item.label}
                         </Link>
                       ))}
                     </div>
 
                     {/* Settings & logout */}
-                    <div className="py-1 border-t" style={{ borderColor: 'var(--border)' }}>
+                    <div className="py-1" style={{ borderTop: '1px solid var(--edith-border)' }}>
                       <Link
                         href="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--surface-secondary)]"
-                        style={{ color: 'var(--text-secondary)' }}
+                        className="flex items-center gap-3 px-4 py-2 text-[11px] font-mono hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
+                        style={{ color: 'var(--edith-text-dim)' }}
                       >
-                        <Settings className="w-4 h-4" />
+                        <Settings className="w-3.5 h-3.5" />
                         Settings
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-[var(--error-bg)]"
-                        style={{ color: 'var(--error)' }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-[11px] font-mono text-edith-red/60 hover:text-edith-red hover:bg-edith-red/5 transition-all"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Log out
+                        <LogOut className="w-3.5 h-3.5" />
+                        Disconnect
                       </button>
                     </div>
                   </div>
@@ -243,38 +301,35 @@ export default function Header() {
               </div>
             </>
           ) : authLoading ? (
+            /* Skeleton placeholder while checking auth — prevents login button flash */
             <div className="flex items-center gap-2">
-              <div className="w-16 h-8 rounded-lg animate-pulse" style={{ background: 'var(--surface-secondary)' }} />
-              <div className="w-8 h-8 rounded-full animate-pulse" style={{ background: 'var(--surface-secondary)' }} />
+              <div className="w-16 h-7 rounded animate-pulse" style={{ background: 'var(--edith-accent-muted)' }} />
+              <div className="w-7 h-7 rounded animate-pulse" style={{ background: 'var(--edith-accent-muted)' }} />
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-[var(--surface-secondary)]"
-                style={{ color: 'var(--text-secondary)' }}
+                className="btn-ghost text-[11px] font-mono tracking-wider"
               >
-                Log in
+                LOG IN
               </Link>
               <Link
                 href="/register"
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--foreground)',
-                  color: 'var(--background)',
-                }}
+                className="btn-primary text-[10px] py-1.5 px-3"
               >
-                Sign up
+                SIGN UP
               </Link>
             </div>
           )}
 
+          {/* Mobile menu toggle */}
           <button
             onClick={() => dispatch(toggleSidebar())}
-            className="md:hidden p-2 rounded-lg transition-colors hover:bg-[var(--surface-secondary)]"
-            style={{ color: 'var(--text-secondary)' }}
+            className="md:hidden p-2 hover:text-edith-cyan transition-colors"
+            style={{ color: 'var(--edith-text-dim)' }}
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -282,26 +337,26 @@ export default function Header() {
       {/* Mobile search panel */}
       {showMobileSearch && (
         <div
-          className="md:hidden absolute top-full left-0 right-0 p-3 animate-slide-up border-b"
+          className="md:hidden absolute top-full left-0 right-0 p-3 animate-slide-up"
           style={{
-            background: 'var(--header-bg)',
+            background: 'var(--edith-header-bg)',
             backdropFilter: 'blur(20px)',
-            borderColor: 'var(--border)',
+            borderBottom: '1px solid var(--edith-header-border)',
           }}
         >
           <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-edith-cyan/40" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="SEARCH..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full pl-10 pr-10 py-2.5 text-sm rounded-full outline-none"
+              className="w-full pl-9 pr-10 py-2.5 text-[11px] font-mono tracking-wider rounded outline-none"
               style={{
-                background: 'var(--surface-secondary)',
-                border: '1px solid var(--border)',
-                color: 'var(--foreground)',
+                background: 'var(--edith-input-bg)',
+                border: '1px solid var(--edith-input-border)',
+                color: 'var(--edith-text)',
               }}
             />
             <button
@@ -309,7 +364,7 @@ export default function Header() {
               onClick={() => setShowMobileSearch(false)}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
-              <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              <X className="w-3.5 h-3.5" style={{ color: 'var(--edith-text-muted)' }} />
             </button>
           </form>
         </div>

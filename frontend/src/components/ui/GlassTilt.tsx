@@ -52,7 +52,6 @@ export default function GlassTilt({
         transform,
         transition: 'transform 0.15s ease-out',
         transformStyle: 'preserve-3d',
-        willChange: 'transform',
       }}
     >
       {children}

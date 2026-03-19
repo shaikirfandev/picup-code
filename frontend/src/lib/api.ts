@@ -107,10 +107,6 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/auth/change-password', data),
-  forgotPassword: (email: string) =>
-    api.post('/auth/forgot-password', { email }),
-  resetPassword: (data: { token: string; password: string }) =>
-    api.post('/auth/reset-password', data),
 };
 
 // Posts API
@@ -228,9 +224,33 @@ export const uploadAPI = {
     }),
 };
 
+// Ads API
+export const adsAPI = {
+  getActiveAds: (params?: { placement?: string; limit?: number }) =>
+    api.get('/ads/active', { params }),
+  getDashboard: (params?: { period?: string }) =>
+    api.get('/ads/dashboard', { params }),
+  getEarnings: (params?: { period?: string }) =>
+    api.get('/ads/earnings', { params }),
+  createAd: (formData: FormData) =>
+    api.post('/ads', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  createAdFromWallet: (formData: FormData) =>
+    api.post('/ads/wallet-create', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  getMyAds: (params?: { page?: number; limit?: number; status?: string; search?: string; sort?: string }) =>
+    api.get('/ads/my', { params }),
+  getAd: (id: string) => api.get(`/ads/${id}`),
+  updateAd: (id: string, formData: FormData) =>
+    api.put(`/ads/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteAd: (id: string) => api.delete(`/ads/${id}`),
+  trackClick: (id: string) => api.post(`/ads/${id}/click`),
+  trackImpression: (id: string) => api.post(`/ads/${id}/impression`),
+  trackView: (id: string) => api.post(`/ads/${id}/view`),
+  getAnalytics: (id: string) => api.get(`/ads/${id}/analytics`),
+};
+
 // Payment API
 export const paymentAPI = {
-  createPayment: (data: { amount: number; currency: string; type: string; description?: string }) =>
+  createPayment: (data: { amount: number; currency: string; type: string; advertisementId?: string; description?: string }) =>
     api.post('/payments/create', data),
   confirmPayment: (data: { paymentId: string; gatewayPaymentId?: string; gatewaySignature?: string }) =>
     api.post('/payments/confirm', data),
@@ -239,10 +259,22 @@ export const paymentAPI = {
   getWallet: () => api.get('/payments/wallet'),
   topUpWallet: (data: { amount: number; currency: string }) =>
     api.post('/payments/wallet/topup', data),
-  subscribe: (data: { plan: string; currency?: string }) =>
+  getWalletTransactions: (params?: { page?: number; limit?: number; type?: string }) =>
+    api.get('/payments/wallet/transactions', { params }),
+  requestWithdraw: (data: { amount: number; payoutMethod: string; payoutDetails: Record<string, string> }) =>
+    api.post('/payments/withdraw', data),
+  getMyWithdrawals: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/payments/withdraw/my', { params }),
+  getPaymentMethods: () =>
+    api.get('/payments/methods'),
+  addPaymentMethod: (data: { type: string; details: Record<string, string>; label?: string; gateway?: string }) =>
+    api.post('/payments/methods', data),
+  updatePaymentMethod: (id: string, data: { isDefault?: boolean; label?: string }) =>
+    api.put(`/payments/methods/${id}`, data),
+  deletePaymentMethod: (id: string) =>
+    api.delete(`/payments/methods/${id}`),
+  subscribePlan: (data: { plan: string }) =>
     api.post('/payments/subscribe', data),
-  getSubscription: () => api.get('/payments/subscription'),
-  cancelSubscription: () => api.post('/payments/subscription/cancel'),
 };
 
 // Creator Analytics API
@@ -345,9 +377,20 @@ export const adminAPI = {
     api.get('/admin/analytics/activity/recent', { params }),
   triggerStatsCompute: (data?: { date?: string; backfill?: number }) =>
     api.post('/admin/analytics/stats/compute', data),
+  // Ads management
+  getAllAds: (params?: { page?: number; status?: string }) =>
+    api.get('/ads/admin/all', { params }),
+  moderateAd: (id: string, action: string) =>
+    api.put(`/ads/admin/${id}/moderate`, { action }),
+  getAdminAdStats: () =>
+    api.get('/ads/admin/stats'),
   // Payments
   getAllPayments: (params?: { page?: number; status?: string; type?: string }) =>
     api.get('/payments/admin/all', { params }),
+  getAdminWithdrawals: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get('/payments/admin/withdrawals', { params }),
+  processWithdrawal: (id: string, data: { status: string; rejectionReason?: string; transactionRef?: string }) =>
+    api.put(`/payments/admin/withdrawals/${id}`, data),
   // Paid users
   getPaidUsers: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; type?: string; minSpent?: number }) =>
     api.get('/admin/paid-users', { params }),
@@ -364,39 +407,67 @@ export const adminAPI = {
     api.get('/admin/blogs-manage/audit-logs', { params }),
 };
 
-// ─── Admin Wallet / Recharge API ─────────────────────────────────────────────
+// Creator Professional Dashboard API
+export const creatorDashboardAPI = {
+  // Overview
+  getOverview: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/overview', { params }),
 
-export const adminWalletAPI = {
-  // Recharges
-  getAllRecharges: (params?: { page?: number; limit?: number; source?: string; search?: string; startDate?: string; endDate?: string; sort?: string; order?: string; minAmount?: number; maxAmount?: number }) =>
-    api.get('/admin/wallet/recharges', { params }),
-  getRechargeStats: (params?: { days?: number }) =>
-    api.get('/admin/wallet/recharges/stats', { params }),
+  // Content Performance
+  getContentPerformance: (params?: {
+    page?: number; limit?: number; sortBy?: string; sortOrder?: string;
+    mediaType?: string; period?: string; search?: string;
+  }) => api.get('/creator-dashboard/content-performance', { params }),
+  getPerformanceHeatmap: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/performance-heatmap', { params }),
+  getEngagementTrends: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/engagement-trends', { params }),
 
-  // All Transactions
-  getAllTransactions: (params?: { page?: number; limit?: number; type?: string; source?: string; status?: string; search?: string; startDate?: string; endDate?: string }) =>
-    api.get('/admin/wallet/transactions', { params }),
+  // Audience Insights
+  getAudienceInsights: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/audience-insights', { params }),
 
-  // All Wallets
-  getAllWallets: (params?: { page?: number; limit?: number; search?: string; sort?: string; order?: string; frozen?: string }) =>
-    api.get('/admin/wallet/wallets', { params }),
+  // Monetization
+  getMonetization: (params?: { period?: string }) =>
+    api.get('/creator-dashboard/monetization', { params }),
+  enableMonetization: () =>
+    api.post('/creator-dashboard/monetization/enable'),
 
-  // Credit Rules
-  getAllCreditRules: () => api.get('/admin/wallet/credit-rules'),
-  updateCreditRule: (id: string, data: { baseCost?: number; description?: string; isDynamic?: boolean; isActive?: boolean; minCredits?: number; maxCredits?: number }) =>
-    api.put(`/admin/wallet/credit-rules/${id}`, data),
-};
+  // Content Management
+  getContentManagement: (params?: {
+    page?: number; limit?: number; status?: string;
+    mediaType?: string; search?: string; sortBy?: string; sortOrder?: string;
+  }) => api.get('/creator-dashboard/content', { params }),
+  schedulePost: (data: { postId?: string; title?: string; content?: string; scheduledFor: string; timezone?: string; recurring?: boolean; recurrencePattern?: string; notes?: string }) =>
+    api.post('/creator-dashboard/content/schedule', data),
+  cancelScheduledPost: (id: string) =>
+    api.delete(`/creator-dashboard/content/schedule/${id}`),
+  togglePinPost: (postId: string) =>
+    api.patch(`/creator-dashboard/content/${postId}/pin`),
+  bulkUpdatePosts: (data: { postIds: string[]; action: string }) =>
+    api.post('/creator-dashboard/content/bulk', data),
 
-// ─── Affiliate Marketing API ─────────────────────────────────────────────────
+  // Growth Insights (AI)
+  getGrowthInsights: () =>
+    api.get('/creator-dashboard/growth-insights'),
 
-export const affiliateAPI = {
-  getMyAffiliatePosts: (params?: { page?: number; limit?: number; sort?: string }) =>
-    api.get('/affiliate/posts', { params }),
-  getSummary: () => api.get('/affiliate/summary'),
-  getPostStats: (postId: string, params?: { period?: string }) =>
-    api.get(`/affiliate/posts/${postId}/stats`, { params }),
-  trackClick: (postId: string, data?: { linkIndex?: number; referrer?: string }) =>
-    api.post(`/posts/${postId}/click`, data),
+  // Activity Feed
+  getActivityFeed: (params?: { page?: number; limit?: number; eventType?: string }) =>
+    api.get('/creator-dashboard/activity', { params }),
+  markActivityRead: (eventIds?: string[] | 'all') =>
+    api.post('/creator-dashboard/activity/read', { eventIds: eventIds || 'all' }),
+
+  // Creator Profile / Settings
+  getCreatorProfile: () =>
+    api.get('/creator-dashboard/profile'),
+  updateCreatorProfile: (data: Record<string, unknown>) =>
+    api.put('/creator-dashboard/profile', data),
+
+  // Comment Moderation
+  getCommentsForModeration: (params?: { page?: number; limit?: number; filter?: string }) =>
+    api.get('/creator-dashboard/comments', { params }),
+  moderateComment: (commentId: string, action: string) =>
+    api.post(`/creator-dashboard/comments/${commentId}/moderate`, { action }),
 };
 
 export default api;

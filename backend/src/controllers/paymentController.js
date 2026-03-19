@@ -1,21 +1,22 @@
 const Payment = require('../models/Payment');
 const Wallet = require('../models/Wallet');
+const Advertisement = require('../models/Advertisement');
+const WithdrawRequest = require('../models/WithdrawRequest');
+const PaymentMethod = require('../models/PaymentMethod');
 const User = require('../models/User');
-const PaymentService = require('../services/paymentService');
-const WalletService = require('../services/walletService');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
-const crypto = require('crypto');
-const apiResponse = require('../utils/apiResponse');
 
-// Create payment intent
+// ──────────────────────────────────────────────
+// PAYMENT CRUD
+// ──────────────────────────────────────────────
+
 exports.createPayment = async (req, res, next) => {
   try {
-    const { amount, currency = 'USD', type = 'wallet_topup', description } = req.body;
+    const { amount, currency = 'USD', type = 'ad_payment', advertisementId, description } = req.body;
 
     if (!['USD', 'INR'].includes(currency)) {
       return ApiResponse.error(res, 'Only USD and INR currencies are supported', 400);
     }
-
     if (amount <= 0) {
       return ApiResponse.error(res, 'Amount must be greater than 0', 400);
     }
@@ -26,18 +27,16 @@ exports.createPayment = async (req, res, next) => {
       amount,
       currency,
       gateway: currency === 'INR' ? 'razorpay' : 'stripe',
+      advertisement: advertisementId || undefined,
       description: description || `Payment for ${type}`,
       status: 'pending',
     });
 
-    // In production, this would create a Stripe/Razorpay order
-    // For now, we return a mock payment intent
     const paymentData = {
       paymentId: payment._id,
       amount,
       currency,
       gateway: payment.gateway,
-      // These would be real gateway details in production
       clientSecret: `mock_secret_${payment._id}`,
       orderId: `order_${payment._id}`,
     };
@@ -48,7 +47,6 @@ exports.createPayment = async (req, res, next) => {
   }
 };
 
-// Confirm payment (webhook or client confirmation)
 exports.confirmPayment = async (req, res, next) => {
   try {
     const { paymentId, gatewayPaymentId, gatewaySignature } = req.body;
@@ -60,19 +58,24 @@ exports.confirmPayment = async (req, res, next) => {
       return ApiResponse.forbidden(res, 'Not authorized');
     }
 
-    // In production: verify signature with Stripe/Razorpay
     payment.status = 'completed';
     payment.gatewayPaymentId = gatewayPaymentId || `mock_${Date.now()}`;
     payment.gatewaySignature = gatewaySignature || `sig_${Date.now()}`;
     payment.paidAt = new Date();
     await payment.save();
 
-    // Add credits to wallet
+    if (payment.advertisement) {
+      await Advertisement.findByIdAndUpdate(payment.advertisement, {
+        isPaid: true,
+        status: 'active',
+        paymentId: payment._id,
+      });
+    }
+
     let wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
       wallet = await Wallet.create({ user: req.user._id, currency: payment.currency });
     }
-    // For wallet topup, add to balance
     if (payment.type === 'wallet_topup') {
       await wallet.addCredit(payment.amount, 'Wallet top-up', payment._id.toString());
     }
@@ -83,7 +86,6 @@ exports.confirmPayment = async (req, res, next) => {
   }
 };
 
-// Get my payments
 exports.getMyPayments = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, type, status } = req.query;
@@ -98,6 +100,7 @@ exports.getMyPayments = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
+        .populate('advertisement', 'title status')
         .lean(),
       Payment.countDocuments(filter),
     ]);
@@ -108,46 +111,54 @@ exports.getMyPayments = async (req, res, next) => {
   }
 };
 
-// Get wallet
+// ──────────────────────────────────────────────
+// WALLET
+// ──────────────────────────────────────────────
+
 exports.getWallet = async (req, res, next) => {
   try {
-    const Transaction = require('../models/Transaction');
-
     let wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
       wallet = await Wallet.create({ user: req.user._id });
     }
 
-    // Fetch last 20 transactions from Transaction collection
-    const recentTransactions = await Transaction.find({ user: req.user._id })
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
-
-    // Map transactions to the shape the frontend expects
-    const mappedTransactions = recentTransactions.map((tx) => ({
-      type: ['purchase', 'bonus', 'refund'].includes(tx.type) ? 'credit' : 'debit',
-      amount: tx.amount,
-      description: tx.description || tx.source,
-      balanceAfter: tx.balanceAfter,
-      createdAt: tx.createdAt,
-      status: tx.status,
-      source: tx.source,
-    }));
+    const recentTransactions = wallet.transactions
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 20);
 
     ApiResponse.success(res, {
       balance: wallet.balance,
       currency: wallet.currency,
-      totalCredits: wallet.totalPurchased + (wallet.bonusCredits || 0),
-      totalDebits: wallet.totalUsed,
-      transactions: mappedTransactions,
+      totalCredits: wallet.totalCredits,
+      totalDebits: wallet.totalDebits,
+      transactions: recentTransactions,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Top up wallet
+exports.getWalletTransactions = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, type } = req.query;
+    let wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) {
+      wallet = await Wallet.create({ user: req.user._id });
+    }
+
+    let txns = [...wallet.transactions].sort((a, b) => b.createdAt - a.createdAt);
+    if (type) txns = txns.filter((t) => t.type === type);
+
+    const total = txns.length;
+    const start = (parseInt(page) - 1) * parseInt(limit);
+    const paginated = txns.slice(start, start + parseInt(limit));
+
+    ApiResponse.paginated(res, paginated, getPaginationMeta(total, page, limit));
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.topUpWallet = async (req, res, next) => {
   try {
     const { amount, currency = 'USD' } = req.body;
@@ -155,12 +166,10 @@ exports.topUpWallet = async (req, res, next) => {
     if (!['USD', 'INR'].includes(currency)) {
       return ApiResponse.error(res, 'Only USD and INR currencies are supported', 400);
     }
-
     if (!amount || amount < 1) {
       return ApiResponse.error(res, 'Minimum top-up amount is 1', 400);
     }
 
-    // Create a completed payment for wallet top-up (mock gateway auto-confirms)
     const payment = await Payment.create({
       user: req.user._id,
       type: 'wallet_topup',
@@ -174,26 +183,221 @@ exports.topUpWallet = async (req, res, next) => {
       paidAt: new Date(),
     });
 
-    // Add credits to wallet
     let wallet = await Wallet.findOne({ user: req.user._id });
     if (!wallet) {
       wallet = await Wallet.create({ user: req.user._id, currency });
     }
-    const result = await wallet.addCredit(amount, 'Wallet top-up', payment._id.toString());
+    await wallet.addCredit(amount, 'Wallet top-up', payment._id.toString());
 
     ApiResponse.created(res, {
       paymentId: payment._id,
       amount,
       currency,
       gateway: payment.gateway,
-      newBalance: result.wallet.balance,
+      newBalance: wallet.balance,
     }, 'Wallet topped up successfully');
   } catch (error) {
     next(error);
   }
 };
 
-// Admin: Get all payments
+// ──────────────────────────────────────────────
+// WITHDRAW
+// ──────────────────────────────────────────────
+
+exports.requestWithdraw = async (req, res, next) => {
+  try {
+    const { amount, currency = 'USD', payoutMethod = 'bank_transfer', payoutDetails = {} } = req.body;
+
+    if (!amount || amount < 5) {
+      return ApiResponse.error(res, 'Minimum withdrawal is $5 / ₹500', 400);
+    }
+
+    const wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet || wallet.balance < amount) {
+      return ApiResponse.error(res, 'Insufficient balance', 400);
+    }
+
+    // Check pending withdrawals
+    const pendingCount = await WithdrawRequest.countDocuments({ user: req.user._id, status: 'pending' });
+    if (pendingCount >= 3) {
+      return ApiResponse.error(res, 'Maximum 3 pending withdrawal requests allowed', 400);
+    }
+
+    // Debit immediately (hold)
+    await wallet.debit(amount, 'Withdrawal request (held)', '');
+
+    const request = await WithdrawRequest.create({
+      user: req.user._id,
+      amount,
+      currency,
+      payoutMethod,
+      payoutDetails,
+    });
+
+    ApiResponse.created(res, request, 'Withdrawal request submitted');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMyWithdrawals = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, status } = req.query;
+    const { skip } = paginate(null, page, limit);
+
+    const filter = { user: req.user._id };
+    if (status) filter.status = status;
+
+    const [requests, total] = await Promise.all([
+      WithdrawRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean(),
+      WithdrawRequest.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(res, requests, getPaginationMeta(total, page, limit));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ──────────────────────────────────────────────
+// PAYMENT METHODS
+// ──────────────────────────────────────────────
+
+exports.getPaymentMethods = async (req, res, next) => {
+  try {
+    const methods = await PaymentMethod.find({ user: req.user._id }).sort({ isDefault: -1, createdAt: -1 }).lean();
+    ApiResponse.success(res, methods);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addPaymentMethod = async (req, res, next) => {
+  try {
+    const { type, label, details, gateway = 'stripe' } = req.body;
+
+    if (!type) return ApiResponse.error(res, 'Payment method type required', 400);
+
+    // If first method, make it default
+    const existing = await PaymentMethod.countDocuments({ user: req.user._id });
+
+    const method = await PaymentMethod.create({
+      user: req.user._id,
+      type,
+      label: label || `${type} ending ${details?.last4 || '****'}`,
+      details: details || {},
+      gateway,
+      isDefault: existing === 0,
+      isVerified: true, // Auto-verify in mock
+    });
+
+    ApiResponse.created(res, method, 'Payment method added');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updatePaymentMethod = async (req, res, next) => {
+  try {
+    const method = await PaymentMethod.findOne({ _id: req.params.id, user: req.user._id });
+    if (!method) return ApiResponse.notFound(res, 'Payment method not found');
+
+    const { label, details, isDefault } = req.body;
+    if (label) method.label = label;
+    if (details) method.details = { ...method.details, ...details };
+
+    if (isDefault) {
+      await PaymentMethod.updateMany({ user: req.user._id }, { isDefault: false });
+      method.isDefault = true;
+    }
+
+    await method.save();
+    ApiResponse.success(res, method, 'Payment method updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deletePaymentMethod = async (req, res, next) => {
+  try {
+    const method = await PaymentMethod.findOne({ _id: req.params.id, user: req.user._id });
+    if (!method) return ApiResponse.notFound(res, 'Payment method not found');
+
+    await method.deleteOne();
+
+    // If it was default, set first remaining as default
+    if (method.isDefault) {
+      const first = await PaymentMethod.findOne({ user: req.user._id }).sort({ createdAt: 1 });
+      if (first) {
+        first.isDefault = true;
+        await first.save();
+      }
+    }
+
+    ApiResponse.success(res, null, 'Payment method removed');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ──────────────────────────────────────────────
+// SUBSCRIPTION
+// ──────────────────────────────────────────────
+
+exports.subscribePlan = async (req, res, next) => {
+  try {
+    const { plan } = req.body;
+    if (!['basic', 'pro', 'enterprise'].includes(plan)) {
+      return ApiResponse.error(res, 'Invalid plan', 400);
+    }
+
+    const planPrices = { basic: 9.99, pro: 29.99, enterprise: 99.99 };
+    const price = planPrices[plan];
+
+    // Check wallet balance
+    const wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet || wallet.balance < price) {
+      return ApiResponse.error(res, `Insufficient balance. Need $${price}`, 400);
+    }
+
+    // Debit wallet
+    await wallet.debit(price, `${plan} plan subscription`, req.user._id.toString());
+
+    // Create payment record
+    await Payment.create({
+      user: req.user._id,
+      type: 'subscription',
+      amount: price,
+      currency: 'USD',
+      gateway: 'manual',
+      description: `${plan} plan subscription`,
+      status: 'completed',
+      paidAt: new Date(),
+    });
+
+    // Update user
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    await User.findByIdAndUpdate(req.user._id, {
+      accountType: 'paid',
+      'subscription.plan': plan,
+      'subscription.startDate': new Date(),
+      'subscription.endDate': endDate,
+      'subscription.isActive': true,
+    });
+
+    ApiResponse.success(res, { plan, expiresAt: endDate, price }, `Subscribed to ${plan} plan`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ──────────────────────────────────────────────
+// ADMIN
+// ──────────────────────────────────────────────
+
 exports.getAllPayments = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, type } = req.query;
@@ -209,6 +413,7 @@ exports.getAllPayments = async (req, res, next) => {
         .skip(skip)
         .limit(parseInt(limit))
         .populate('user', 'username email displayName')
+        .populate('advertisement', 'title')
         .lean(),
       Payment.countDocuments(filter),
     ]);
@@ -219,100 +424,61 @@ exports.getAllPayments = async (req, res, next) => {
   }
 };
 
-// Subscribe to a plan
-const PLAN_PRICES = {
-  basic: { amount: 4.99, label: 'Basic' },
-  pro: { amount: 9.99, label: 'Pro' },
-  enterprise: { amount: 29.99, label: 'Enterprise' },
-};
-
-exports.subscribe = async (req, res, next) => {
+exports.adminGetWithdrawals = async (req, res, next) => {
   try {
-    const { plan, currency = 'USD' } = req.body;
+    const { page = 1, limit = 20, status } = req.query;
+    const { skip } = paginate(null, page, limit);
 
-    if (!['basic', 'pro', 'enterprise'].includes(plan)) {
-      return ApiResponse.error(res, 'Invalid plan. Choose basic, pro, or enterprise.', 400);
-    }
+    const filter = {};
+    if (status) filter.status = status;
 
-    const planInfo = PLAN_PRICES[plan];
+    const [requests, total] = await Promise.all([
+      WithdrawRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('user', 'username email displayName avatar')
+        .lean(),
+      WithdrawRequest.countDocuments(filter),
+    ]);
 
-    // Create subscription payment record
-    const payment = await Payment.create({
-      user: req.user._id,
-      type: 'subscription',
-      amount: planInfo.amount,
-      currency,
-      gateway: currency === 'INR' ? 'razorpay' : 'stripe',
-      description: `${planInfo.label} plan subscription`,
-      status: 'completed',
-      gatewayPaymentId: `sub_${Date.now()}`,
-      gatewaySignature: `sig_${Date.now()}`,
-      paidAt: new Date(),
-    });
-
-    // Upgrade user
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 1);
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        accountType: 'paid',
-        subscription: {
-          plan,
-          startDate: now,
-          endDate,
-          isActive: true,
-        },
-      },
-      { new: true }
-    ).select('-password -refreshToken');
-
-    ApiResponse.success(res, {
-      user,
-      payment: {
-        id: payment._id,
-        amount: planInfo.amount,
-        currency,
-        plan,
-      },
-    }, `Successfully subscribed to ${planInfo.label} plan!`);
+    ApiResponse.paginated(res, requests, getPaginationMeta(total, page, limit));
   } catch (error) {
     next(error);
   }
 };
 
-// Get my subscription
-exports.getSubscription = async (req, res, next) => {
+exports.adminProcessWithdrawal = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select('accountType subscription').lean();
-    ApiResponse.success(res, {
-      accountType: user.accountType,
-      subscription: user.subscription || { plan: 'none', isActive: false },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    const { action, rejectionReason } = req.body;
+    const request = await WithdrawRequest.findById(req.params.id);
+    if (!request) return ApiResponse.notFound(res, 'Withdrawal request not found');
 
-// Cancel subscription
-exports.cancelSubscription = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user._id);
-
-    if (user.accountType !== 'paid' || !user.subscription?.isActive) {
-      return ApiResponse.error(res, 'No active subscription to cancel', 400);
+    if (request.status !== 'pending') {
+      return ApiResponse.error(res, 'Request already processed', 400);
     }
 
-    // Keep access until the end date, just mark as not renewing
-    user.subscription.isActive = false;
-    await user.save();
+    if (action === 'approve') {
+      request.status = 'completed';
+      request.processedBy = req.user._id;
+      request.processedAt = new Date();
+    } else if (action === 'reject') {
+      request.status = 'rejected';
+      request.processedBy = req.user._id;
+      request.processedAt = new Date();
+      request.rejectionReason = rejectionReason || '';
 
-    ApiResponse.success(res, {
-      accountType: user.accountType,
-      subscription: user.subscription,
-    }, 'Subscription cancelled. You\'ll retain access until the current period ends.');
+      // Refund the held amount
+      const wallet = await Wallet.findOne({ user: request.user });
+      if (wallet) {
+        await wallet.addCredit(request.amount, 'Withdrawal rejected — refund', request._id.toString());
+      }
+    } else {
+      return ApiResponse.error(res, 'Invalid action. Use approve or reject.', 400);
+    }
+
+    await request.save();
+    ApiResponse.success(res, request, `Withdrawal ${action}d`);
   } catch (error) {
     next(error);
   }

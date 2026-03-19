@@ -2,421 +2,526 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fonts are self-hosted via next/font/google in layout.tsx */
-
 /* ═══════════════════════════════════════════════════
-   mepiks — Cosmos-inspired Minimal Design System
-   Dual-mode: Light (default) + Dark
+   E.D.I.T.H  —  Even Dead I'm The Hero
+   Tony Stark Holographic HUD Theme
+   Dual-mode: Dark (HUD) + Light (Stark Industries)
    ═══════════════════════════════════════════════════ */
 
-/* ── Light Mode (default) ────────────────────────── */
+/* ── Dark Mode (default) ────────────────────────── */
 :root {
-  /* Surfaces */
-  --background: #ffffff;
-  --surface: #ffffff;
-  --surface-secondary: #f7f7f7;
-  --surface-elevated: #ffffff;
-  --surface-hover: #f0f0f0;
+  --edith-bg: #050510;
+  --edith-surface: #0a0a1a;
+  --edith-panel: #0d0d20;
+  --edith-elevated: #111128;
+  --edith-border: rgba(0, 200, 255, 0.12);
+  --edith-border-strong: rgba(0, 200, 255, 0.25);
 
-  /* Borders */
-  --border: #eaeaea;
-  --border-strong: #d4d4d4;
-  --border-subtle: #f0f0f0;
+  /* Accents — full neon for dark */
+  --edith-cyan: #00d4ff;
+  --edith-blue: #0088ff;
+  --edith-red: #ff3333;
+  --edith-amber: #ffaa00;
+  --edith-green: #00ff88;
+  --edith-purple: #bf00ff;
 
-  /* Text */
-  --foreground: #111111;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
-  --text-muted: #b4b4b4;
-  --text-on-accent: #ffffff;
+  /* Light-adapted accents (same as neon in dark) */
+  --edith-accent: #00d4ff;
+  --edith-accent-hover: #00bbee;
+  --edith-accent-active: #009fd4;
+  --edith-accent-muted: rgba(0, 200, 255, 0.12);
+  --edith-accent-subtle: rgba(0, 200, 255, 0.06);
 
-  /* Accent */
-  --accent: #111111;
-  --accent-hover: #333333;
-  --accent-muted: rgba(17, 17, 17, 0.08);
-  --accent-subtle: rgba(17, 17, 17, 0.04);
+  /* Semantic text — WCAG AAA on dark */
+  --edith-text: rgba(200, 230, 255, 0.92);
+  --edith-text-secondary: rgba(170, 200, 230, 0.7);
+  --edith-text-dim: rgba(140, 170, 200, 0.5);
+  --edith-text-muted: rgba(120, 150, 180, 0.35);
+  --edith-text-on-accent: #ffffff;
 
-  /* Semantic */
-  --error: #e5484d;
-  --error-bg: rgba(229, 72, 77, 0.08);
-  --success: #30a46c;
-  --success-bg: rgba(48, 164, 108, 0.08);
-  --warning: #f5a623;
-  --warning-bg: rgba(245, 166, 35, 0.08);
+  /* Semantic states */
+  --edith-error: #ff4d4d;
+  --edith-error-bg: rgba(255, 51, 51, 0.1);
+  --edith-success: #00e676;
+  --edith-success-bg: rgba(0, 230, 118, 0.1);
+  --edith-warning: #ffaa00;
+  --edith-warning-bg: rgba(255, 170, 0, 0.1);
 
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.1);
+  /* Glow & shadows */
+  --edith-glow: 0 0 20px rgba(0, 200, 255, 0.15), 0 0 60px rgba(0, 200, 255, 0.05);
+  --edith-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --edith-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --edith-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --edith-shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7);
 
   /* Component tokens */
-  --header-bg: rgba(255, 255, 255, 0.85);
-  --header-border: #eaeaea;
-  --header-shadow: 0 1px 0 #eaeaea;
-  --card-bg: #ffffff;
-  --card-hover-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --input-bg: #f7f7f7;
-  --input-border: #eaeaea;
-  --input-focus-border: #111111;
-  --dropdown-bg: #ffffff;
-  --dropdown-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --overlay-bg: rgba(0, 0, 0, 0.5);
-  --skeleton-from: #f0f0f0;
-  --skeleton-to: #e0e0e0;
-  --tag-bg: #f7f7f7;
-  --tag-border: #eaeaea;
-  --tag-text: #666666;
+  --edith-card-bg: linear-gradient(135deg, rgba(10,10,30,0.9), rgba(15,15,35,0.8));
+  --edith-glass-bg: rgba(10, 10, 30, 0.85);
+  --edith-input-bg: rgba(0, 200, 255, 0.03);
+  --edith-input-border: rgba(0, 200, 255, 0.1);
+  --edith-input-focus-bg: rgba(0, 200, 255, 0.05);
+  --edith-input-focus-border: rgba(0, 200, 255, 0.35);
+  --edith-header-bg: linear-gradient(180deg, rgba(5,5,16,0.95), rgba(5,5,16,0.85));
+  --edith-header-border: rgba(0, 212, 255, 0.1);
+  --edith-header-shadow: 0 1px 30px rgba(0,0,0,0.5), 0 0 60px rgba(0,212,255,0.03);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(10,10,26,0.97), rgba(15,15,35,0.95));
+  --edith-dropdown-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,255,0.05);
+  --edith-overlay-from: rgba(5,5,16,0.2);
+  --edith-overlay-to: rgba(5,5,16,0.9);
+  --edith-skeleton-from: rgba(0,200,255,0.03);
+  --edith-skeleton-via: rgba(0,200,255,0.08);
+  --edith-btn-secondary-bg: rgba(255,255,255,0.03);
+  --edith-btn-secondary-border: rgba(255,255,255,0.08);
+  --edith-tag-bg: rgba(255,255,255,0.02);
+  --edith-tag-border: rgba(255,255,255,0.06);
+  --edith-tag-text: rgba(255,255,255,0.3);
+  --edith-tag-hover-text: rgba(255,255,255,0.5);
+  --edith-radial-hero: rgba(0,212,255,0.08);
+  --edith-gradient-text: rgba(255,255,255,0.9);
 
-  /* Typography */
-  --font-sans: var(--font-body, 'Poppins'), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-code: var(--font-mono, 'JetBrains Mono'), 'Fira Code', monospace;
+  /* Typography — references next/font CSS variables with fallbacks */
+  --edith-mono: var(--font-jetbrains, 'JetBrains Mono'), 'Fira Code', monospace;
+  --edith-display: var(--font-orbitron, 'Orbitron'), sans-serif;
+  --edith-body: var(--font-rajdhani, 'Rajdhani'), 'Inter', sans-serif;
+  --edith-article: var(--font-source-serif, 'Source Serif 4'), 'Lora', Georgia, Cambria, serif;
+  --edith-article-heading: var(--font-lora, 'Lora'), Georgia, Cambria, serif;
+}
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+/* ── Light Mode — Stark Industries Clean UI ────── */
+.light {
+  --edith-bg: #f4f6f9;
+  --edith-surface: #ffffff;
+  --edith-panel: #f0f2f6;
+  --edith-elevated: #ffffff;
+  --edith-border: rgba(15, 30, 60, 0.1);
+  --edith-border-strong: rgba(15, 30, 60, 0.2);
 
-  /* Typography weight — slightly heavier in light mode (Apple/Poppins style) */
-  --font-weight-body: 500;
-  --font-weight-ui: 500;
+  /* Accents — deepened for contrast on white (WCAG AA) */
+  --edith-cyan: #0091b3;
+  --edith-blue: #0064cc;
+  --edith-red: #d92d20;
+  --edith-amber: #b87500;
+  --edith-green: #059652;
+  --edith-purple: #8a14cc;
+
+  --edith-accent: #0091b3;
+  --edith-accent-hover: #007a99;
+  --edith-accent-active: #006680;
+  --edith-accent-muted: rgba(0, 145, 179, 0.1);
+  --edith-accent-subtle: rgba(0, 145, 179, 0.05);
+
+  /* Text — soft dark grays, NOT #000 */
+  --edith-text: #1a2233;
+  --edith-text-secondary: #3d4f66;
+  --edith-text-dim: #6b7d99;
+  --edith-text-muted: #94a3b8;
+  --edith-text-on-accent: #ffffff;
+
+  /* Semantic states (darkened for light bg) */
+  --edith-error: #d92d20;
+  --edith-error-bg: rgba(217, 45, 32, 0.08);
+  --edith-success: #059652;
+  --edith-success-bg: rgba(5, 150, 82, 0.08);
+  --edith-warning: #b87500;
+  --edith-warning-bg: rgba(184, 117, 0, 0.08);
+
+  /* Shadows — elevation instead of glow */
+  --edith-glow: 0 1px 3px rgba(15, 30, 60, 0.06), 0 2px 8px rgba(15, 30, 60, 0.04);
+  --edith-shadow-sm: 0 1px 2px rgba(15, 30, 60, 0.06), 0 1px 3px rgba(15, 30, 60, 0.04);
+  --edith-shadow-md: 0 2px 6px rgba(15, 30, 60, 0.06), 0 6px 16px rgba(15, 30, 60, 0.05);
+  --edith-shadow-lg: 0 4px 12px rgba(15, 30, 60, 0.06), 0 12px 32px rgba(15, 30, 60, 0.06);
+  --edith-shadow-xl: 0 8px 24px rgba(15, 30, 60, 0.08), 0 24px 48px rgba(15, 30, 60, 0.06);
+
+  /* Component tokens */
+  --edith-card-bg: linear-gradient(135deg, #ffffff, #fafbfd);
+  --edith-glass-bg: rgba(255, 255, 255, 0.82);
+  --edith-input-bg: rgba(15, 30, 60, 0.03);
+  --edith-input-border: rgba(15, 30, 60, 0.12);
+  --edith-input-focus-bg: rgba(0, 145, 179, 0.04);
+  --edith-input-focus-border: rgba(0, 145, 179, 0.45);
+  --edith-header-bg: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.88));
+  --edith-header-border: rgba(15, 30, 60, 0.08);
+  --edith-header-shadow: 0 1px 3px rgba(15,30,60,0.05), 0 4px 20px rgba(15,30,60,0.04);
+  --edith-dropdown-bg: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+  --edith-dropdown-shadow: 0 10px 40px rgba(15,30,60,0.12), 0 2px 10px rgba(15,30,60,0.06);
+  --edith-overlay-from: rgba(255,255,255,0.15);
+  --edith-overlay-to: rgba(15,20,35,0.8);
+  --edith-skeleton-from: rgba(15,30,60,0.04);
+  --edith-skeleton-via: rgba(15,30,60,0.08);
+  --edith-btn-secondary-bg: rgba(15,30,60,0.04);
+  --edith-btn-secondary-border: rgba(15,30,60,0.1);
+  --edith-tag-bg: rgba(15,30,60,0.04);
+  --edith-tag-border: rgba(15,30,60,0.1);
+  --edith-tag-text: #6b7d99;
+  --edith-tag-hover-text: #3d4f66;
+  --edith-radial-hero: rgba(0,145,179,0.06);
+  --edith-gradient-text: #1a2233;
 
   color-scheme: light;
 }
 
-/* ── Dark Mode ──────────────────────────────────── */
-.dark {
-  --background: #0a0a0a;
-  --surface: #141414;
-  --surface-secondary: #1a1a1a;
-  --surface-elevated: #1e1e1e;
-  --surface-hover: #252525;
-
-  --border: #2a2a2a;
-  --border-strong: #404040;
-  --border-subtle: #1e1e1e;
-
-  --foreground: #ededed;
-  --text-secondary: #a0a0a0;
-  --text-tertiary: #707070;
-  --text-muted: #505050;
-  --text-on-accent: #000000;
-
-  --accent: #ededed;
-  --accent-hover: #d4d4d4;
-  --accent-muted: rgba(237, 237, 237, 0.1);
-  --accent-subtle: rgba(237, 237, 237, 0.05);
-
-  --error: #e5484d;
-  --error-bg: rgba(229, 72, 77, 0.12);
-  --success: #30a46c;
-  --success-bg: rgba(48, 164, 108, 0.12);
-  --warning: #f5a623;
-  --warning-bg: rgba(245, 166, 35, 0.12);
-
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.5);
-
-  --header-bg: rgba(10, 10, 10, 0.85);
-  --header-border: #2a2a2a;
-  --header-shadow: 0 1px 0 #2a2a2a;
-  --card-bg: #141414;
-  --card-hover-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --input-bg: #1a1a1a;
-  --input-border: #2a2a2a;
-  --input-focus-border: #ededed;
-  --dropdown-bg: #1a1a1a;
-  --dropdown-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --overlay-bg: rgba(0, 0, 0, 0.7);
-  --skeleton-from: #1e1e1e;
-  --skeleton-to: #2a2a2a;
-  --tag-bg: #1a1a1a;
-  --tag-border: #2a2a2a;
-  --tag-text: #a0a0a0;
-
-  /* Normal weight in dark mode — bolder feels heavy on dark backgrounds */
-  --font-weight-body: 400;
-  --font-weight-ui: 400;
-
-  color-scheme: dark;
-}
-
-/* ══════════════════════════════════════════════════ */
-/*  Base Layer                                        */
-/* ══════════════════════════════════════════════════ */
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--edith-border);
   }
 
   html {
-    background: var(--background);
-    scroll-behavior: smooth;
+    background: var(--edith-bg);
+  }
+
+  .dark html, html:not(.light) {
+    color-scheme: dark;
   }
 
   body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-sans);
-    font-weight: var(--font-weight-body);
+    background: var(--edith-bg);
+    color: var(--edith-text);
+    font-family: var(--edith-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    line-height: 1.6;
   }
 
-  /* Ensure form elements inherit font settings (browsers don't always cascade these) */
-  input, button, select, textarea {
-    font-family: var(--font-sans);
-    font-weight: var(--font-weight-ui);
+  /* Subtle grid background — Stark HUD grid (dark only) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(rgba(0,200,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.018) 1px, transparent 1px);
+    background-size: 60px 60px;
+    will-change: transform;
+  }
+  .light body::before {
+    /* Light: a very subtle dot-grid for "tech blueprint" feel */
+    background:
+      radial-gradient(circle, rgba(0,80,140,0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
-  /* Clean scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  /* CRT scan-line overlay (dark only) */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 200, 255, 0.008) 2px,
+      rgba(0, 200, 255, 0.008) 4px
+    );
+    will-change: transform;
+  }
+  .light body::after {
+    background: none;
+  }
+
+  /* Scrollbar — theme-adaptive */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: var(--border-strong);
-    border-radius: var(--radius-full);
+    background: linear-gradient(180deg, var(--edith-cyan), var(--edith-blue));
+    border-radius: 4px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--text-tertiary);
+  ::-webkit-scrollbar-thumb:hover { background: var(--edith-cyan); }
+
+  .light ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #94a3b8, #64748b);
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: var(--edith-accent);
   }
 
   ::selection {
-    background: var(--accent-muted);
-    color: var(--foreground);
+    background: rgba(0, 200, 255, 0.25);
+    color: #fff;
+  }
+  .light ::selection {
+    background: rgba(0, 145, 179, 0.2);
+    color: #1a2233;
   }
 
-  /* Typography */
+  /* ── Typography hierarchy ── */
   h1, h2, h3, h4, h5, h6 {
-    color: var(--foreground);
-    font-weight: 600;
-    line-height: 1.3;
+    color: var(--edith-text);
   }
-  h1 { font-size: 2rem; font-weight: 700; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
-
-  p, li {
-    color: var(--text-secondary);
-  }
-
-  /* Prose typography overrides for blog */
-  .prose {
-    --tw-prose-body: var(--foreground);
-    --tw-prose-headings: var(--foreground);
-    --tw-prose-links: var(--accent);
-    --tw-prose-bold: var(--foreground);
-    --tw-prose-counters: var(--text-secondary);
-    --tw-prose-bullets: var(--text-tertiary);
-    --tw-prose-hr: var(--border);
-    --tw-prose-quotes: var(--foreground);
-    --tw-prose-quote-borders: var(--border-strong);
-    --tw-prose-captions: var(--text-tertiary);
-    --tw-prose-code: var(--foreground);
-    --tw-prose-pre-code: var(--foreground);
-    --tw-prose-pre-bg: var(--surface-secondary);
-    --tw-prose-th-borders: var(--border);
-    --tw-prose-td-borders: var(--border-subtle);
+  p, li, span {
+    color: var(--edith-text-secondary, var(--edith-text));
   }
 }
 
-/* ══════════════════════════════════════════════════ */
-/*  Component Layer                                   */
-/* ══════════════════════════════════════════════════ */
 @layer components {
-  /* ── Buttons ── */
+  /* ── EDITH Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium transition-all duration-200;
-    background: var(--foreground);
-    color: var(--background);
-    border: 1px solid var(--foreground);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-xs);
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300;
+    font-family: var(--edith-mono);
+    background: linear-gradient(135deg, var(--edith-accent-muted), rgba(0,136,255,0.1));
+    border: 1px solid var(--edith-accent);
+    color: var(--edith-accent);
+    border-radius: 4px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    box-shadow: var(--edith-shadow-sm);
   }
   .btn-primary:hover {
-    opacity: 0.85;
+    background: var(--edith-accent);
+    color: var(--edith-text-on-accent);
+    box-shadow: var(--edith-shadow-md);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
   }
   .btn-primary:active {
-    opacity: 0.9;
+    background: var(--edith-accent-active);
+    color: var(--edith-text-on-accent);
     transform: translateY(0);
   }
-  .btn-primary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  /* Dark-only: neon text-shadow on primary */
+  :root .btn-primary { text-shadow: 0 0 10px rgba(0,200,255,0.5); }
+  :root .btn-primary:hover { box-shadow: 0 0 30px rgba(0,200,255,0.2), inset 0 0 20px rgba(0,200,255,0.1); }
+  .light .btn-primary { text-shadow: none; }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium transition-all duration-200;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--foreground);
-    border-radius: var(--radius-md);
+    font-family: var(--edith-mono);
+    background: var(--edith-btn-secondary-bg);
+    border: 1px solid var(--edith-btn-secondary-border);
+    color: var(--edith-text-dim);
+    border-radius: 4px;
   }
   .btn-secondary:hover {
-    background: var(--surface-secondary);
-    border-color: var(--border-strong);
+    background: var(--edith-accent-muted);
+    border-color: var(--edith-accent);
+    color: var(--edith-accent);
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center px-3 py-2 text-sm font-medium transition-all duration-200;
-    color: var(--text-secondary);
-    border-radius: var(--radius-md);
+    color: var(--edith-text-dim);
+    border-radius: 4px;
     background: transparent;
   }
   .btn-ghost:hover {
-    background: var(--surface-secondary);
-    color: var(--foreground);
+    background: var(--edith-accent-subtle);
+    color: var(--edith-accent);
   }
+  :root .btn-ghost:hover { text-shadow: 0 0 10px rgba(0,200,255,0.3); }
+  .light .btn-ghost:hover { text-shadow: none; }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium transition-all duration-200;
-    background: var(--error-bg);
-    border: 1px solid var(--error);
-    color: var(--error);
-    border-radius: var(--radius-md);
+    @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200;
+    font-family: var(--edith-mono);
+    background: var(--edith-error-bg);
+    border: 1px solid var(--edith-error);
+    color: var(--edith-error);
+    border-radius: 4px;
   }
   .btn-danger:hover {
-    background: var(--error);
+    background: var(--edith-error);
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--edith-shadow-md);
   }
 
-  /* ── Input ── */
+  /* ── EDITH Input ── */
   .input-field {
     @apply w-full px-4 py-3 text-sm transition-all duration-200;
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    border-radius: var(--radius-md);
-    color: var(--foreground);
+    font-family: var(--edith-mono);
+    background: var(--edith-input-bg);
+    border: 1px solid var(--edith-input-border);
+    border-radius: 4px;
+    color: var(--edith-text);
     outline: none;
   }
-  .input-field::placeholder {
-    color: var(--text-muted);
-  }
+  .input-field::placeholder { color: var(--edith-text-muted); font-size: 12px; }
   .input-field:focus {
-    border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
+    border-color: var(--edith-input-focus-border);
+    background: var(--edith-input-focus-bg);
+    box-shadow: 0 0 0 3px var(--edith-accent-subtle);
+  }
+  /* Dark: neon inner glow on focus */
+  :root .input-field:focus {
+    box-shadow: 0 0 20px rgba(0,200,255,0.08), inset 0 0 20px rgba(0,200,255,0.03);
   }
 
-  /* ── Cards ── */
+  /* ── EDITH Cards ── */
   .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xs);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    background: var(--edith-card-bg);
+    border: 1px solid var(--edith-border);
+    border-radius: 8px;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--edith-glow);
   }
-  .card:hover {
-    box-shadow: var(--card-hover-shadow);
+  .light .card {
+    backdrop-filter: none;
+    box-shadow: var(--edith-shadow-sm);
+  }
+  .light .card:hover {
+    box-shadow: var(--edith-shadow-md);
   }
 
   .glass-card {
-    background: var(--header-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    background: var(--edith-glass-bg);
+    backdrop-filter: blur(30px) saturate(1.3);
+    -webkit-backdrop-filter: blur(30px) saturate(1.3);
+    border: 1px solid var(--edith-border);
+    border-radius: 8px;
+    box-shadow: var(--edith-glow);
+  }
+  .light .glass-card {
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    box-shadow: var(--edith-shadow-md);
+    border-color: var(--edith-border);
   }
 
-  /* ── Skeleton ── */
   .skeleton {
-    @apply rounded;
-    background: linear-gradient(90deg, var(--skeleton-from), var(--skeleton-to), var(--skeleton-from));
+    @apply animate-pulse rounded;
+    background: linear-gradient(90deg, var(--edith-skeleton-from), var(--edith-skeleton-via), var(--edith-skeleton-from));
     background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    animation: shimmer 2s linear infinite;
   }
 
   .shimmer {
     @apply relative overflow-hidden;
-    background: linear-gradient(90deg, transparent, var(--accent-subtle), transparent);
+    background: linear-gradient(90deg, transparent, var(--edith-accent-subtle), transparent);
     background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    animation: shimmer 2s linear infinite;
   }
 
-  /* ── Masonry Grid ── */
+  /* ── EDITH Masonry Grid ── */
   .masonry-grid {
     display: flex;
-    margin-left: -16px;
+    margin-left: -10px;
     width: auto;
   }
   .masonry-grid-column {
-    padding-left: 16px;
+    padding-left: 10px;
     background-clip: padding-box;
   }
 
-  /* ── Pin Card ── */
+  /* ── EDITH Pin Card ── */
   .pin-card {
     position: relative;
     cursor: pointer;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    background: var(--card-bg);
-    margin-bottom: 16px;
+    overflow: visible;
+    border-radius: 6px;
+    background: var(--edith-surface);
+    border: 1px solid var(--edith-border);
+    margin-bottom: 10px;
     break-inside: avoid;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .pin-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--card-hover-shadow);
+    border-color: var(--edith-border-strong);
+  }
+  /* Dark: neon glow on card hover */
+  :root .pin-card:hover {
+    box-shadow:
+      0 0 0 1px rgba(0,200,255,0.08),
+      0 4px 30px rgba(0,0,0,0.4),
+      0 0 40px rgba(0,200,255,0.06);
+  }
+  /* Light: clean elevation on hover */
+  .light .pin-card:hover {
+    box-shadow: var(--edith-shadow-lg);
+    border-color: var(--edith-accent);
   }
 
   .pin-card img {
     @apply w-full object-cover;
-    transition: transform 0.3s ease;
-    border-radius: var(--radius-lg);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .pin-overlay {
-    @apply absolute inset-0 flex flex-col justify-between p-3 transition-opacity duration-200;
+    @apply absolute inset-0 flex flex-col justify-between p-3 transition-all duration-300;
     background: linear-gradient(180deg,
-      transparent 0%,
-      transparent 40%,
-      rgba(0, 0, 0, 0.5) 100%
+      var(--edith-overlay-from) 0%,
+      transparent 30%,
+      transparent 50%,
+      var(--edith-overlay-to) 85%
     );
     opacity: 0;
-    border-radius: var(--radius-lg);
   }
-  .group:hover .pin-overlay {
-    opacity: 1;
-  }
+  .group:hover .pin-overlay { opacity: 1; }
   .pin-overlay > * {
-    @apply transition-all duration-200;
-    transform: translateY(4px);
+    @apply transition-all duration-300;
+    transform: translateY(6px);
     opacity: 0;
   }
   .group:hover .pin-overlay > * {
     transform: translateY(0);
     opacity: 1;
   }
+
+  /* ── Disable hover effects while scrolling ── */
+  html.is-scrolling .pin-card,
+  html.is-scrolling .card,
+  html.is-scrolling .glass-card {
+    pointer-events: none;
+  }
+  html.is-scrolling .group:hover .pin-overlay {
+    opacity: 0 !important;
+  }
+  html.is-scrolling .group:hover .pin-overlay > * {
+    transform: translateY(6px) !important;
+    opacity: 0 !important;
+  }
+
+  /* ── EDITH HUD accent corners ── */
+  .hud-corners {
+    position: relative;
+  }
+  .hud-corners::before,
+  .hud-corners::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .hud-corners::before {
+    top: 0; left: 0;
+    border-top: 1px solid var(--edith-cyan);
+    border-left: 1px solid var(--edith-cyan);
+  }
+  .hud-corners::after {
+    bottom: 0; right: 0;
+    border-bottom: 1px solid var(--edith-cyan);
+    border-right: 1px solid var(--edith-cyan);
+  }
+  /* Light: soften HUD corners */
+  .light .hud-corners::before,
+  .light .hud-corners::after {
+    opacity: 0.4;
+  }
 }
 
-/* ══════════════════════════════════════════════════ */
-/*  Utility Layer                                     */
-/* ══════════════════════════════════════════════════ */
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, var(--foreground), var(--text-secondary));
+    background: linear-gradient(135deg, var(--edith-cyan), var(--edith-blue), var(--edith-purple));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Semantic text */
-  .text-heading { color: var(--foreground); }
-  .text-body { color: var(--text-secondary); }
-  .text-caption { color: var(--text-tertiary); }
-  .text-label { color: var(--text-muted); }
+  .text-edith-glow {
+    text-shadow: 0 0 10px rgba(0,200,255,0.5), 0 0 30px rgba(0,200,255,0.2);
+  }
+  .light .text-edith-glow {
+    text-shadow: none;
+  }
+
+  /* Theme-aware text helpers */
+  .text-heading { color: var(--edith-text); }
+  .text-body { color: var(--edith-text-secondary); }
+  .text-caption { color: var(--edith-text-dim); }
+  .text-label { color: var(--edith-text-muted); }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -437,52 +542,372 @@
     overflow: hidden;
   }
 
-  /* Elevation utilities */
-  .shadow-theme-xs { box-shadow: var(--shadow-xs); }
-  .shadow-theme-sm { box-shadow: var(--shadow-sm); }
-  .shadow-theme-md { box-shadow: var(--shadow-md); }
-  .shadow-theme-lg { box-shadow: var(--shadow-lg); }
-  .shadow-theme-xl { box-shadow: var(--shadow-xl); }
+  .perspective-container {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  .edith-border-glow {
+    box-shadow:
+      0 0 0 1px rgba(0,200,255,0.1),
+      0 0 20px rgba(0,200,255,0.05),
+      inset 0 0 20px rgba(0,200,255,0.02);
+  }
+  .light .edith-border-glow {
+    box-shadow: var(--edith-shadow-md);
+  }
+
+  /* Elevation utilities for light mode */
+  .shadow-theme-sm { box-shadow: var(--edith-shadow-sm); }
+  .shadow-theme-md { box-shadow: var(--edith-shadow-md); }
+  .shadow-theme-lg { box-shadow: var(--edith-shadow-lg); }
+  .shadow-theme-xl { box-shadow: var(--edith-shadow-xl); }
 }
 
 /* ── Keyframes ── */
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+@keyframes dashFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -16; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes edithFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+  51% { opacity: 1; }
+  80% { opacity: 0.98; }
+  81% { opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes hudBoot {
+  0% { opacity: 0; transform: scale(0.95); filter: brightness(2) blur(4px); }
+  40% { opacity: 1; filter: brightness(1.5) blur(1px); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1) blur(0); }
+}
+
+@keyframes dataStream {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+/* Stark HUD – Iron Man investigation modal */
+@keyframes starkPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(251,146,60,0.6); }
+  50% { opacity: 0.4; box-shadow: 0 0 2px rgba(251,146,60,0.2); }
+}
+@keyframes starkSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ═══════════════════════════════════════════════════
-   AG Grid — Clean Theme Overrides
+   Medium-style Article Typography
+   ═══════════════════════════════════════════════════ */
+
+/* ── Article prose container ── */
+.article-content {
+  font-family: var(--edith-article);
+  font-size: 20px;
+  line-height: 1.68;
+  letter-spacing: -0.003em;
+  color: var(--edith-text);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.article-content > * + * {
+  margin-top: 1.25em;
+}
+
+/* Paragraphs */
+.article-content p {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-family: var(--edith-article);
+  font-size: 20px;
+  line-height: 1.68;
+  color: var(--edith-text-secondary);
+}
+
+.article-content p + p {
+  margin-top: 1.4em;
+}
+
+/* Headings */
+.article-content h1 {
+  font-family: var(--edith-article-heading);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.016em;
+  margin-top: 2.2em;
+  margin-bottom: 0.4em;
+  color: var(--edith-text);
+}
+
+.article-content h2 {
+  font-family: var(--edith-article-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  margin-top: 2em;
+  margin-bottom: 0.3em;
+  color: var(--edith-text);
+}
+
+.article-content h3 {
+  font-family: var(--edith-article-heading);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.006em;
+  margin-top: 1.8em;
+  margin-bottom: 0.25em;
+  color: var(--edith-text);
+}
+
+.article-content h4 {
+  font-family: var(--edith-article-heading);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.6em;
+  margin-bottom: 0.2em;
+  color: var(--edith-text);
+}
+
+/* First element after heading shouldn't have extra top margin */
+.article-content h1 + *,
+.article-content h2 + *,
+.article-content h3 + *,
+.article-content h4 + * {
+  margin-top: 0.5em;
+}
+
+/* Links */
+.article-content a {
+  color: var(--edith-accent);
+  text-decoration: underline;
+  text-decoration-color: var(--edith-accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: all 0.15s ease;
+}
+
+.article-content a:hover {
+  text-decoration-thickness: 2px;
+  opacity: 0.85;
+}
+
+/* Bold & Italic */
+.article-content strong, .article-content b {
+  font-weight: 700;
+  color: var(--edith-text);
+}
+
+.article-content em, .article-content i {
+  font-style: italic;
+}
+
+/* Blockquotes — Medium style: left border accent, larger italic text */
+.article-content blockquote {
+  position: relative;
+  margin: 2em 0;
+  padding: 0.1em 0 0.1em 1.5em;
+  border-left: 3px solid var(--edith-accent);
+  font-family: var(--edith-article);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.58;
+  color: var(--edith-text);
+  background: none;
+}
+
+.article-content blockquote p {
+  font-family: var(--edith-article);
+  font-style: italic;
+  font-size: 21px;
+  color: var(--edith-text);
+}
+
+/* Lists */
+.article-content ul, .article-content ol {
+  margin: 1.25em 0;
+  padding-left: 1.5em;
+}
+
+.article-content ul {
+  list-style-type: disc;
+}
+
+.article-content ol {
+  list-style-type: decimal;
+}
+
+.article-content li {
+  font-family: var(--edith-article);
+  font-size: 20px;
+  line-height: 1.68;
+  color: var(--edith-text-secondary);
+  margin-top: 0.5em;
+  padding-left: 0.25em;
+}
+
+.article-content li::marker {
+  color: var(--edith-text-dim);
+}
+
+/* Inline code */
+.article-content code {
+  font-family: var(--edith-mono);
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: var(--edith-accent-subtle);
+  color: var(--edith-accent);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Code blocks */
+.article-content pre {
+  margin: 1.8em 0;
+  padding: 1.25em 1.5em;
+  border-radius: 8px;
+  overflow-x: auto;
+  background: var(--edith-surface);
+  border: 1px solid var(--edith-border);
+  line-height: 1.6;
+}
+
+.article-content pre code {
+  font-family: var(--edith-mono);
+  font-size: 15px;
+  padding: 0;
+  background: none;
+  color: var(--edith-text-secondary);
+  border-radius: 0;
+  white-space: pre;
+  word-break: normal;
+}
+
+/* Images */
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1.8em auto;
+  display: block;
+}
+
+.article-content figure {
+  margin: 2em 0;
+  text-align: center;
+}
+
+.article-content figcaption {
+  font-family: var(--edith-body);
+  font-size: 14px;
+  color: var(--edith-text-dim);
+  margin-top: 0.75em;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Horizontal rule — Medium-style three dots */
+.article-content hr {
+  border: none;
+  text-align: center;
+  margin: 2.5em auto;
+  max-width: 100%;
+}
+
+.article-content hr::before {
+  content: '···';
+  font-family: var(--edith-article);
+  font-size: 28px;
+  letter-spacing: 0.6em;
+  color: var(--edith-text-muted);
+}
+
+/* Tables */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.8em 0;
+  font-size: 16px;
+}
+
+.article-content th, .article-content td {
+  padding: 0.75em 1em;
+  text-align: left;
+  border-bottom: 1px solid var(--edith-border);
+}
+
+.article-content th {
+  font-weight: 600;
+  color: var(--edith-text);
+  font-family: var(--edith-body);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Drop cap — first paragraph enhancement (optional class) */
+.article-content .drop-cap::first-letter {
+  float: left;
+  font-family: var(--edith-article-heading);
+  font-size: 3.5em;
+  line-height: 0.85;
+  padding-right: 0.12em;
+  padding-top: 0.06em;
+  font-weight: 700;
+  color: var(--edith-text);
+}
+
+/* ── Article header typography ── */
+.article-title {
+  font-family: var(--edith-article-heading);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  color: var(--edith-text);
+}
+
+.article-subtitle {
+  font-family: var(--edith-article);
+  font-size: clamp(18px, 2.5vw, 22px);
+  line-height: 1.5;
+  color: var(--edith-text-dim);
+  font-weight: 400;
+}
+
+.article-meta {
+  font-family: var(--edith-body);
+  font-size: 14px;
+  color: var(--edith-text-dim);
+}
+
+/* ═══════════════════════════════════════════════════
+   AG Grid — EDITH Theme Overrides
    ═══════════════════════════════════════════════════ */
 .ag-theme-quartz,
 .ag-root-wrapper {
   --ag-background-color: transparent !important;
-  --ag-header-background-color: var(--surface-secondary) !important;
-  --ag-foreground-color: var(--foreground) !important;
-  --ag-header-foreground-color: var(--text-secondary) !important;
-  --ag-border-color: var(--border) !important;
-  --ag-row-hover-color: var(--surface-hover) !important;
-  --ag-selected-row-background-color: var(--accent-subtle) !important;
-  --ag-odd-row-background-color: var(--surface-secondary) !important;
-  font-family: var(--font-sans) !important;
+  --ag-header-background-color: rgba(0, 200, 255, 0.04) !important;
+  --ag-border-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-row-hover-color: rgba(0, 200, 255, 0.06) !important;
+  --ag-selected-row-background-color: rgba(0, 200, 255, 0.08) !important;
+  --ag-odd-row-background-color: rgba(0, 200, 255, 0.02) !important;
+  font-family: var(--edith-body) !important;
   border: none !important;
 }
 
 .ag-header-cell-label {
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   font-weight: 500 !important;
-  font-size: 12px;
 }
 
 .ag-row {
@@ -492,4 +917,17 @@
 .ag-cell {
   display: flex !important;
   align-items: center !important;
+}
+
+/* Light mode overrides */
+.light .ag-theme-quartz,
+.light .ag-root-wrapper {
+  --ag-background-color: transparent !important;
+  --ag-header-background-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-foreground-color: #1a2233 !important;
+  --ag-header-foreground-color: #6b7d99 !important;
+  --ag-border-color: rgba(15, 30, 60, 0.08) !important;
+  --ag-row-hover-color: rgba(15, 30, 60, 0.04) !important;
+  --ag-selected-row-background-color: rgba(0, 145, 179, 0.06) !important;
+  --ag-odd-row-background-color: rgba(15, 30, 60, 0.02) !important;
 }

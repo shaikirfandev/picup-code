@@ -1,0 +1,1319 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════════════╗
+ * ║  E.D.I.T.H — Unified Seed Script (All Features)                       ║
+ * ║                                                                          ║
+ * ║  Seeds every collection for a fully-working demo environment:            ║
+ * ║    Core      →  Users · Categories · Posts · Comments · Boards           ║
+ * ║    Social    →  Likes · Saves · Follows · Notifications                  ║
+ * ║    Analytics →  PostEvents · PostAnalyticsDaily · CreatorSnapshots        ║
+ * ║    Creator   →  CreatorProfiles · ContentMetrics · AudienceDemographics  ║
+ * ║                 ActivityEvents · CreatorRevenue · ScheduledPosts          ║
+ * ║    Finance   →  Payments · Wallets · Advertisements · AdClickEvents    ║
+ * ║                 WithdrawRequests · PaymentMethods · AffiliateClicks     ║
+ * ║    Content   →  BlogPosts · Reports · LoginLogs · DailyStats            ║
+ * ║                                                                          ║
+ * ║  Run:  node src/seeds/seed-all.js                                        ║
+ * ╚══════════════════════════════════════════════════════════════════════════╝
+ */
+
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const slugify = require('slugify');
+
+// ─── Models ────────────────────────────────────────────────────────────────────
+const User = require('../models/User');
+const Category = require('../models/Category');
+const Post = require('../models/Post');
+const Comment = require('../models/Comment');
+const Board = require('../models/Board');
+const Notification = require('../models/Notification');
+const { Like, Save, Follow } = require('../models/Interaction');
+const PostEvent = require('../models/PostEvent');
+const PostAnalyticsDaily = require('../models/PostAnalyticsDaily');
+const CreatorAnalyticsSnapshot = require('../models/CreatorAnalyticsSnapshot');
+const ContentMetrics = require('../models/ContentMetrics');
+const CreatorRevenue = require('../models/CreatorRevenue');
+const CreatorProfile = require('../models/CreatorProfile');
+const AudienceDemographic = require('../models/AudienceDemographic');
+const ActivityEvent = require('../models/ActivityEvent');
+const ScheduledPost = require('../models/ScheduledPost');
+const Payment = require('../models/Payment');
+const Wallet = require('../models/Wallet');
+const Advertisement = require('../models/Advertisement');
+const AdClickEvent = require('../models/AdClickEvent');
+const AffiliateClick = require('../models/AffiliateClick');
+const WithdrawRequest = require('../models/WithdrawRequest');
+const PaymentMethod = require('../models/PaymentMethod');
+const BlogPost = require('../models/BlogPost');
+const Report = require('../models/Report');
+const LoginLog = require('../models/LoginLog');
+const DailyStats = require('../models/DailyStats');
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const pickN = (arr, n) => {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(n, arr.length));
+};
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const chance = (pct) => Math.random() < pct;
+const uniqueSlug = (title, idx) =>
+  slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString(36) + idx;
+
+const daysAgo = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(randInt(0, 23), randInt(0, 59), randInt(0, 59));
+  return d;
+};
+
+const dateStr = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
+
+// ─── Data pools ────────────────────────────────────────────────────────────────
+const categories = [
+  { name: 'Technology', slug: 'technology', icon: '💻', color: '#6366f1', description: 'Tech gadgets and software', order: 1 },
+  { name: 'Fashion', slug: 'fashion', icon: '👗', color: '#ec4899', description: 'Clothing and accessories', order: 2 },
+  { name: 'Home & Living', slug: 'home-living', icon: '🏠', color: '#f59e0b', description: 'Home decor and furniture', order: 3 },
+  { name: 'Art & Design', slug: 'art-design', icon: '🎨', color: '#8b5cf6', description: 'Art prints and design tools', order: 4 },
+  { name: 'Photography', slug: 'photography', icon: '📸', color: '#14b8a6', description: 'Cameras and photography gear', order: 5 },
+  { name: 'Food & Drink', slug: 'food-drink', icon: '🍕', color: '#ef4444', description: 'Gourmet food and beverages', order: 6 },
+  { name: 'Travel', slug: 'travel', icon: '✈️', color: '#3b82f6', description: 'Travel gear and accessories', order: 7 },
+  { name: 'Books', slug: 'books', icon: '📚', color: '#a855f7', description: 'Books and reading material', order: 8 },
+  { name: 'Fitness', slug: 'fitness', icon: '💪', color: '#22c55e', description: 'Workout equipment and supplements', order: 9 },
+  { name: 'Electronics', slug: 'electronics', icon: '🔌', color: '#f97316', description: 'Electronic devices and accessories', order: 10 },
+  { name: 'Beauty', slug: 'beauty', icon: '💄', color: '#f472b6', description: 'Skincare and beauty products', order: 11 },
+  { name: 'Automotive', slug: 'automotive', icon: '🚗', color: '#64748b', description: 'Car accessories and parts', order: 12 },
+];
+
+const firstNames = [
+  'Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Elijah', 'Sophia', 'James',
+  'Isabella', 'Oliver', 'Mia', 'Benjamin', 'Charlotte', 'Lucas', 'Amelia',
+  'Mason', 'Harper', 'Ethan', 'Evelyn', 'Alexander', 'Luna', 'Daniel',
+  'Ella', 'Matthew', 'Scarlett', 'Aiden', 'Grace', 'Henry', 'Chloe', 'Sebastian',
+  'Aria', 'Jack', 'Riley', 'Owen', 'Zoey', 'Samuel', 'Nora', 'Ryan',
+  'Lily', 'Nathan', 'Eleanor', 'Caleb', 'Hannah', 'Leo', 'Layla', 'Isaac',
+  'Penelope', 'Dylan', 'Violet', 'Adrian',
+];
+const lastNames = [
+  'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
+  'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
+  'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson',
+  'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson',
+  'Walker', 'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen',
+  'Hill', 'Flores', 'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera',
+  'Campbell', 'Mitchell', 'Carter', 'Roberts',
+];
+const bios = [
+  'UI/UX Designer • Loves minimal aesthetics',
+  'Full-stack developer & open-source enthusiast 🚀',
+  'Photographer • Digital nomad 🌍',
+  'Tech reviewer & gadget collector',
+  'Fashion blogger • Sustainable style advocate',
+  'Illustrator & concept artist 🎨',
+  'Coffee addict ☕ • Travel junkie',
+  'Minimalist designer from Tokyo',
+  'Street photographer • Film lover',
+  'Interior designer • Plant parent 🌿',
+  'AI researcher & creative coder',
+  'Vintage collector • Thrift enthusiast',
+  'Food blogger • Home chef 🍳',
+  'Fitness coach • Wellness advocate',
+  'Graphic designer by day, gamer by night 🎮',
+  'Bookworm • Aspiring novelist 📖',
+  'Music producer & sound designer 🎧',
+  'Architect • Loves brutalist design',
+  'Drone pilot & aerial photographer',
+  'Sustainable living advocate 🌱',
+];
+const locations = [
+  'San Francisco, CA', 'New York, NY', 'Los Angeles, CA', 'Austin, TX',
+  'Seattle, WA', 'Portland, OR', 'Chicago, IL', 'Miami, FL',
+  'Denver, CO', 'Boston, MA', 'London, UK', 'Tokyo, Japan',
+  'Berlin, Germany', 'Paris, France', 'Toronto, Canada', 'Sydney, Australia',
+];
+const postTitles = [
+  'MacBook Pro M4 Ultra Setup Tour', 'Best Mechanical Keyboards 2026', 'Smart Home Dashboard Build',
+  'AI-Powered Code Editor Review', 'Raspberry Pi Retro Arcade', 'VR Headset Comparison Guide',
+  'Minimal Tech Desk Setup', 'Custom Water-Cooled PC Build', 'Solar Panel Home Installation',
+  'Robot Vacuum Showdown', 'Wireless Charging Station DIY', 'Smart Watch Face Design',
+  'Capsule Wardrobe Essentials', 'Vintage Denim Collection', 'Sustainable Fashion Brands Guide',
+  'Minimalist Jewelry Picks', 'Streetwear Layering Techniques', 'Luxury Watch Showcase',
+  'Designer Sneaker Collection', 'Linen Summer Collection', 'Handmade Leather Goods',
+  'Japandi Interior Design Ideas', 'Indoor Herb Garden Setup', 'Smart Lighting Ambience Guide',
+  'Cozy Reading Nook Design', 'Kitchen Organization Hacks', 'Modern Planter Collection',
+  'DIY Concrete Furniture', 'Scandinavian Living Room Tour', 'Wall Art Gallery Arrangement',
+  'Digital Illustration Process', 'Procreate Brush Collection', 'Typography Poster Series',
+  'Watercolor Painting Tutorial', 'Logo Design Case Study', 'Abstract Art Commission',
+  'Pixel Art Character Sheet', 'Brand Identity Mockup', 'Risograph Print Collection',
+  'Golden Hour Portrait Session', 'Street Photography in Tokyo', 'Astrophotography Guide',
+  'Macro Flower Photography', 'Drone Aerial Landscapes', 'Film vs Digital Comparison',
+  'Moody Cityscape Collection', 'Food Photography Lighting', 'Minimalist Architecture Shots',
+  'Artisan Sourdough Recipe', 'Japanese Ramen From Scratch', 'Specialty Coffee Brewing Guide',
+  'Homemade Pasta Varieties', 'Vegan Dessert Collection', 'Charcuterie Board Inspiration',
+  'Patagonia Hiking Adventure', 'Tokyo Street Style Guide', 'Northern Lights in Norway',
+  'Bali Temple Photography', 'Iceland Ring Road Trip', 'Safari Wildlife Photography',
+  'Must-Read Sci-Fi Collection', 'Bookshelf Organization Ideas', 'Graphic Novel Recommendations',
+  'Journaling Setup & Templates', 'Book Cover Design Showcase', 'Classic Literature Collection',
+  'Home Gym Setup Guide', 'Yoga Mat & Props Review', 'Running Shoe Comparison 2026',
+  'Calisthenics Park Workout', 'Meal Prep for Athletes', 'Cycling Gear Essentials',
+  'Wireless Earbuds Showdown', 'Smart Speaker Setup Guide', 'Camera Lens Collection Tour',
+  'Portable Monitor Review', 'Gaming Mouse Comparison', 'Streaming Audio Setup',
+  'Korean Skincare Routine', 'Minimal Makeup Collection', 'Nail Art Design Ideas',
+  'Fragrance Collection Tour', 'Hair Care Product Lineup', 'DIY Face Mask Recipes',
+  'JDM Classic Car Collection', 'Tesla Cybertruck Review', 'Custom Motorcycle Build',
+  'Detailing Products Guide', 'Vintage Car Interior Restore', 'Electric SUV Comparison',
+  'Desk Setup Productivity Tips', 'Gift Guide for Creatives', 'Flat Lay Photography Tips',
+  'Mood Board Design Process', 'Color Theory in Design', 'Workspace Tour & Gear List',
+  'Beginner Camera Buying Guide', 'Aesthetic Stationery Haul', 'Developer Desk Accessories',
+  'Studio Apartment Makeover', 'Content Creator Starter Kit', 'Digital Art Tablet Setup',
+  'Podcast Recording Setup', 'Home Office Cable Management', 'Freelancer Toolkit Review',
+  'Smart Mirror Build Project', 'Custom Keyboard Switches', 'LED Neon Sign DIY',
+  'Acoustic Treatment Guide', 'Vintage Poster Collection', 'Retro Gaming Console',
+];
+const tagPool = [
+  'trending', 'curated', 'minimal', 'aesthetic', 'diy', 'review', 'howto', 'inspiration',
+  'photography', 'tech', 'fashion', 'design', 'art', 'food', 'travel', 'fitness',
+  'home', 'beauty', 'gaming', 'music', 'coding', 'nature', 'vintage', 'modern',
+  'sustainable', 'luxury', 'budget', 'premium', 'handmade', 'organic', 'retro', 'urban',
+];
+const commentTexts = [
+  'Absolutely love this! 😍', 'Great find, adding to my wishlist!', 'Where can I get one?',
+  'This is stunning!', 'The quality looks amazing', 'Thanks for sharing! 🙌',
+  'Perfect for my collection', 'Been looking for something like this', 'Incredible work!',
+  'Love the attention to detail', 'Clean aesthetic! 🔥', 'How much does this cost?',
+  'Added to my board!', 'This is goals 💯', 'Need this in my life',
+  'So inspiring!', 'Beautiful composition', 'What camera did you use?',
+  'Tutorial please!', 'This is next level', 'Saving this for later',
+  'The colors are perfect', 'Would love to see more like this', 'Bookmarked! 📌',
+  'Masterpiece! 🎨', 'Take my money 💸', 'Exactly what I needed',
+  'Wow, this is incredible!', 'Such a great setup!', 'Love the minimalist approach',
+];
+const reportReasons = ['spam', 'nsfw', 'nudity', 'violence', 'harassment', 'hate_speech', 'misinformation', 'copyright', 'other'];
+const countries = [
+  { code: 'US', name: 'United States' }, { code: 'GB', name: 'United Kingdom' },
+  { code: 'CA', name: 'Canada' }, { code: 'DE', name: 'Germany' },
+  { code: 'FR', name: 'France' }, { code: 'AU', name: 'Australia' },
+  { code: 'JP', name: 'Japan' }, { code: 'IN', name: 'India' },
+  { code: 'BR', name: 'Brazil' }, { code: 'KR', name: 'South Korea' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'SE', name: 'Sweden' },
+];
+const eventTypes = ['view', 'like', 'unlike', 'share', 'click', 'save', 'unsave', 'comment'];
+const deviceTypes = ['mobile', 'desktop', 'tablet'];
+const browsers = ['Chrome', 'Safari', 'Firefox', 'Edge', 'Opera'];
+const oses = ['Windows', 'macOS', 'Android', 'iOS', 'Linux'];
+const referrerTypes = ['home_feed', 'search', 'profile', 'external', 'direct', 'notification', 'board'];
+
+// ════════════════════════════════════════════════════════════════════════════════
+// MAIN SEED FUNCTION
+// ════════════════════════════════════════════════════════════════════════════════
+async function seedAll() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('🔗 Connected to MongoDB\n');
+
+    // ── 1. CLEAR ALL COLLECTIONS ───────────────────────────────────────────────
+    console.log('🗑️  Clearing all collections...');
+    await Promise.all([
+      User.deleteMany({}),
+      Category.deleteMany({}),
+      Post.deleteMany({}),
+      Comment.deleteMany({}),
+      Board.deleteMany({}),
+      Notification.deleteMany({}),
+      Like.deleteMany({}),
+      Save.deleteMany({}),
+      Follow.deleteMany({}),
+      PostEvent.deleteMany({}),
+      PostAnalyticsDaily.deleteMany({}),
+      CreatorAnalyticsSnapshot.deleteMany({}),
+      ContentMetrics.deleteMany({}),
+      CreatorRevenue.deleteMany({}),
+      CreatorProfile.deleteMany({}),
+      AudienceDemographic.deleteMany({}),
+      ActivityEvent.deleteMany({}),
+      ScheduledPost.deleteMany({}),
+      Payment.deleteMany({}),
+      Wallet.deleteMany({}),
+      Advertisement.deleteMany({}),
+      AdClickEvent.deleteMany({}),
+      AffiliateClick.deleteMany({}),
+      WithdrawRequest.deleteMany({}),
+      PaymentMethod.deleteMany({}),
+      BlogPost.deleteMany({}),
+      Report.deleteMany({}),
+      LoginLog.deleteMany({}),
+      DailyStats.deleteMany({}),
+    ]);
+    console.log('   ✅ All collections cleared\n');
+
+    // ── 2. CATEGORIES ──────────────────────────────────────────────────────────
+    const createdCategories = await Category.insertMany(categories);
+    console.log(`📂 Created ${createdCategories.length} categories`);
+
+    // ── 3. USERS (50: 1 admin + 2 mods + 10 paid creators + 37 regular) ─────
+    console.log('👥 Creating 50 users...');
+    const hashedPw = await bcrypt.hash('demo123', 12);
+    const adminPw = await bcrypt.hash('admin123', 12);
+
+    const usersData = [];
+    // Admin
+    usersData.push({
+      username: 'admin', email: 'admin@picup.app', password: adminPw,
+      displayName: 'PicUp Admin', role: 'admin', isVerified: true,
+      bio: 'Platform administrator', status: 'active',
+      avatar: 'https://i.pravatar.cc/300?u=admin',
+      accountTier: 'paid', createdAt: daysAgo(180),
+    });
+    // Moderators
+    for (let i = 0; i < 2; i++) {
+      usersData.push({
+        username: `mod_${firstNames[i + 1].toLowerCase()}`,
+        email: `mod${i + 1}@picup.app`, password: hashedPw,
+        displayName: `${firstNames[i + 1]} ${lastNames[i + 1]}`,
+        role: 'moderator', isVerified: true, bio: pick(bios),
+        status: 'active', location: pick(locations),
+        avatar: `https://i.pravatar.cc/300?u=mod${i}`,
+        accountType: 'paid', createdAt: daysAgo(150),
+      });
+    }
+    // Paid creators (10)
+    for (let i = 0; i < 10; i++) {
+      const fn = firstNames[i + 3];
+      const ln = lastNames[i + 3];
+      usersData.push({
+        username: `${fn.toLowerCase()}_${ln.toLowerCase()}`,
+        email: `${fn.toLowerCase()}.${ln.toLowerCase()}@demo.com`,
+        password: hashedPw,
+        displayName: `${fn} ${ln}`,
+        role: 'user', isVerified: true,
+        bio: bios[i % bios.length],
+        status: 'active', location: pick(locations),
+        avatar: `https://i.pravatar.cc/300?u=${fn}${ln}`,
+        accountType: 'paid',
+        website: `https://${fn.toLowerCase()}.design`,
+        followersCount: randInt(100, 5000),
+        followingCount: randInt(20, 200),
+        postsCount: randInt(10, 50),
+        createdAt: daysAgo(randInt(60, 180)),
+      });
+    }
+    // Regular users (37)
+    for (let i = 0; i < 37; i++) {
+      const fn = firstNames[(i + 13) % firstNames.length];
+      const ln = lastNames[(i + 13) % lastNames.length];
+      usersData.push({
+        username: `${fn.toLowerCase()}_${ln.toLowerCase()}_${i}`,
+        email: `user${i + 1}@demo.com`,
+        password: hashedPw,
+        displayName: `${fn} ${ln}`,
+        role: 'user',
+        isVerified: chance(0.7),
+        bio: chance(0.6) ? pick(bios) : '',
+        status: 'active',
+        location: chance(0.5) ? pick(locations) : '',
+        avatar: `https://i.pravatar.cc/300?u=user${i}`,
+        accountType: 'free',
+        followersCount: randInt(0, 500),
+        followingCount: randInt(5, 100),
+        postsCount: randInt(0, 20),
+        createdAt: daysAgo(randInt(5, 120)),
+      });
+    }
+
+    const createdUsers = await User.insertMany(usersData);
+    const adminUser = createdUsers[0];
+    const moderators = createdUsers.slice(1, 3);
+    const paidCreators = createdUsers.slice(3, 13);
+    const regularUsers = createdUsers.slice(13);
+    const allUsers = createdUsers;
+    console.log(`   ✅ ${createdUsers.length} users (1 admin, 2 mods, 10 paid creators, 37 regular)`);
+
+    // ── 4. POSTS (500) ─────────────────────────────────────────────────────────
+    console.log('📝 Creating 500 posts...');
+    const postsData = [];
+    const heights = [600, 700, 750, 800, 850, 900, 500, 650, 950, 550];
+
+    for (let i = 0; i < 500; i++) {
+      const author = i < 200
+        ? pick(paidCreators)  // 40% from paid creators
+        : pick(allUsers);
+      const cat = pick(createdCategories);
+      const title = postTitles[i % postTitles.length] + (i >= postTitles.length ? ` Vol ${Math.floor(i / postTitles.length) + 1}` : '');
+      const h = pick(heights);
+      const age = randInt(0, 90);
+
+      postsData.push({
+        title,
+        slug: uniqueSlug(title, i),
+        description: `Discover ${title.toLowerCase()} — curated for quality and style.`,
+        image: { url: `https://picsum.photos/seed/picup${i}/800/${h}`, width: 800, height: h },
+        productUrl: chance(0.6) ? `https://example.com/product/${i + 1}` : '',
+        price: chance(0.45) ? { amount: randInt(5, 300), currency: 'USD' } : undefined,
+        tags: pickN(tagPool, randInt(2, 5)),
+        category: cat._id,
+        author: author._id,
+        status: chance(0.9) ? 'published' : pick(['draft', 'archived']),
+        isFeatured: chance(0.08),
+        isAiGenerated: chance(0.12),
+        likesCount: randInt(0, 800),
+        viewsCount: randInt(10, 5000),
+        commentsCount: randInt(0, 80),
+        savesCount: randInt(0, 200),
+        sharesCount: randInt(0, 150),
+        clicksCount: randInt(0, 300),
+        createdAt: daysAgo(age),
+        updatedAt: daysAgo(Math.max(0, age - randInt(0, 5))),
+      });
+    }
+
+    const createdPosts = await Post.insertMany(postsData);
+    const publishedPosts = createdPosts.filter((p) => p.status === 'published');
+    console.log(`   ✅ ${createdPosts.length} posts (${publishedPosts.length} published)`);
+
+    // Update category post counts
+    for (const cat of createdCategories) {
+      const count = createdPosts.filter((p) => p.category.toString() === cat._id.toString()).length;
+      await Category.findByIdAndUpdate(cat._id, { postsCount: count });
+    }
+
+    // ── 5. COMMENTS (300 + 80 replies) ─────────────────────────────────────────
+    console.log('💬 Creating comments...');
+    const commentsData = [];
+    for (let i = 0; i < 300; i++) {
+      commentsData.push({
+        text: pick(commentTexts),
+        post: pick(publishedPosts)._id,
+        user: pick(allUsers)._id,
+        createdAt: daysAgo(randInt(0, 60)),
+      });
+    }
+    const topLevelComments = await Comment.insertMany(commentsData);
+
+    // Replies
+    const repliesData = [];
+    for (let i = 0; i < 80; i++) {
+      const parent = pick(topLevelComments);
+      repliesData.push({
+        text: pick(commentTexts),
+        post: parent.post,
+        user: pick(allUsers)._id,
+        parentComment: parent._id,
+        createdAt: daysAgo(randInt(0, 30)),
+      });
+    }
+    await Comment.insertMany(repliesData);
+    console.log(`   ✅ ${topLevelComments.length} comments + ${repliesData.length} replies`);
+
+    // ── 6. BOARDS (60) ─────────────────────────────────────────────────────────
+    console.log('📋 Creating boards...');
+    const boardNames = [
+      'Inspiration', 'Wishlist', 'Gift Ideas', 'My Style', 'Home Decor',
+      'Tech Gear', 'Want to Buy', 'Favorites', 'Recipe Ideas', 'Travel Goals',
+      'Reading List', 'Workout Gear', 'Art Inspo', 'Photography Refs', 'DIY Projects',
+    ];
+    const boardsData = [];
+    for (let i = 0; i < 60; i++) {
+      const owner = pick(allUsers);
+      const boardPosts = pickN(publishedPosts, randInt(3, 15));
+      boardsData.push({
+        name: `${pick(boardNames)} ${i}`,
+        description: 'A curated collection of my favorite finds',
+        user: owner._id,
+        posts: boardPosts.map((p) => p._id),
+        isPrivate: chance(0.2),
+        pinsCount: boardPosts.length,
+      });
+    }
+    await Board.insertMany(boardsData);
+    console.log(`   ✅ 60 boards`);
+
+    // ── 7. INTERACTIONS (Likes, Saves, Follows) ────────────────────────────────
+    console.log('❤️  Creating interactions...');
+    const likeSet = new Set();
+    const likesData = [];
+    for (let i = 0; i < 800; i++) {
+      const user = pick(allUsers);
+      const post = pick(publishedPosts);
+      const key = `${user._id}-${post._id}`;
+      if (likeSet.has(key)) continue;
+      likeSet.add(key);
+      likesData.push({ user: user._id, post: post._id, createdAt: daysAgo(randInt(0, 60)) });
+    }
+    await Like.insertMany(likesData);
+
+    const saveSet = new Set();
+    const savesData = [];
+    for (let i = 0; i < 500; i++) {
+      const user = pick(allUsers);
+      const post = pick(publishedPosts);
+      const key = `${user._id}-${post._id}`;
+      if (saveSet.has(key)) continue;
+      saveSet.add(key);
+      savesData.push({ user: user._id, post: post._id, createdAt: daysAgo(randInt(0, 60)) });
+    }
+    await Save.insertMany(savesData);
+
+    const followSet = new Set();
+    const followsData = [];
+    for (let i = 0; i < 400; i++) {
+      const follower = pick(allUsers);
+      const following = pick(allUsers);
+      if (follower._id.toString() === following._id.toString()) continue;
+      const key = `${follower._id}-${following._id}`;
+      if (followSet.has(key)) continue;
+      followSet.add(key);
+      followsData.push({ follower: follower._id, following: following._id, createdAt: daysAgo(randInt(0, 90)) });
+    }
+    await Follow.insertMany(followsData);
+    console.log(`   ✅ ${likesData.length} likes · ${savesData.length} saves · ${followsData.length} follows`);
+
+    // ── 8. NOTIFICATIONS (300) ─────────────────────────────────────────────────
+    console.log('🔔 Creating notifications...');
+    const notifTypes = ['like', 'comment', 'follow', 'mention', 'system'];
+    const notifsData = [];
+    for (let i = 0; i < 300; i++) {
+      const type = pick(notifTypes);
+      const recipient = pick(allUsers);
+      const sender = pick(allUsers);
+      notifsData.push({
+        recipient: recipient._id,
+        sender: sender._id,
+        type,
+        post: ['like', 'comment', 'mention'].includes(type) ? pick(publishedPosts)._id : undefined,
+        message: type === 'follow'
+          ? `${sender.displayName} started following you`
+          : type === 'like'
+            ? `${sender.displayName} liked your post`
+            : type === 'comment'
+              ? `${sender.displayName} commented on your post`
+              : `System notification`,
+        isRead: chance(0.4),
+        createdAt: daysAgo(randInt(0, 30)),
+      });
+    }
+    await Notification.insertMany(notifsData);
+    console.log(`   ✅ 300 notifications`);
+
+    // ── 9. POST EVENTS (for analytics — ~15K events across 90 days) ────────────
+    console.log('📊 Creating post events (analytics)...');
+    const analyticsPostPool = publishedPosts.slice(0, 150); // Use first 150 posts
+    const postEventsData = [];
+    for (const post of analyticsPostPool) {
+      const numEvents = randInt(20, 200);
+      for (let j = 0; j < numEvents; j++) {
+        const age = randInt(0, 90);
+        const viewer = pick(allUsers);
+        postEventsData.push({
+          postId: post._id,
+          ownerId: post.author,
+          viewerId: chance(0.7) ? viewer._id : null,
+          eventType: pick(eventTypes),
+          sessionId: `sess_${Date.now().toString(36)}_${j}`,
+          deviceType: pick(deviceTypes),
+          browser: pick(browsers),
+          os: pick(oses),
+          referrer: pick(referrerTypes),
+          country: pick(countries).code,
+          createdAt: daysAgo(age),
+        });
+      }
+    }
+    // Bulk insert in chunks to avoid memory issues
+    const PE_CHUNK = 5000;
+    for (let i = 0; i < postEventsData.length; i += PE_CHUNK) {
+      await PostEvent.insertMany(postEventsData.slice(i, i + PE_CHUNK));
+    }
+    console.log(`   ✅ ${postEventsData.length} post events`);
+
+    // ── 10. POST ANALYTICS DAILY (for analytics dashboard charts) ──────────────
+    console.log('📈 Creating PostAnalyticsDaily records...');
+    const padData = [];
+    for (const post of analyticsPostPool.slice(0, 80)) {
+      for (let day = 0; day < 60; day++) {
+        if (chance(0.25)) continue; // skip some days
+        const d = daysAgo(day);
+        const impressions = randInt(50, 500);
+        const uniqueViews = Math.floor(impressions * 0.65);
+        const likes = randInt(0, Math.floor(impressions * 0.15));
+        const comments = randInt(0, Math.floor(impressions * 0.05));
+        const shares = randInt(0, Math.floor(impressions * 0.08));
+        const saves = randInt(0, Math.floor(impressions * 0.1));
+        const clicks = randInt(0, Math.floor(impressions * 0.2));
+        padData.push({
+          postId: post._id,
+          ownerId: post.author,
+          date: dateStr(d),
+          impressions, uniqueViews,
+          likes, comments, shares, saves, clicks,
+          ctr: parseFloat((clicks / (impressions || 1)).toFixed(4)),
+          engagementRate: parseFloat(((likes + comments + shares + saves) / (impressions || 1)).toFixed(4)),
+          trafficSources: { home_feed: randInt(0, 50), search: randInt(0, 30), profile: randInt(0, 20), external: randInt(0, 15), direct: randInt(0, 40), notification: randInt(0, 10), board: randInt(0, 8) },
+          deviceBreakdown: { mobile: randInt(30, 70), desktop: randInt(20, 50), tablet: randInt(5, 20) },
+          hourlyDistribution: Array.from({ length: 24 }, () => randInt(0, 20)),
+        });
+      }
+    }
+    // Deduplicate by post+date
+    const padMap = new Map();
+    padData.forEach((d) => padMap.set(`${d.postId}-${d.date}`, d));
+    const uniquePad = [...padMap.values()];
+    const PAD_CHUNK = 3000;
+    for (let i = 0; i < uniquePad.length; i += PAD_CHUNK) {
+      await PostAnalyticsDaily.insertMany(uniquePad.slice(i, i + PAD_CHUNK));
+    }
+    console.log(`   ✅ ${uniquePad.length} PostAnalyticsDaily records`);
+
+    // ── 11. CREATOR ANALYTICS SNAPSHOTS (for dashboard overview trends) ────────
+    console.log('📉 Creating CreatorAnalyticsSnapshots...');
+    const snapData = [];
+    for (const creator of paidCreators) {
+      for (let day = 0; day < 60; day++) {
+        if (chance(0.15)) continue;
+        const d = daysAgo(day);
+        const totalImpressions = randInt(200, 5000);
+        const totalUniqueViews = Math.floor(totalImpressions * 0.6);
+        const totalLikes = randInt(5, 200);
+        const totalComments = randInt(1, 50);
+        const totalShares = randInt(0, 40);
+        const totalSaves = randInt(2, 80);
+        const totalClicks = randInt(5, 150);
+        const engagement = ((totalLikes + totalComments + totalShares + totalSaves) / (totalImpressions || 1) * 100);
+        const topPostPick = pick(publishedPosts);
+        snapData.push({
+          userId: creator._id,
+          date: dateStr(d),
+          totalPosts: randInt(1, 10),
+          totalImpressions, totalUniqueViews, totalLikes, totalComments, totalShares, totalSaves, totalClicks,
+          totalAffiliateClicks: randInt(0, 20),
+          followersCount: creator.followersCount || randInt(100, 3000),
+          followersGained: randInt(0, 15),
+          followersLost: randInt(0, 5),
+          netFollowerGrowth: randInt(-3, 12),
+          engagementRate: parseFloat(engagement.toFixed(2)),
+          ctr: parseFloat((totalClicks / (totalImpressions || 1) * 100).toFixed(2)),
+          estimatedRevenue: parseFloat((totalClicks * 0.02 * 25 * 0.05).toFixed(2)),
+          performanceScore: randInt(20, 90),
+          viralProbabilityScore: randInt(0, 30),
+          topPost: { postId: topPostPick._id, title: topPostPick.title, impressions: randInt(100, 2000), engagementRate: parseFloat((Math.random() * 10).toFixed(2)) },
+          deviceBreakdown: { mobile: randInt(40, 70), desktop: randInt(20, 45), tablet: randInt(5, 15) },
+          audienceActiveHours: Array.from({ length: 24 }, () => randInt(0, 30)),
+        });
+      }
+    }
+    const snapMap = new Map();
+    snapData.forEach((s) => snapMap.set(`${s.userId}-${s.date}`, s));
+    const uniqueSnaps = [...snapMap.values()];
+    const SNAP_CHUNK = 2000;
+    for (let i = 0; i < uniqueSnaps.length; i += SNAP_CHUNK) {
+      await CreatorAnalyticsSnapshot.insertMany(uniqueSnaps.slice(i, i + SNAP_CHUNK));
+    }
+    console.log(`   ✅ ${uniqueSnaps.length} CreatorAnalyticsSnapshots`);
+
+    // ── 12. CREATOR PROFILES ───────────────────────────────────────────────────
+    console.log('👤 Creating CreatorProfiles...');
+    const profilesData = paidCreators.map((creator, i) => ({
+      user: creator._id,
+      isCreator: true,
+      creatorSince: daysAgo(randInt(30, 150)),
+      verificationStatus: i < 5 ? 'verified' : pick(['unverified', 'pending', 'verified']),
+      monetizationEnabled: true,
+      monetizationEnabledAt: daysAgo(randInt(20, 100)),
+      monetizationTier: pick(['starter', 'partner', 'premium', 'elite']),
+      adRevenueEnabled: chance(0.7),
+      sponsorshipEnabled: chance(0.5),
+      donationsEnabled: chance(0.6),
+      tipsEnabled: chance(0.8),
+      subscriptionEnabled: chance(0.3),
+      premiumContentEnabled: chance(0.2),
+      affiliateEnabled: chance(0.6),
+      payoutMethod: pick(['bank_transfer', 'paypal', 'stripe']),
+      payoutDetails: { paypalEmail: `${creator.username}@paypal.com` },
+      minimumPayout: pick([25, 50, 100]),
+      payoutSchedule: pick(['weekly', 'biweekly', 'monthly']),
+      subscriptionTiers: [
+        { name: 'Basic', price: 4.99, currency: 'USD', benefits: ['Early access', 'No ads'], isActive: true },
+        { name: 'Premium', price: 14.99, currency: 'USD', benefits: ['Early access', 'No ads', 'Exclusive content', 'Direct messages'], isActive: true },
+      ],
+      autoModeration: true,
+      commentFilter: { enabled: true, blockedWords: ['spam', 'scam'], requireApproval: false, blockLinks: false },
+      dashboardLayout: pick(['default', 'compact', 'detailed']),
+      goals: {
+        followerTarget: randInt(5000, 50000),
+        monthlyRevenueTarget: randInt(500, 5000),
+        engagementRateTarget: randInt(3, 10),
+        postsPerWeekTarget: randInt(3, 7),
+      },
+      lifetimeRevenue: randInt(500, 25000),
+      lifetimePayouts: randInt(200, 15000),
+      pendingBalance: randInt(50, 2000),
+      totalSubscribers: randInt(10, 500),
+      totalDonationsReceived: randInt(100, 5000),
+    }));
+    await CreatorProfile.insertMany(profilesData);
+    console.log(`   ✅ ${profilesData.length} CreatorProfiles`);
+
+    // ── 13. CONTENT METRICS (per-post performance rollups) ─────────────────────
+    console.log('📊 Creating ContentMetrics...');
+    const metricsData = [];
+    const metricsPostPool = publishedPosts.slice(0, 120);
+    for (const post of metricsPostPool) {
+      const views = post.viewsCount || randInt(100, 5000);
+      const likes = post.likesCount || randInt(0, 200);
+      const comments = post.commentsCount || randInt(0, 50);
+      const shares = post.sharesCount || randInt(0, 100);
+      const saves = post.savesCount || randInt(0, 80);
+      const clicks = post.clicksCount || randInt(0, 150);
+      const engagementRate = ((likes + comments + shares + saves) / (views || 1) * 100);
+      const perfScore = Math.min(100, Math.floor(engagementRate * 8 + Math.log(views + 1) * 5));
+
+      metricsData.push({
+        post: post._id,
+        creator: post.author,
+        totalViews: views,
+        uniqueViews: Math.floor(views * 0.72),
+        totalLikes: likes,
+        totalComments: comments,
+        totalShares: shares,
+        totalSaves: saves,
+        totalClicks: clicks,
+        engagementRate: parseFloat(engagementRate.toFixed(2)),
+        clickThroughRate: parseFloat((clicks / (views || 1) * 100).toFixed(2)),
+        performanceScore: perfScore,
+        performanceTier: perfScore > 80 ? 'viral' : perfScore > 60 ? 'good' : perfScore > 40 ? 'average' : 'low',
+        isTopPerforming: perfScore > 75,
+        viewsTrend: Array.from({ length: 7 }, (_, j) => ({ date: dateStr(daysAgo(j)), value: randInt(10, views / 5) })),
+        engagementTrend: Array.from({ length: 7 }, (_, j) => ({ date: dateStr(daysAgo(j)), value: parseFloat((Math.random() * 10).toFixed(2)) })),
+        lastAggregatedAt: new Date(),
+      });
+    }
+    await ContentMetrics.insertMany(metricsData);
+    console.log(`   ✅ ${metricsData.length} ContentMetrics`);
+
+    // ── 14. CREATOR REVENUE ────────────────────────────────────────────────────
+    console.log('💰 Creating CreatorRevenue records...');
+    const revenueTypes = ['ad_revenue', 'sponsorship', 'donation', 'tip', 'subscription', 'affiliate'];
+    const revenueData = [];
+    for (const creator of paidCreators) {
+      const numEntries = randInt(10, 40);
+      for (let j = 0; j < numEntries; j++) {
+        const type = pick(revenueTypes);
+        const amount = type === 'sponsorship' ? randInt(200, 5000) : randInt(1, 200);
+        const fee = parseFloat((amount * 0.15).toFixed(2));
+        revenueData.push({
+          creator: creator._id,
+          type,
+          amount,
+          netAmount: parseFloat((amount - fee).toFixed(2)),
+          platformFee: fee,
+          status: pick(['pending', 'approved', 'paid']),
+          post: ['ad_revenue', 'affiliate'].includes(type) ? pick(publishedPosts)._id : undefined,
+          donor: type === 'donation' || type === 'tip' ? pick(regularUsers)._id : undefined,
+          donorMessage: type === 'tip' ? pick(['Great work!', 'Love your content!', 'Keep it up! 🔥', '']) : undefined,
+          description: `${type.replace('_', ' ')} — ${creator.displayName}`,
+          periodStart: daysAgo(randInt(30, 90)),
+          periodEnd: daysAgo(randInt(0, 29)),
+          createdAt: daysAgo(randInt(0, 90)),
+        });
+      }
+    }
+    await CreatorRevenue.insertMany(revenueData);
+    console.log(`   ✅ ${revenueData.length} CreatorRevenue records`);
+
+    // ── 15. AUDIENCE DEMOGRAPHICS ──────────────────────────────────────────────
+    console.log('🌍 Creating AudienceDemographics...');
+    const demoData = [];
+    for (const creator of paidCreators) {
+      for (let day = 0; day < 30; day += 3) {
+        const d = daysAgo(day);
+        const total = randInt(100, 3000);
+        const countryList = pickN(countries, randInt(4, 8)).map((c, idx) => ({
+          code: c.code, name: c.name,
+          count: Math.floor(total * (0.3 - idx * 0.04)),
+          percentage: parseFloat((30 - idx * 4).toFixed(1)),
+        }));
+
+        demoData.push({
+          creator: creator._id,
+          date: dateStr(d),
+          totalFollowers: creator.followersCount || randInt(100, 5000),
+          totalProfileVisits: randInt(20, 500),
+          totalContentViewers: total,
+          ageGroups: {
+            '13-17': randInt(2, 8), '18-24': randInt(25, 40),
+            '25-34': randInt(25, 35), '35-44': randInt(10, 20),
+            '45-54': randInt(5, 10), '55+': randInt(2, 8),
+          },
+          genderDistribution: {
+            male: randInt(30, 55), female: randInt(30, 55),
+            other: randInt(2, 8), unknown: randInt(5, 15),
+          },
+          countries: countryList,
+          engagementSegments: {
+            superFans: randInt(5, 15), activeFans: randInt(15, 30),
+            casualViewers: randInt(30, 50), dormant: randInt(10, 25),
+          },
+          devices: { mobile: randInt(45, 65), desktop: randInt(25, 40), tablet: randInt(5, 15) },
+          trafficSources: {
+            direct: randInt(20, 40), search: randInt(10, 25),
+            social: randInt(15, 35), referral: randInt(5, 15),
+            email: randInt(2, 8), other: randInt(1, 5),
+          },
+          newViewers: randInt(20, 60),
+          returningViewers: randInt(40, 80),
+        });
+      }
+    }
+    const demoMap = new Map();
+    demoData.forEach((d) => demoMap.set(`${d.creator}-${d.date}`, d));
+    const uniqueDemo = [...demoMap.values()];
+    await AudienceDemographic.insertMany(uniqueDemo);
+    console.log(`   ✅ ${uniqueDemo.length} AudienceDemographic records`);
+
+    // ── 16. ACTIVITY EVENTS (creator activity feed) ────────────────────────────
+    console.log('⚡ Creating ActivityEvents...');
+    const activityTypes = [
+      'new_follower', 'post_like', 'post_comment', 'post_share', 'post_save',
+      'post_view_milestone', 'profile_visit', 'donation_received', 'tip_received',
+      'content_trending', 'achievement_unlocked',
+    ];
+    const activityData = [];
+    for (const creator of paidCreators) {
+      const numEvents = randInt(30, 80);
+      for (let j = 0; j < numEvents; j++) {
+        const type = pick(activityTypes);
+        const actor = pick(allUsers);
+        const post = ['post_like', 'post_comment', 'post_share', 'post_save', 'post_view_milestone', 'content_trending'].includes(type)
+          ? pick(publishedPosts) : null;
+        activityData.push({
+          creator: creator._id,
+          eventType: type,
+          actor: actor._id,
+          actorName: actor.displayName,
+          actorAvatar: actor.avatar,
+          post: post?._id,
+          postTitle: post?.title,
+          message: type === 'new_follower' ? `${actor.displayName} started following you`
+            : type === 'post_like' ? `${actor.displayName} liked "${post?.title}"`
+            : type === 'donation_received' ? `${actor.displayName} donated $${randInt(5, 50)}`
+            : type === 'post_view_milestone' ? `"${post?.title}" reached ${pick([100, 500, 1000, 5000])} views!`
+            : type === 'content_trending' ? `"${post?.title}" is trending! 🔥`
+            : type === 'achievement_unlocked' ? `Achievement unlocked: ${pick(['First 100 followers', '1K views', '10 posts', 'Top Creator'])}`
+            : `${actor.displayName} interacted with your content`,
+          amount: type === 'donation_received' || type === 'tip_received' ? randInt(5, 100) : undefined,
+          currency: type === 'donation_received' || type === 'tip_received' ? 'USD' : undefined,
+          milestone: type === 'post_view_milestone' ? pick([100, 500, 1000, 5000]) : undefined,
+          isRead: chance(0.5),
+          createdAt: daysAgo(randInt(0, 25)),
+        });
+      }
+    }
+    await ActivityEvent.insertMany(activityData);
+    console.log(`   ✅ ${activityData.length} ActivityEvents`);
+
+    // ── 17. SCHEDULED POSTS ────────────────────────────────────────────────────
+    console.log('⏰ Creating ScheduledPosts...');
+    const scheduledData = [];
+    // Create some draft posts for scheduling
+    const draftPosts = createdPosts.filter((p) => p.status === 'draft');
+    for (let i = 0; i < Math.min(15, draftPosts.length); i++) {
+      const post = draftPosts[i];
+      const daysInFuture = randInt(1, 14);
+      const scheduledFor = new Date();
+      scheduledFor.setDate(scheduledFor.getDate() + daysInFuture);
+      scheduledFor.setHours(pick([9, 10, 12, 14, 17, 19]), 0, 0);
+
+      scheduledData.push({
+        creator: post.author,
+        post: post._id,
+        scheduledFor,
+        timezone: pick(['UTC', 'America/New_York', 'America/Los_Angeles', 'Europe/London', 'Asia/Tokyo']),
+        status: 'scheduled',
+        recurring: chance(0.2),
+        recurrencePattern: chance(0.2) ? pick(['weekly', 'biweekly']) : undefined,
+        notes: chance(0.5) ? 'Auto-publish at peak engagement hours' : undefined,
+      });
+    }
+    await ScheduledPost.insertMany(scheduledData);
+    console.log(`   ✅ ${scheduledData.length} ScheduledPosts`);
+
+    // ── 18. PAYMENTS & WALLETS ─────────────────────────────────────────────────
+    console.log('💳 Creating Payments & Wallets...');
+    const paymentTypes = ['ad_payment', 'subscription', 'wallet_topup'];
+    const gateways = ['stripe', 'razorpay'];
+    const paymentsData = [];
+    const walletsData = [];
+
+    for (const user of paidCreators) {
+      const numPayments = randInt(2, 8);
+      let walletBalance = 0;
+      const transactions = [];
+
+      for (let j = 0; j < numPayments; j++) {
+        const amount = randInt(10, 500);
+        walletBalance += amount;
+        const gateway = pick(gateways);
+        paymentsData.push({
+          user: user._id,
+          type: pick(paymentTypes),
+          amount,
+          gateway,
+          gatewayPaymentId: `${gateway}_${Date.now().toString(36)}_${j}`,
+          gatewayOrderId: `order_${Date.now().toString(36)}_${j}`,
+          status: pick(['completed', 'completed', 'completed', 'pending']),
+          createdAt: daysAgo(randInt(0, 60)),
+        });
+        transactions.push({
+          type: 'credit', amount, description: 'Wallet top-up',
+          balanceAfter: walletBalance, createdAt: daysAgo(randInt(0, 60)),
+        });
+      }
+
+      // A few debits
+      const numDebits = randInt(1, 3);
+      for (let j = 0; j < numDebits && walletBalance > 20; j++) {
+        const debitAmt = randInt(10, Math.min(100, walletBalance));
+        walletBalance -= debitAmt;
+        transactions.push({
+          type: 'debit', amount: debitAmt, description: 'Ad campaign spend',
+          balanceAfter: walletBalance, createdAt: daysAgo(randInt(0, 30)),
+        });
+      }
+
+      walletsData.push({
+        user: user._id,
+        balance: walletBalance,
+        totalCredits: transactions.filter((t) => t.type === 'credit').reduce((s, t) => s + t.amount, 0),
+        totalDebits: transactions.filter((t) => t.type === 'debit').reduce((s, t) => s + t.amount, 0),
+        transactions,
+      });
+    }
+    await Payment.insertMany(paymentsData);
+    await Wallet.insertMany(walletsData);
+    console.log(`   ✅ ${paymentsData.length} Payments · ${walletsData.length} Wallets`);
+
+    // ── 19. ADVERTISEMENTS (40 — enhanced with new fields) ───────────────────
+    console.log('📢 Creating Advertisements...');
+    const adTitlePrefixes = ['Summer', 'Winter', 'Spring', 'Holiday', 'Flash', 'Premium', 'Mega', 'Limited', 'Exclusive', 'Early Bird'];
+    const adTitleSuffixes = ['Sale', 'Collection', 'Launch', 'Promo', 'Campaign', 'Deals', 'Showcase', 'Special'];
+    const adDescriptions = [
+      'Promote your brand to a targeted creative audience',
+      'Reach thousands of design enthusiasts and tech lovers',
+      'Boost visibility for your latest product launch',
+      'Drive qualified traffic to your store',
+      'Get your brand in front of active buyers',
+      'Connect with creative professionals worldwide',
+    ];
+    const promotionTypes = ['standard', 'featured', 'homepage', 'category_boost'];
+    const audienceTargets = ['all', 'followers', 'new_users', 'returning_users'];
+    const adLocations = ['United States', 'United Kingdom', 'Canada', 'Germany', 'India', 'Japan', 'Australia', 'France'];
+
+    const adsData = [];
+    for (let i = 0; i < 40; i++) {
+      const advertiser = pick(paidCreators);
+      const budget = randInt(100, 3000);
+      const spent = randInt(0, Math.floor(budget * 0.8));
+      const impressions = randInt(500, 25000);
+      const clicks = randInt(20, Math.floor(impressions * 0.08));
+      const views = randInt(Math.floor(impressions * 0.4), impressions);
+      const promoType = pick(promotionTypes);
+      const startDaysAgo = randInt(5, 75);
+      const endDaysFromNow = randInt(-10, 45); // negative = already ended
+
+      // Generate dailyStats for last 30 days
+      const daily = [];
+      for (let d = 0; d < 30; d++) {
+        if (chance(0.2)) continue; // skip some days
+        const dayImpressions = randInt(50, Math.ceil(impressions / 20));
+        const dayClicks = randInt(0, Math.ceil(dayImpressions * 0.06));
+        const dayViews = randInt(Math.floor(dayImpressions * 0.3), dayImpressions);
+        daily.push({
+          date: daysAgo(d),
+          impressions: dayImpressions,
+          clicks: dayClicks,
+          views: dayViews,
+          spent: parseFloat((dayClicks * 0.02 + dayImpressions * 0.0005).toFixed(2)),
+        });
+      }
+
+      adsData.push({
+        title: `${pick(adTitlePrefixes)} ${pick(adTitleSuffixes)} ${i + 1}`,
+        description: pick(adDescriptions),
+        image: { url: `https://picsum.photos/seed/ad${i}/800/400`, width: 800, height: 400 },
+        redirectUrl: `https://example.com/promo/${i + 1}`,
+        advertiser: advertiser._id,
+        campaign: {
+          name: `Campaign ${i + 1}`,
+          startDate: daysAgo(startDaysAgo),
+          endDate: daysAgo(-endDaysFromNow),
+          budget,
+          spent,
+          currency: pick(['USD', 'USD', 'USD', 'INR']),
+        },
+        placement: pick(['feed', 'sidebar', 'banner', 'search']),
+        status: i < 12 ? 'active' : i < 18 ? 'paused' : i < 24 ? 'completed' : i < 30 ? 'pending' : i < 35 ? 'draft' : pick(['active', 'rejected']),
+        isPaid: true,
+        impressions,
+        clicks,
+        views,
+        likes: randInt(0, Math.floor(clicks * 0.3)),
+        shares: randInt(0, Math.floor(clicks * 0.1)),
+        ctr: parseFloat((clicks / (impressions || 1) * 100).toFixed(2)),
+        targetCategories: pickN(createdCategories, randInt(1, 3)).map(c => c._id),
+        targetTags: pickN(tagPool, randInt(2, 5)),
+        targetLocations: pickN(adLocations, randInt(1, 4)),
+        targetAudience: pick(audienceTargets),
+        promotionType: promoType,
+        dailyStats: daily,
+      });
+    }
+    const createdAds = await Advertisement.insertMany(adsData);
+    const activeAds = createdAds.filter(a => a.status === 'active');
+    console.log(`   ✅ ${createdAds.length} Advertisements (${activeAds.length} active)`);
+
+    // ── 19b. AD CLICK EVENTS (~5,000 for analytics) ────────────────────────────
+    console.log('🖱️  Creating AdClickEvents...');
+    const adEventTypes = ['impression', 'click', 'view', 'conversion'];
+    const adClickEventsData = [];
+    const adCities = ['San Francisco', 'New York', 'London', 'Tokyo', 'Berlin', 'Mumbai', 'Sydney', 'Toronto', 'Paris', 'Seoul'];
+    const adPlacements = ['feed', 'sidebar', 'banner', 'search'];
+
+    for (const ad of createdAds.slice(0, 25)) { // Top 25 ads get events
+      const numEvents = randInt(80, 350);
+      for (let j = 0; j < numEvents; j++) {
+        const eventType = chance(0.55) ? 'impression' : chance(0.55) ? 'view' : chance(0.85) ? 'click' : 'conversion';
+        const viewer = chance(0.7) ? pick(allUsers) : null;
+        const age = randInt(0, 75);
+        const isSusp = chance(0.03);
+
+        adClickEventsData.push({
+          advertisement: ad._id,
+          eventType,
+          user: viewer?._id || null,
+          sessionId: `adsess_${Date.now().toString(36)}_${j}_${ad._id.toString().slice(-4)}`,
+          ip: `${randInt(1, 223)}.${randInt(0, 255)}.${randInt(0, 255)}.${randInt(1, 254)}`,
+          userAgent: `Mozilla/5.0 (${pick(['Windows NT 10.0', 'Macintosh; Intel Mac OS X 10_15', 'Linux x86_64', 'iPhone; CPU iPhone OS 17_0', 'Android 14'])})`,
+          country: pick(countries).code,
+          city: pick(adCities),
+          deviceType: pick(deviceTypes),
+          browser: pick(browsers),
+          os: pick(oses),
+          referrer: pick(['home_feed', 'search', 'direct', 'external', 'notification']),
+          placement: ad.placement || pick(adPlacements),
+          costPerClick: eventType === 'click' ? 0.02 : 0,
+          costPerImpression: eventType === 'impression' ? 0.0005 : 0,
+          isSuspicious: isSusp,
+          suspiciousReason: isSusp ? pick(['rapid_clicks', 'bot_pattern', 'geo_mismatch', 'duplicate_session']) : '',
+          createdAt: daysAgo(age),
+        });
+      }
+    }
+    // Bulk insert in chunks
+    const ACE_CHUNK = 3000;
+    for (let i = 0; i < adClickEventsData.length; i += ACE_CHUNK) {
+      await AdClickEvent.insertMany(adClickEventsData.slice(i, i + ACE_CHUNK));
+    }
+    console.log(`   ✅ ${adClickEventsData.length} AdClickEvents`);
+
+    // ── 19c. PAYMENT METHODS (for paid creators) ───────────────────────────────
+    console.log('💳 Creating PaymentMethods...');
+    const cardBrands = ['visa', 'mastercard', 'amex', 'discover'];
+    const bankNames = ['Chase', 'Bank of America', 'Wells Fargo', 'Citibank', 'HDFC Bank', 'ICICI Bank', 'Barclays'];
+    const payMethodsData = [];
+
+    for (const creator of paidCreators) {
+      // Each paid creator gets 1–3 payment methods
+      const numMethods = randInt(1, 3);
+      const methodTypes = pickN(['credit_card', 'debit_card', 'paypal', 'upi', 'bank_account'], numMethods);
+
+      methodTypes.forEach((type, idx) => {
+        const isDefault = idx === 0;
+        const method = {
+          user: creator._id,
+          type,
+          label: type === 'credit_card' ? 'Personal Card'
+            : type === 'debit_card' ? 'Debit Card'
+            : type === 'paypal' ? 'PayPal Account'
+            : type === 'upi' ? 'UPI'
+            : 'Bank Account',
+          details: {},
+          gateway: type === 'upi' ? 'razorpay' : 'stripe',
+          gatewayToken: `tok_${type}_${Date.now().toString(36)}_${creator._id.toString().slice(-4)}`,
+          isDefault,
+          isVerified: chance(0.8),
+        };
+
+        if (type === 'credit_card' || type === 'debit_card') {
+          method.details = {
+            last4: `${randInt(1000, 9999)}`,
+            brand: pick(cardBrands),
+            expiryMonth: randInt(1, 12),
+            expiryYear: randInt(2026, 2030),
+          };
+        } else if (type === 'paypal') {
+          method.details = { paypalEmail: `${creator.username}@paypal.com` };
+        } else if (type === 'upi') {
+          method.details = { upiId: `${creator.username}@upi` };
+        } else if (type === 'bank_account') {
+          method.details = {
+            last4: `${randInt(1000, 9999)}`,
+            bankName: pick(bankNames),
+          };
+        }
+
+        payMethodsData.push(method);
+      });
+    }
+    await PaymentMethod.insertMany(payMethodsData);
+    console.log(`   ✅ ${payMethodsData.length} PaymentMethods`);
+
+    // ── 19d. WITHDRAW REQUESTS ─────────────────────────────────────────────────
+    console.log('🏦 Creating WithdrawRequests...');
+    const withdrawData = [];
+    const payoutMethods = ['bank_transfer', 'paypal', 'upi'];
+
+    for (const creator of paidCreators) {
+      const numWithdrawals = randInt(1, 4);
+      for (let j = 0; j < numWithdrawals; j++) {
+        const method = pick(payoutMethods);
+        const status = pick(['pending', 'pending', 'processing', 'completed', 'completed', 'completed', 'rejected']);
+        const age = randInt(0, 60);
+        const amount = randInt(25, 500);
+
+        const wr = {
+          user: creator._id,
+          amount,
+          currency: method === 'upi' ? 'INR' : 'USD',
+          status,
+          payoutMethod: method,
+          payoutDetails: {},
+          notes: chance(0.3) ? 'Monthly earnings withdrawal' : '',
+          createdAt: daysAgo(age),
+        };
+
+        if (method === 'bank_transfer') {
+          wr.payoutDetails = {
+            accountName: creator.displayName,
+            accountNumber: `****${randInt(1000, 9999)}`,
+            bankName: pick(bankNames),
+            ifscCode: chance(0.5) ? `ABCD0${randInt(100000, 999999)}` : '',
+          };
+        } else if (method === 'paypal') {
+          wr.payoutDetails = { paypalEmail: `${creator.username}@paypal.com` };
+        } else if (method === 'upi') {
+          wr.payoutDetails = { upiId: `${creator.username}@upi` };
+        }
+
+        if (status === 'completed') {
+          wr.processedBy = adminUser._id;
+          wr.processedAt = daysAgo(Math.max(0, age - randInt(1, 3)));
+          wr.transactionRef = `TXN_${Date.now().toString(36)}_${j}`;
+        } else if (status === 'rejected') {
+          wr.processedBy = adminUser._id;
+          wr.processedAt = daysAgo(Math.max(0, age - 1));
+          wr.rejectionReason = pick(['Insufficient balance', 'Invalid payout details', 'Account verification required']);
+        }
+
+        withdrawData.push(wr);
+      }
+    }
+    await WithdrawRequest.insertMany(withdrawData);
+    console.log(`   ✅ ${withdrawData.length} WithdrawRequests`);
+
+    // ── 20. AFFILIATE CLICKS ───────────────────────────────────────────────────
+    console.log('🔗 Creating AffiliateClicks...');
+    const affiliateData = [];
+    for (const post of analyticsPostPool.slice(0, 40)) {
+      const numClicks = randInt(5, 50);
+      for (let j = 0; j < numClicks; j++) {
+        const clicker = pick(allUsers);
+        affiliateData.push({
+          postId: post._id,
+          ownerId: post.author,
+          clickerId: chance(0.6) ? clicker._id : null,
+          productUrl: post.productUrl || `https://example.com/product/${j}`,
+          sessionId: `aff_${Date.now().toString(36)}_${j}`,
+          referrer: pick(referrerTypes),
+          deviceType: pick(deviceTypes),
+          browser: pick(browsers),
+          os: pick(oses),
+          country: pick(countries).code,
+          converted: chance(0.05),
+          conversionValue: chance(0.05) ? randInt(5, 100) : 0,
+          createdAt: daysAgo(randInt(0, 60)),
+        });
+      }
+    }
+    const AFF_CHUNK = 3000;
+    for (let i = 0; i < affiliateData.length; i += AFF_CHUNK) {
+      await AffiliateClick.insertMany(affiliateData.slice(i, i + AFF_CHUNK));
+    }
+    console.log(`   ✅ ${affiliateData.length} AffiliateClicks`);
+
+    // ── 21. BLOG POSTS (12) ───────────────────────────────────────────────────
+    console.log('📰 Creating BlogPosts...');
+    const blogCategories = ['technology', 'ai', 'web-development', 'tutorials', 'news', 'gadgets'];
+    const blogData = [];
+    for (let i = 0; i < 12; i++) {
+      const author = pick([adminUser, ...moderators, ...paidCreators.slice(0, 3)]);
+      const blogTitles = [
+        'Getting Started with AI Image Generation in 2026',
+        'Top 10 VS Code Extensions for Productivity',
+        'The Future of Web Development: What to Expect',
+        'Building Scalable APIs with Node.js and MongoDB',
+        'A Complete Guide to Responsive Design Patterns',
+        'Understanding Redux Toolkit: Best Practices',
+        'Docker for Developers: From Zero to Production',
+        'CSS Grid vs Flexbox: When to Use Which',
+        'Machine Learning in the Browser with TensorFlow.js',
+        'The Rise of Edge Computing: What You Need to Know',
+        'TypeScript Tips and Tricks for Better Code',
+        'How to Build a Real-Time Dashboard with Socket.io',
+      ];
+      const title = blogTitles[i % blogTitles.length];
+
+      blogData.push({
+        title: `${title}`,
+        slug: slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString(36) + i,
+        content: `<article><h2>${title}</h2><p>This is a comprehensive guide covering everything you need to know about ${title.toLowerCase()}. In this article, we'll explore the key concepts, best practices, and practical examples to get you started.</p><h3>Introduction</h3><p>The landscape of technology continues to evolve rapidly. Understanding the latest trends and tools is essential for any developer or creator looking to stay ahead.</p><h3>Key Takeaways</h3><ul><li>Understanding the fundamentals is crucial</li><li>Practice with real-world projects</li><li>Stay updated with the community</li><li>Experiment with new tools and approaches</li></ul><p>Whether you're a beginner or an experienced professional, there's always something new to learn in this exciting field.</p></article>`,
+        excerpt: `A comprehensive guide to ${title.toLowerCase()} with practical examples and best practices.`,
+        tags: pickN(['javascript', 'nodejs', 'react', 'typescript', 'ai', 'web', 'tutorial', 'guide'], 3),
+        category: pick(blogCategories),
+        author: author._id,
+        status: 'published',
+        coverImage: { url: `https://picsum.photos/seed/blog${i}/1200/600`, width: 1200, height: 600 },
+        viewsCount: randInt(100, 5000),
+        likesCount: randInt(10, 200),
+        commentsCount: randInt(0, 30),
+        sharesCount: randInt(0, 50),
+        isFeatured: chance(0.25),
+        createdAt: daysAgo(randInt(1, 60)),
+      });
+    }
+    await BlogPost.insertMany(blogData);
+    console.log(`   ✅ 12 BlogPosts`);
+
+    // ── 22. REPORTS ────────────────────────────────────────────────────────────
+    console.log('🚩 Creating Reports...');
+    const reportsData = [];
+    for (let i = 0; i < 30; i++) {
+      const reporter = pick(allUsers);
+      const targetPost = pick(publishedPosts);
+      reportsData.push({
+        reporter: reporter._id,
+        post: targetPost._id,
+        reason: pick(reportReasons),
+        description: chance(0.5) ? 'This content violates community guidelines' : undefined,
+        status: pick(['pending', 'pending', 'reviewed', 'resolved', 'dismissed']),
+        createdAt: daysAgo(randInt(0, 30)),
+      });
+    }
+    await Report.insertMany(reportsData);
+    console.log(`   ✅ 30 Reports`);
+
+    // ── 23. LOGIN LOGS ─────────────────────────────────────────────────────────
+    console.log('🔐 Creating LoginLogs...');
+    const loginData = [];
+    for (let i = 0; i < 200; i++) {
+      const user = pick(allUsers);
+      loginData.push({
+        user: user._id,
+        email: user.email,
+        ip: `${randInt(1, 255)}.${randInt(0, 255)}.xxx.xxx`,
+        method: pick(['email', 'google', 'github']),
+        success: chance(0.95),
+        browser: pick(browsers),
+        os: pick(oses),
+        deviceType: pick(deviceTypes),
+        country: pick(countries).code,
+        city: pick(['San Francisco', 'New York', 'London', 'Tokyo', 'Berlin']),
+        createdAt: daysAgo(randInt(0, 30)),
+      });
+    }
+    await LoginLog.insertMany(loginData);
+    console.log(`   ✅ 200 LoginLogs`);
+
+    // ── 24. DAILY STATS ────────────────────────────────────────────────────────
+    console.log('📅 Creating DailyStats...');
+    const statsData = [];
+    for (let day = 0; day < 60; day++) {
+      const d = daysAgo(day);
+      statsData.push({
+        date: dateStr(d),
+        newUsers: randInt(0, 5),
+        logins: randInt(10, 80),
+        uniqueLogins: randInt(8, 50),
+        posts: randInt(1, 10),
+        views: randInt(200, 5000),
+        likes: randInt(5, 100),
+        saves: randInt(2, 40),
+        aiGenerations: randInt(0, 20),
+        reports: randInt(0, 3),
+        blogPosts: randInt(0, 2),
+        comments: randInt(0, 15),
+        loginsByMethod: { email: randInt(5, 40), google: randInt(2, 20), github: randInt(0, 10) },
+        loginsByDevice: { desktop: randInt(10, 40), mobile: randInt(5, 30), tablet: randInt(1, 10), unknown: randInt(0, 3) },
+        topCountries: pickN(countries, 5).map((c) => ({ country: c.code, count: randInt(5, 100) })),
+      });
+    }
+    // Deduplicate by date
+    const statsMap = new Map();
+    statsData.forEach((s) => statsMap.set(s.date, s));
+    await DailyStats.insertMany([...statsMap.values()]);
+    console.log(`   ✅ ${statsMap.size} DailyStats records`);
+
+    // ── SUMMARY ────────────────────────────────────────────────────────────────
+    console.log('\n' + '═'.repeat(65));
+    console.log('🎉  E.D.I.T.H — SEED COMPLETE');
+    console.log('═'.repeat(65));
+    console.log(`
+  Core Data:
+    👥  50 Users (1 admin · 2 mods · 10 paid creators · 37 regular)
+    📂  12 Categories
+    📝  ${createdPosts.length} Posts (${publishedPosts.length} published)
+    💬  ${topLevelComments.length + repliesData.length} Comments
+    📋  60 Boards
+
+  Social:
+    ❤️   ${likesData.length} Likes · 💾 ${savesData.length} Saves · 👥 ${followsData.length} Follows
+    🔔  300 Notifications
+
+  Analytics:
+    📊  ${postEventsData.length} PostEvents
+    📈  ${uniquePad.length} PostAnalyticsDaily records
+    📉  ${uniqueSnaps.length} CreatorAnalyticsSnapshots
+
+  Creator Dashboard:
+    👤  ${profilesData.length} CreatorProfiles
+    📊  ${metricsData.length} ContentMetrics
+    🌍  ${uniqueDemo.length} AudienceDemographics
+    ⚡  ${activityData.length} ActivityEvents
+    💰  ${revenueData.length} CreatorRevenue records
+    ⏰  ${scheduledData.length} ScheduledPosts
+
+  Finance & Payments:
+    💳  ${paymentsData.length} Payments · 💰 ${walletsData.length} Wallets
+    🏦  ${payMethodsData.length} PaymentMethods
+    📢  ${createdAds.length} Advertisements (${activeAds.length} active)
+    🖱️   ${adClickEventsData.length} AdClickEvents
+    💸  ${withdrawData.length} WithdrawRequests
+    🔗  ${affiliateData.length} AffiliateClicks
+
+  Content:
+    📰  12 BlogPosts · 🚩 30 Reports
+    🔐  200 LoginLogs · 📅 ${statsMap.size} DailyStats
+
+  Logins:
+    Admin:          admin@picup.app / admin123
+    Paid Creators:  <firstname>.<lastname>@demo.com / demo123
+    Regular Users:  user<N>@demo.com / demo123
+`);
+
+    process.exit(0);
+  } catch (error) {
+    console.error('\n❌ Seed error:', error);
+    process.exit(1);
+  }
+}
+
+seedAll();

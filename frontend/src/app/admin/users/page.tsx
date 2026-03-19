@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { adminAPI } from '@/lib/api';
 import { timeAgo } from '@/lib/utils';
+import { useDebounce } from '@/hooks';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AgGridReact } from 'ag-grid-react';
@@ -87,21 +88,25 @@ function ActionsCellRenderer(params: ICellRendererParams) {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const gridRef = useRef<AgGridReact>(null);
   const picupTheme = usePicupGridTheme();
 
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
+
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data } = await adminAPI.getUsers({ page, search, limit: 20 } as any);
+      const { data } = await adminAPI.getUsers({ page, search: debouncedSearch, limit: 20 } as any);
       setUsers(data.data || []);
       setTotalPages(data.pagination?.pages || 1);
     } catch { /* silent */ }
     setIsLoading(false);
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
