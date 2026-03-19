@@ -26,7 +26,7 @@ echo "Starting the app..."
 cd "$ROOT_DIR/backend" && npm run dev &
 BACKEND_PID=$!
 
-# Run frontend in background
+# Run frontend
 cd "$ROOT_DIR/frontend" && npm run dev &
 FRONTEND_PID=$!
 
