@@ -401,3 +401,26 @@ export const affiliateAPI = {
 };
 
 export default api;
+
+// Affiliate API
+export const affiliateAPI = {
+  getMyAffiliatePosts: (params?: { page?: number; limit?: number; sort?: string }) =>
+    api.get('/affiliate/posts', { params }),
+  getSummary: () => api.get('/affiliate/summary'),
+  getPostStats: (postId: string, params?: { period?: string }) =>
+    api.get(`/affiliate/posts/${postId}/stats`, { params }),
+  trackClick: (postId: string, data: { linkIndex: number; referrer?: string }) =>
+    api.post(`/affiliate/posts/${postId}/click`, data),
+};
+
+// Admin Wallet API
+export const adminWalletAPI = {
+  getAllRecharges: (params?: { page?: number; limit?: number; search?: string; source?: string }) =>
+    api.get('/admin/wallet/recharges', { params }),
+  getRechargeStats: (params?: { days?: number }) =>
+    api.get('/admin/wallet/recharges/stats', { params }),
+  getAllTransactions: (params?: { page?: number; limit?: number }) =>
+    api.get('/admin/wallet/transactions', { params }),
+  getAllWallets: (params?: { page?: number; limit?: number; search?: string }) =>
+    api.get('/admin/wallet/wallets', { params }),
+};

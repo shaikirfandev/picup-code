@@ -90,7 +90,7 @@ export default function UpgradePage() {
 
     setSubscribing(planId);
     try {
-      await paymentAPI.subscribe({ plan: planId });
+      await paymentAPI.subscribePlan({ plan: planId });
       await dispatch(fetchUser());
       toast.success(`Successfully upgraded to ${planId.charAt(0).toUpperCase() + planId.slice(1)}!`);
       router.push('/analytics');
