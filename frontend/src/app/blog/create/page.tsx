@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { blogAPI } from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
@@ -8,9 +8,9 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import BlogFooter from '@/components/layout/BlogFooter';
 import {
-  ArrowLeft, Upload, Send, Image, X, Eye, Edit3, ChevronRight,
+  Upload, Send, Image, X, Eye, Edit3,
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Code,
-  Link as LinkIcon, Minus, type LucideIcon, Sparkles, FileText
+  Link as LinkIcon, Minus, type LucideIcon, MoreHorizontal,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -22,9 +22,11 @@ const CATEGORIES = [
 function ToolbarBtn({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} title={label}
-      className="w-7 h-7 rounded flex items-center justify-center transition-all hover:text-edith-cyan"
-      style={{ color: 'var(--edith-text-dim)', background: 'transparent' }}>
-      <Icon className="w-3.5 h-3.5" />
+      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+      style={{ color: 'var(--text-tertiary)' }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-secondary)'; e.currentTarget.style.color = 'var(--foreground)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)'; }}>
+      <Icon className="w-[18px] h-[18px]" />
     </button>
   );
 }
@@ -39,22 +41,24 @@ export default function CreateBlogPost() {
   });
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   /* ─── Auth guard ─── */
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <div className="text-center">
-          <FileText className="w-16 h-16 mx-auto text-edith-cyan/20 mb-4" />
-          <h2 className="text-xl font-display font-bold mb-2" style={{ color: 'var(--edith-text)' }}>
-            Sign in to Write
+          <h2 className="text-[22px] font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+            Sign in to write
           </h2>
-          <p className="text-xs font-mono mb-4" style={{ color: 'var(--edith-text-dim)' }}>
+          <p className="text-[15px] mb-6" style={{ color: 'var(--text-secondary)' }}>
             You need to be logged in to publish articles.
           </p>
-          <Link href="/login" className="btn-primary inline-flex gap-2 text-xs">
-            Log In
+          <Link href="/login"
+            className="inline-flex items-center px-5 py-2.5 rounded-full text-[14px] font-medium"
+            style={{ background: 'var(--accent)', color: '#fff' }}>
+            Sign in
           </Link>
         </div>
       </div>
@@ -119,197 +123,220 @@ export default function CreateBlogPost() {
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-8 text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-          <Link href="/blog" className="hover:text-edith-cyan transition-colors flex items-center gap-1">
-            <ArrowLeft className="w-3 h-3" /> Blog
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      {/* ═══ TOP BAR ═══ */}
+      <header className="sticky top-0 z-30" style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
+        <div className="max-w-[1024px] mx-auto px-6 flex items-center justify-between h-14">
+          <Link href="/blog" className="text-[14px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+            mepiks
           </Link>
-          <ChevronRight className="w-3 h-3" />
-          <span style={{ color: 'var(--edith-text-dim)' }}>Write New Article</span>
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-display font-bold flex items-center gap-2" style={{ color: 'var(--edith-text)' }}>
-              <Edit3 className="w-5 h-5 text-edith-cyan" /> Write Article
-            </h1>
-            <p className="text-[10px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
-              Share your knowledge with the community
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] hidden sm:inline" style={{ color: 'var(--text-tertiary)' }}>
+              {wordCount > 0 ? `${wordCount} words · ${readTime} min read` : 'Draft'}
+            </span>
             <button type="button" onClick={() => setPreview(!preview)}
-              className="text-[10px] font-mono px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
-              style={{
-                background: preview ? 'var(--edith-accent-muted)' : 'var(--edith-accent-subtle)',
-                color: preview ? 'var(--edith-cyan)' : 'var(--edith-text-dim)',
-                border: `1px solid ${preview ? 'var(--edith-border-strong)' : 'var(--edith-border)'}`,
-              }}>
-              {preview ? <><Edit3 className="w-3 h-3" /> Edit</> : <><Eye className="w-3 h-3" /> Preview</>}
+              className="px-3 py-1.5 rounded-full text-[13px] transition-colors"
+              style={preview
+                ? { background: 'var(--foreground)', color: 'var(--background)' }
+                : { background: 'var(--surface-secondary)', color: 'var(--text-secondary)' }
+              }>
+              {preview ? 'Edit' : 'Preview'}
+            </button>
+            <button type="button" onClick={(e) => { e.preventDefault(); handleSubmit(e); }} disabled={isSubmitting}
+              className="px-4 py-1.5 rounded-full text-[14px] font-medium transition-colors disabled:opacity-50"
+              style={{ background: 'var(--accent)', color: '#fff' }}>
+              {isSubmitting ? 'Publishing...' : 'Publish'}
+            </button>
+            <button type="button" onClick={() => setShowSettings(!showSettings)}
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ color: 'var(--text-tertiary)' }}>
+              <MoreHorizontal className="w-5 h-5" />
             </button>
           </div>
         </div>
+      </header>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* ─── Title ─── */}
+      <form onSubmit={handleSubmit} className="max-w-[680px] mx-auto px-6 py-10">
+        {/* ─── Cover Image ─── */}
+        {coverPreviewUrl ? (
+          <div className="relative mb-8 -mx-6 sm:mx-0 sm:rounded-lg overflow-hidden group">
+            <img src={coverPreviewUrl} alt="Cover" className="w-full max-h-[400px] object-cover" />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <button type="button" onClick={() => document.getElementById('cover-upload')?.click()}
+                className="px-4 py-2 rounded-full text-[14px] bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 transition-colors">
+                Change
+              </button>
+              <button type="button" onClick={removeCover}
+                className="px-4 py-2 rounded-full text-[14px] bg-red-500/30 text-white backdrop-blur-sm hover:bg-red-500/40 transition-colors">
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button"
+            className="flex items-center gap-2 text-[14px] mb-6 transition-colors"
+            style={{ color: 'var(--text-tertiary)' }}
+            onClick={() => document.getElementById('cover-upload')?.click()}>
+            <Image className="w-5 h-5" />
+            Add a cover image
+          </button>
+        )}
+        <input id="cover-upload" type="file" accept="image/*" className="hidden" onChange={handleCoverSelect} />
+
+        {preview ? (
+          /* ═══ PREVIEW MODE ═══ */
           <div>
-            <input
-              type="text"
+            <h1 className="text-[32px] md:text-[42px] font-extrabold leading-[1.15] tracking-tight mb-6"
+              style={{ color: form.title ? 'var(--foreground)' : 'var(--text-tertiary)', letterSpacing: '-0.016em' }}>
+              {form.title || 'Your title'}
+            </h1>
+            {form.excerpt && (
+              <p className="text-[20px] leading-[1.4] mb-8" style={{ color: 'var(--text-secondary)' }}>
+                {form.excerpt}
+              </p>
+            )}
+            <div
+              className="prose dark:prose-invert max-w-none
+                prose-headings:font-bold prose-headings:tracking-tight
+                prose-h1:text-[28px] prose-h2:text-[24px] prose-h3:text-[20px]
+                prose-p:text-[18px] prose-p:leading-[1.72]
+                prose-a:text-accent prose-a:underline
+                prose-code:text-[15px] prose-code:text-accent
+                prose-pre:rounded-lg
+                prose-li:text-[18px] prose-li:leading-[1.72]
+                prose-blockquote:border-l-[3px] prose-blockquote:pl-5 prose-blockquote:italic prose-blockquote:text-[20px]"
+              style={{ color: 'var(--foreground)' }}
+              dangerouslySetInnerHTML={{ __html: form.content || '<p style="color:var(--text-tertiary)">Start writing...</p>' }}
+            />
+          </div>
+        ) : (
+          /* ═══ EDIT MODE ═══ */
+          <div>
+            {/* Title */}
+            <textarea
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-transparent text-2xl md:text-3xl font-bold outline-none pb-4"
-              style={{ color: 'var(--edith-text)', borderBottom: '1px solid var(--edith-border)', fontFamily: 'var(--edith-article-heading)', letterSpacing: '-0.015em' }}
-              placeholder="Article title..."
+              onChange={(e) => {
+                setForm({ ...form, title: e.target.value });
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
+              rows={1}
+              className="w-full bg-transparent text-[32px] md:text-[42px] font-extrabold leading-[1.15] tracking-tight outline-none resize-none placeholder-[var(--text-tertiary)] mb-4"
+              style={{ color: 'var(--foreground)', letterSpacing: '-0.016em', border: 'none', overflow: 'hidden' }}
+              placeholder="Title"
+              required
+            />
+
+            {/* Excerpt */}
+            <textarea
+              value={form.excerpt}
+              onChange={(e) => {
+                setForm({ ...form, excerpt: e.target.value });
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
+              rows={1}
+              className="w-full bg-transparent text-[20px] leading-[1.4] outline-none resize-none mb-8 placeholder-[var(--text-tertiary)]"
+              style={{ color: 'var(--text-secondary)', border: 'none', overflow: 'hidden' }}
+              placeholder="Write a brief description..."
+            />
+
+            {/* Formatting toolbar */}
+            <div className="flex items-center gap-0.5 mb-4 pb-4 flex-wrap" style={{ borderBottom: '1px solid var(--border)' }}>
+              <ToolbarBtn icon={Bold} label="Bold" onClick={() => insertWrap('<b>', '</b>')} />
+              <ToolbarBtn icon={Italic} label="Italic" onClick={() => insertWrap('<i>', '</i>')} />
+              <ToolbarBtn icon={Heading1} label="Heading 1" onClick={() => insertWrap('<h1>', '</h1>')} />
+              <ToolbarBtn icon={Heading2} label="Heading 2" onClick={() => insertWrap('<h2>', '</h2>')} />
+              <ToolbarBtn icon={Quote} label="Blockquote" onClick={() => insertWrap('<blockquote>', '</blockquote>')} />
+              <ToolbarBtn icon={List} label="List" onClick={() => insertWrap('<ul>\n<li>', '</li>\n</ul>')} />
+              <ToolbarBtn icon={ListOrdered} label="Numbered List" onClick={() => insertWrap('<ol>\n<li>', '</li>\n</ol>')} />
+              <ToolbarBtn icon={Code} label="Code" onClick={() => insertWrap('<code>', '</code>')} />
+              <ToolbarBtn icon={LinkIcon} label="Link" onClick={() => insertWrap('<a href="url">', '</a>')} />
+              <ToolbarBtn icon={Minus} label="Divider" onClick={() => insertWrap('<hr/>', '')} />
+            </div>
+
+            {/* Content */}
+            <textarea
+              ref={contentRef}
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              className="w-full min-h-[400px] resize-none bg-transparent text-[18px] leading-[1.72] outline-none placeholder-[var(--text-tertiary)]"
+              style={{ color: 'var(--foreground)', border: 'none' }}
+              placeholder="Tell your story..."
               required
             />
           </div>
+        )}
+      </form>
 
-          {/* ─── Cover Image ─── */}
-          <div>
-            <label className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2 block text-edith-cyan/50">
-              Cover Image
-            </label>
-            {coverPreviewUrl ? (
-              <div className="relative rounded-xl overflow-hidden group" style={{ border: '1px solid var(--edith-border)' }}>
-                <img src={coverPreviewUrl} alt="Cover" className="w-full max-h-72 object-cover" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <button type="button" onClick={() => document.getElementById('cover-upload')?.click()}
-                    className="text-[10px] font-mono px-3 py-1.5 rounded bg-white/10 text-white hover:bg-white/20 transition-colors">
-                    Replace
-                  </button>
-                  <button type="button" onClick={removeCover}
-                    className="text-[10px] font-mono px-3 py-1.5 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors">
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all hover:border-edith-cyan/30 hover:bg-edith-cyan/[0.02]"
-                style={{ borderColor: 'var(--edith-border)' }}
-                onClick={() => document.getElementById('cover-upload')?.click()}
-              >
-                <Image className="w-10 h-10 mx-auto text-edith-cyan/20 mb-3" />
-                <p className="text-xs font-mono mb-1" style={{ color: 'var(--edith-text-dim)' }}>
-                  Click to upload cover image
-                </p>
-                <p className="text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-                  PNG, JPG, WebP up to 5MB — Recommended: 1200×630
-                </p>
-              </div>
-            )}
-            <input
-              id="cover-upload" type="file" accept="image/*" className="hidden"
-              onChange={handleCoverSelect}
-            />
-          </div>
+      {/* ═══ SETTINGS DRAWER ═══ */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowSettings(false)}>
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="relative w-full max-w-sm h-full overflow-y-auto p-8 space-y-6"
+            style={{ background: 'var(--background)', borderLeft: '1px solid var(--border)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[18px] font-bold" style={{ color: 'var(--foreground)' }}>Story settings</h2>
+              <button onClick={() => setShowSettings(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ color: 'var(--text-tertiary)' }}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          {/* ─── Meta row ─── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Category */}
             <div>
-              <label className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2 block text-edith-cyan/50">Category</label>
+              <label className="block text-[14px] font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                Category
+              </label>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="input-field text-sm capitalize">
+                className="w-full px-3 py-2.5 rounded-lg text-[14px] outline-none capitalize"
+                style={{ background: 'var(--surface-secondary)', color: 'var(--foreground)', border: '1px solid var(--border)' }}>
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat.replace(/-/g, ' ')}</option>
                 ))}
               </select>
             </div>
+
+            {/* Tags */}
             <div>
-              <label className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2 block text-edith-cyan/50">Tags</label>
+              <label className="block text-[14px] font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                Tags
+              </label>
               <input type="text" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                className="input-field text-sm" placeholder="react, typescript, nextjs (comma separated)" />
-            </div>
-          </div>
-
-          {/* ─── Excerpt ─── */}
-          <div>
-            <label className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2 block text-edith-cyan/50">
-              Excerpt <span style={{ color: 'var(--edith-text-muted)' }}>(optional)</span>
-            </label>
-            <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-              className="input-field h-20 resize-none text-sm" placeholder="Brief summary of the article..." />
-          </div>
-
-          {/* ─── Content ─── */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[9px] font-mono font-bold uppercase tracking-widest text-edith-cyan/50">Content</label>
-              <span className="text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-                {wordCount} words · {readTime} min read
-              </span>
+                className="w-full px-3 py-2.5 rounded-lg text-[14px] outline-none"
+                style={{ background: 'var(--surface-secondary)', color: 'var(--foreground)', border: '1px solid var(--border)' }}
+                placeholder="react, typescript, nextjs" />
+              <p className="text-[12px] mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
+                Separate with commas. Max 5 tags.
+              </p>
             </div>
 
-            {preview ? (
-              /* Preview mode */
-              <div className="rounded-xl p-6 min-h-[300px]"
-                style={{ background: 'var(--edith-panel)', border: '1px solid var(--edith-border)' }}>
-                {form.content ? (
-                  <div
-                    className="article-content"
-                    dangerouslySetInnerHTML={{ __html: form.content }}
-                  />
-                ) : (
-                  <p className="text-xs font-mono text-center py-10" style={{ color: 'var(--edith-text-muted)' }}>
-                    Nothing to preview yet
-                  </p>
-                )}
-              </div>
-            ) : (
-              /* Edit mode */
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--edith-border)' }}>
-                {/* Toolbar */}
-                <div className="flex items-center gap-0.5 px-2 py-1.5 flex-wrap"
-                  style={{ background: 'var(--edith-panel)', borderBottom: '1px solid var(--edith-border)' }}>
-                  <ToolbarBtn icon={Bold} label="Bold" onClick={() => insertWrap('<b>', '</b>')} />
-                  <ToolbarBtn icon={Italic} label="Italic" onClick={() => insertWrap('<i>', '</i>')} />
-                  <div className="w-px h-4 mx-1" style={{ background: 'var(--edith-border)' }} />
-                  <ToolbarBtn icon={Heading1} label="Heading 1" onClick={() => insertWrap('<h1>', '</h1>')} />
-                  <ToolbarBtn icon={Heading2} label="Heading 2" onClick={() => insertWrap('<h2>', '</h2>')} />
-                  <div className="w-px h-4 mx-1" style={{ background: 'var(--edith-border)' }} />
-                  <ToolbarBtn icon={List} label="Unordered List" onClick={() => insertWrap('<ul>\n<li>', '</li>\n</ul>')} />
-                  <ToolbarBtn icon={ListOrdered} label="Ordered List" onClick={() => insertWrap('<ol>\n<li>', '</li>\n</ol>')} />
-                  <ToolbarBtn icon={Quote} label="Blockquote" onClick={() => insertWrap('<blockquote>', '</blockquote>')} />
-                  <div className="w-px h-4 mx-1" style={{ background: 'var(--edith-border)' }} />
-                  <ToolbarBtn icon={Code} label="Code" onClick={() => insertWrap('<code>', '</code>')} />
-                  <ToolbarBtn icon={LinkIcon} label="Link" onClick={() => insertWrap('<a href="url">', '</a>')} />
-                  <ToolbarBtn icon={Minus} label="Divider" onClick={() => insertWrap('<hr/>', '')} />
+            {/* Cover */}
+            <div>
+              <label className="block text-[14px] font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                Cover image
+              </label>
+              {coverPreviewUrl ? (
+                <div className="relative rounded-lg overflow-hidden">
+                  <img src={coverPreviewUrl} alt="Cover" className="w-full h-32 object-cover" />
+                  <button type="button" onClick={removeCover}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/50 text-white">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <textarea
-                  ref={contentRef}
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  className="w-full h-80 resize-y text-lg p-6 outline-none leading-relaxed"
-                  style={{ background: 'var(--edith-bg)', color: 'var(--edith-text)', border: 'none', fontFamily: 'var(--edith-article)' }}
-                  placeholder="Write your article content here... HTML is supported."
-                  required
-                />
-              </div>
-            )}
-          </div>
-
-          {/* ─── Action bar ─── */}
-          <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--edith-border)' }}>
-            <div className="text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
-              <Sparkles className="w-3 h-3 inline mr-1 text-edith-cyan/30" />
-              HTML tags are supported for formatting
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/blog" className="btn-secondary text-xs px-4 py-2">
-                Cancel
-              </Link>
-              <button type="submit" disabled={isSubmitting}
-                className="btn-primary text-xs px-6 py-2 flex items-center gap-2 disabled:opacity-50">
-                <Send className="w-3.5 h-3.5" />
-                {isSubmitting ? 'Publishing...' : 'Publish Article'}
-              </button>
+              ) : (
+                <button type="button" className="w-full px-3 py-6 rounded-lg border-2 border-dashed text-center text-[14px] transition-colors"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text-tertiary)' }}
+                  onClick={() => document.getElementById('cover-upload')?.click()}>
+                  Upload cover image
+                </button>
+              )}
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
 
       <BlogFooter />
     </div>

@@ -26,6 +26,11 @@ router.delete('/methods/:id', authenticate, paymentController.deletePaymentMetho
 // Subscription
 router.post('/subscribe', authenticate, paymentController.subscribePlan);
 
+// Subscription
+router.post('/subscribe', authenticate, paymentController.subscribe);
+router.get('/subscription', authenticate, paymentController.getSubscription);
+router.post('/subscription/cancel', authenticate, paymentController.cancelSubscription);
+
 // Admin
 router.get('/admin/all', authenticate, isAdmin, paymentController.getAllPayments);
 router.get('/admin/withdrawals', authenticate, isAdmin, paymentController.adminGetWithdrawals);
