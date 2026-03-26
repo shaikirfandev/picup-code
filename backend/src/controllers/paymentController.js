@@ -1,6 +1,8 @@
 const Payment = require('../models/Payment');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
+const PaymentMethod = require('../models/PaymentMethod');
+const WithdrawRequest = require('../models/WithdrawRequest');
 const PaymentService = require('../services/paymentService');
 const WalletService = require('../services/walletService');
 const { ApiResponse, paginate, getPaginationMeta } = require('../utils/apiResponse');
@@ -138,10 +140,38 @@ exports.getWallet = async (req, res, next) => {
     ApiResponse.success(res, {
       balance: wallet.balance,
       currency: wallet.currency,
-      totalCredits: wallet.totalPurchased + (wallet.bonusCredits || 0),
-      totalDebits: wallet.totalUsed,
+      totalCredits: wallet.totalCredits || wallet.totalPurchased || 0,
+      totalDebits: wallet.totalDebits || wallet.totalUsed || 0,
       transactions: mappedTransactions,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get wallet transactions (paginated)
+exports.getWalletTransactions = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+
+    let wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) {
+      wallet = await Wallet.create({ user: req.user._id });
+    }
+
+    const allTransactions = [...(wallet.transactions || [])].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const items = allTransactions.slice(skip, skip + limit);
+
+    ApiResponse.paginated(
+      res,
+      items,
+      getPaginationMeta(allTransactions.length, page, limit),
+      'Wallet transactions'
+    );
   } catch (error) {
     next(error);
   }
@@ -186,8 +216,154 @@ exports.topUpWallet = async (req, res, next) => {
       amount,
       currency,
       gateway: payment.gateway,
-      newBalance: result.wallet.balance,
+      newBalance: result.balance,
     }, 'Wallet topped up successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Request withdrawal
+exports.requestWithdraw = async (req, res, next) => {
+  try {
+    const { amount, currency, payoutMethod = 'bank_transfer', payoutDetails = {}, notes = '' } = req.body;
+    const requestedAmount = Number(amount);
+
+    if (!requestedAmount || requestedAmount < 1) {
+      return ApiResponse.error(res, 'Minimum withdrawal amount is 1', 400);
+    }
+
+    let wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) {
+      wallet = await Wallet.create({ user: req.user._id });
+    }
+
+    if (wallet.balance < requestedAmount) {
+      return ApiResponse.error(res, 'Insufficient wallet balance', 400);
+    }
+
+    const withdrawRequest = await WithdrawRequest.create({
+      user: req.user._id,
+      amount: requestedAmount,
+      currency: currency || wallet.currency || 'USD',
+      payoutMethod,
+      payoutDetails,
+      notes,
+      status: 'pending',
+    });
+
+    await wallet.debit(requestedAmount, 'Withdrawal request', withdrawRequest._id.toString());
+
+    ApiResponse.created(
+      res,
+      { request: withdrawRequest, balance: wallet.balance },
+      'Withdrawal request submitted'
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get my withdrawal requests
+exports.getMyWithdrawals = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, status } = req.query;
+    const { skip } = paginate(null, page, limit);
+    const filter = { user: req.user._id };
+    if (status) filter.status = status;
+
+    const [rows, total] = await Promise.all([
+      WithdrawRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      WithdrawRequest.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(res, rows, getPaginationMeta(total, page, limit), 'My withdrawals');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Payment methods
+exports.getPaymentMethods = async (req, res, next) => {
+  try {
+    const methods = await PaymentMethod.find({ user: req.user._id })
+      .sort({ isDefault: -1, createdAt: -1 })
+      .lean();
+    ApiResponse.success(res, methods, 'Payment methods');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addPaymentMethod = async (req, res, next) => {
+  try {
+    const { type, label = '', details = {}, gateway = 'stripe', gatewayToken = '', isDefault = false } = req.body;
+
+    if (!type) {
+      return ApiResponse.error(res, 'Payment method type is required', 400);
+    }
+
+    if (isDefault) {
+      await PaymentMethod.updateMany({ user: req.user._id }, { $set: { isDefault: false } });
+    }
+
+    const method = await PaymentMethod.create({
+      user: req.user._id,
+      type,
+      label,
+      details,
+      gateway,
+      gatewayToken,
+      isDefault: Boolean(isDefault),
+    });
+
+    ApiResponse.created(res, method, 'Payment method added');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updatePaymentMethod = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body || {};
+
+    const method = await PaymentMethod.findOne({ _id: id, user: req.user._id });
+    if (!method) {
+      return ApiResponse.notFound(res, 'Payment method not found');
+    }
+
+    if (updates.isDefault === true) {
+      await PaymentMethod.updateMany({ user: req.user._id }, { $set: { isDefault: false } });
+      method.isDefault = true;
+    }
+
+    if (typeof updates.type === 'string') method.type = updates.type;
+    if (typeof updates.label === 'string') method.label = updates.label;
+    if (typeof updates.gateway === 'string') method.gateway = updates.gateway;
+    if (typeof updates.gatewayToken === 'string') method.gatewayToken = updates.gatewayToken;
+    if (updates.details && typeof updates.details === 'object') method.details = updates.details;
+    if (typeof updates.isVerified === 'boolean') method.isVerified = updates.isVerified;
+
+    await method.save();
+    ApiResponse.success(res, method, 'Payment method updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deletePaymentMethod = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deleted = await PaymentMethod.findOneAndDelete({ _id: id, user: req.user._id });
+    if (!deleted) {
+      return ApiResponse.notFound(res, 'Payment method not found');
+    }
+    ApiResponse.success(res, null, 'Payment method deleted');
   } catch (error) {
     next(error);
   }
@@ -283,6 +459,9 @@ exports.subscribe = async (req, res, next) => {
   }
 };
 
+// Backward-compatible alias used by routes
+exports.subscribePlan = (req, res, next) => exports.subscribe(req, res, next);
+
 // Get my subscription
 exports.getSubscription = async (req, res, next) => {
   try {
@@ -291,6 +470,71 @@ exports.getSubscription = async (req, res, next) => {
       accountType: user.accountType,
       subscription: user.subscription || { plan: 'none', isActive: false },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Admin: list withdrawal requests
+exports.adminGetWithdrawals = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+    const { skip } = paginate(null, page, limit);
+    const filter = {};
+    if (status) filter.status = status;
+
+    const [rows, total] = await Promise.all([
+      WithdrawRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('user', 'username email displayName')
+        .populate('processedBy', 'username email displayName')
+        .lean(),
+      WithdrawRequest.countDocuments(filter),
+    ]);
+
+    ApiResponse.paginated(res, rows, getPaginationMeta(total, page, limit), 'Withdrawals');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Admin: process withdrawal request
+exports.adminProcessWithdrawal = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, rejectionReason = '', transactionRef = '', notes = '' } = req.body;
+    const allowed = ['processing', 'completed', 'rejected'];
+
+    if (!allowed.includes(status)) {
+      return ApiResponse.error(res, 'Invalid status. Use processing, completed, or rejected.', 400);
+    }
+
+    const request = await WithdrawRequest.findById(id);
+    if (!request) {
+      return ApiResponse.notFound(res, 'Withdrawal request not found');
+    }
+
+    const prevStatus = request.status;
+    request.status = status;
+    request.rejectionReason = rejectionReason;
+    request.transactionRef = transactionRef;
+    request.notes = notes;
+    request.processedBy = req.user._id;
+    request.processedAt = new Date();
+    await request.save();
+
+    // If rejected after amount was reserved, return credits once.
+    if (status === 'rejected' && ['pending', 'processing'].includes(prevStatus)) {
+      let wallet = await Wallet.findOne({ user: request.user });
+      if (!wallet) {
+        wallet = await Wallet.create({ user: request.user, currency: request.currency || 'USD' });
+      }
+      await wallet.addCredit(request.amount, 'Withdrawal rejection refund', request._id.toString());
+    }
+
+    ApiResponse.success(res, request, 'Withdrawal request updated');
   } catch (error) {
     next(error);
   }

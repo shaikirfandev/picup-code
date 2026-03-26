@@ -24,9 +24,6 @@ router.put('/methods/:id', authenticate, paymentController.updatePaymentMethod);
 router.delete('/methods/:id', authenticate, paymentController.deletePaymentMethod);
 
 // Subscription
-router.post('/subscribe', authenticate, paymentController.subscribePlan);
-
-// Subscription
 router.post('/subscribe', authenticate, paymentController.subscribe);
 router.get('/subscription', authenticate, paymentController.getSubscription);
 router.post('/subscription/cancel', authenticate, paymentController.cancelSubscription);
