@@ -193,6 +193,91 @@ exports.topUpWallet = async (req, res, next) => {
   }
 };
 
+// Subscribe to plan
+exports.subscribe = async (req, res, next) => {
+  try {
+    const { planId, plan } = req.body;
+    const finalPlanId = planId || plan;
+
+    if (!finalPlanId) {
+      return ApiResponse.error(res, 'Plan ID is required', 400);
+    }
+
+    // Create a subscription payment
+    const payment = await Payment.create({
+      user: req.user._id,
+      type: 'subscription',
+      amount: 0, // Subscription amount will be determined by plan, set to 0 for now
+      currency: 'USD',
+      gateway: 'manual',
+      status: 'completed',
+      description: `Subscription to ${finalPlanId} plan`,
+      metadata: { planId: finalPlanId },
+      paidAt: new Date(),
+    });
+
+    // Update user with new subscription
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user._id, {
+      accountType: 'paid',
+      'subscription.plan': finalPlanId,
+      'subscription.startDate': new Date(),
+    });
+
+    ApiResponse.created(res, payment, 'Subscribed successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get subscription
+exports.getSubscription = async (req, res, next) => {
+  try {
+    const subscription = await Payment.findOne({
+      user: req.user._id,
+      type: 'subscription',
+      status: 'completed',
+    }).sort({ createdAt: -1 });
+
+    if (!subscription) {
+      return ApiResponse.success(res, null, 'No active subscription');
+    }
+
+    ApiResponse.success(res, subscription);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Cancel subscription
+exports.cancelSubscription = async (req, res, next) => {
+  try {
+    const subscription = await Payment.findOne({
+      user: req.user._id,
+      type: 'subscription',
+      status: 'completed',
+    }).sort({ createdAt: -1 });
+
+    if (!subscription) {
+      return ApiResponse.notFound(res, 'No active subscription found');
+    }
+
+    subscription.status = 'cancelled';
+    await subscription.save();
+
+    // Update user to downgrade to free account
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user._id, {
+      accountType: 'free',
+      'subscription.plan': null,
+    });
+
+    ApiResponse.success(res, subscription, 'Subscription cancelled');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Admin: Get all payments
 exports.getAllPayments = async (req, res, next) => {
   try {

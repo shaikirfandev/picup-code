@@ -160,7 +160,7 @@ export default function WalletPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link href="/ad-manager" className="inline-flex items-center gap-2 text-xs font-mono text-edith-cyan/60 hover:text-edith-cyan mb-4">
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-xs font-mono text-edith-cyan/60 hover:text-edith-cyan mb-4">
         <ArrowLeft className="w-3 h-3" /> Back to Dashboard
       </Link>
 
@@ -188,7 +188,7 @@ export default function WalletPage() {
           <button onClick={() => { setShowWithdraw(!showWithdraw); setShowTopUp(false); }} className="btn-ghost gap-2 text-xs">
             <Send className="w-3 h-3" /> Withdraw
           </button>
-          <Link href="/ad-manager/payments" className="btn-ghost gap-2 text-xs">
+          <Link href="/settings" className="btn-ghost gap-2 text-xs">
             <CreditCard className="w-3 h-3" /> Payment Methods
           </Link>
         </div>

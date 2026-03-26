@@ -400,16 +400,28 @@ export const affiliateAPI = {
     api.post(`/posts/${postId}/click`, data),
 };
 
-// ─── Affiliate Marketing API ─────────────────────────────────────────────────
+// ─── Creator Dashboard API ────────────────────────────────────────────────────
 
-export const affiliateAPI = {
-  getMyAffiliatePosts: (params?: { page?: number; limit?: number; sort?: string }) =>
-    api.get('/affiliate/posts', { params }),
-  getSummary: () => api.get('/affiliate/summary'),
-  getPostStats: (postId: string, params?: { period?: string }) =>
-    api.get(`/affiliate/posts/${postId}/stats`, { params }),
-  trackClick: (postId: string, data?: { linkIndex?: number; referrer?: string }) =>
-    api.post(`/posts/${postId}/click`, data),
+export const creatorDashboardAPI = {
+  getOverview: (params?: { period?: string }) => api.get('/dashboard/overview', { params }),
+  getContentPerformance: (params?: any) => api.get('/dashboard/content-performance', { params }),
+  getEngagementTrends: (params?: { period?: string }) => api.get('/dashboard/engagement-trends', { params }),
+  getPerformanceHeatmap: (params?: { period?: string }) => api.get('/dashboard/performance-heatmap', { params }),
+  getAudienceInsights: (params?: { period?: string }) => api.get('/dashboard/audience-insights', { params }),
+  getMonetization: (params?: { period?: string }) => api.get('/dashboard/monetization', { params }),
+  enableMonetization: () => api.post('/dashboard/monetization/enable', {}),
+  getContentManagement: (params?: any) => api.get('/dashboard/content-management', { params }),
+  schedulePost: (data: any) => api.post('/dashboard/schedule-post', data),
+  cancelScheduledPost: (id: string) => api.delete(`/dashboard/schedule-post/${id}`),
+  togglePinPost: (postId: string) => api.put(`/dashboard/posts/${postId}/pin`, {}),
+  bulkUpdatePosts: (data: any) => api.put('/dashboard/posts/bulk', data),
+  getGrowthInsights: () => api.get('/dashboard/growth-insights'),
+  getActivityFeed: (params?: any) => api.get('/dashboard/activity-feed', { params }),
+  markActivityRead: (eventIds: string[]) => api.put('/dashboard/activity-feed/read', { eventIds }),
+  getCreatorProfile: () => api.get('/dashboard/profile'),
+  updateCreatorProfile: (data: any) => api.put('/dashboard/profile', data),
+  getCommentsForModeration: (params?: any) => api.get('/dashboard/moderation/comments', { params }),
+  moderateComment: (commentId: string, action: string) => api.put(`/dashboard/moderation/comments/${commentId}`, { action }),
 };
 
 export default api;

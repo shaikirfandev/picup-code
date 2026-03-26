@@ -8,7 +8,6 @@ import analyticsReducer from './slices/analyticsSlice';
 import creatorAnalyticsReducer from './slices/creatorAnalyticsSlice';
 import creatorDashboardReducer from './slices/creatorDashboardSlice';
 import boardReducer from './slices/boardSlice';
-import adReducer from './slices/adSlice';
 import walletReducer from './slices/walletSlice';
 import affiliateReducer from './slices/affiliateSlice';
 import { errorToastMiddleware, attachOnlineListeners } from './middleware';
@@ -24,7 +23,6 @@ export const store = configureStore({
     creatorAnalytics: creatorAnalyticsReducer,
     creatorDashboard: creatorDashboardReducer,
     boards: boardReducer,
-    ads: adReducer,
     wallet: walletReducer,
     affiliate: affiliateReducer,
   },
