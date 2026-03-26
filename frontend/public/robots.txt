@@ -2,7 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /settings
 Disallow: /admin
-Disallow: /ad-manager
 Disallow: /wallet
 Disallow: /api/
 
