@@ -424,4 +424,17 @@ export const creatorDashboardAPI = {
   moderateComment: (commentId: string, action: string) => api.put(`/dashboard/moderation/comments/${commentId}`, { action }),
 };
 
+// ─── Ads API ──────────────────────────────────────────────────────────────────
+
+export const adsAPI = {
+  getMyAds: (params?: any) => api.get('/ads/my-ads', { params }),
+  createAd: (data: any) => api.post('/ads', data),
+  updateAd: (id: string, data: any) => api.put(`/ads/${id}`, data),
+  deleteAd: (id: string) => api.delete(`/ads/${id}`),
+  getAdAnalytics: (id: string, params?: any) => api.get(`/ads/${id}/analytics`, { params }),
+  pauseAd: (id: string) => api.put(`/ads/${id}/pause`, {}),
+  resumeAd: (id: string) => api.put(`/ads/${id}/resume`, {}),
+  getAdInsights: (params?: any) => api.get('/ads/insights', { params }),
+};
+
 export default api;
