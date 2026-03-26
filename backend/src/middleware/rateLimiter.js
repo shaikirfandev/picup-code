@@ -1,50 +1,83 @@
 const rateLimit = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
 
-// ── Redis store factory ──────────────────────────────────────────────────────
-// Falls back to the default in-memory store when Redis is unavailable.
+// ── Redis client (lazy init) ────────────────────────────────────────────────
 let redisClient = null;
 
+// ✅ Detect real Redis (ioredis / node-redis)
+function isRealRedis(client) {
+  return (
+    client &&
+    (typeof client.call === 'function' || // ioredis
+      typeof client.sendCommand === 'function') // node-redis
+  );
+}
+
+// ── Store factory ───────────────────────────────────────────────────────────
 function getStore(prefix) {
   try {
     if (!redisClient) {
-      const { getRedisClient, isRedisConnected } = require('../config/redis');
-      if (isRedisConnected()) {
-        redisClient = getRedisClient();
-      } else {
-        // Try to init, but don't crash if it fails
-        try { redisClient = getRedisClient(); } catch { /* noop */ }
-      }
+      const { getRedisClient } = require('../config/redis');
+      redisClient = getRedisClient();
+
+      console.log(
+        '🔍 Redis detected methods:',
+        Object.keys(redisClient || {}).slice(0, 10)
+      );
     }
-    if (redisClient) {
-      return new RedisStore({
-        sendCommand: (...args) => redisClient.call(...args),
-        prefix: `rl:${prefix}:`,
-      });
+
+    // ❌ If NOT real Redis → fallback to MemoryStore
+    if (!isRealRedis(redisClient)) {
+      console.warn('⚠️ Using in-memory rate limiter (dev mode)');
+      return undefined;
     }
-  } catch {
-    console.warn('⚠️  rate-limit-redis unavailable, falling back to MemoryStore');
+
+    // ✅ Real Redis → use RedisStore
+    return new RedisStore({
+      sendCommand: (...args) => {
+        try {
+          // ioredis
+          if (typeof redisClient.call === 'function') {
+            return redisClient.call(...args);
+          }
+
+          // node-redis v4
+          if (typeof redisClient.sendCommand === 'function') {
+            return redisClient.sendCommand(args);
+          }
+
+          throw new Error('Unsupported Redis client');
+        } catch (err) {
+          console.error('❌ Redis command failed:', err.message);
+          throw err;
+        }
+      },
+      prefix: `rl:${prefix}:`,
+    });
+  } catch (err) {
+    console.warn('⚠️ Redis unavailable → fallback MemoryStore:', err.message);
   }
-  return undefined; // express-rate-limit defaults to MemoryStore
+
+  return undefined; // fallback to default MemoryStore
 }
 
-// ── Per-user key generator (falls back to IP for unauthenticated) ────────────
+// ── Key generator ───────────────────────────────────────────────────────────
 function userOrIpKey(req) {
   return req.user?.id || req.user?._id || req.ip;
 }
 
-// ── Shared options ───────────────────────────────────────────────────────────
+// ── Shared config ───────────────────────────────────────────────────────────
 const sharedOpts = {
   standardHeaders: true,
   legacyHeaders: false,
 };
 
-// ── Limiters ─────────────────────────────────────────────────────────────────
+// ── LIMITERS ────────────────────────────────────────────────────────────────
 
-// Global rate limiter (IP-based, covers everything)
+// 🌍 Global limiter
 const globalLimiter = rateLimit({
   ...sharedOpts,
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 1000,
   store: getStore('global'),
   message: {
@@ -53,7 +86,7 @@ const globalLimiter = rateLimit({
   },
 });
 
-// Auth endpoints rate limiter (IP-based — user not yet authenticated)
+// 🔐 Auth limiter
 const authLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000,
@@ -65,20 +98,20 @@ const authLimiter = rateLimit({
   },
 });
 
-// AI generation rate limiter (per-user)
+// 🤖 AI limiter
 const aiLimiter = rateLimit({
   ...sharedOpts,
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: 20,
   keyGenerator: userOrIpKey,
   store: getStore('ai'),
   message: {
     success: false,
-    message: 'AI generation rate limit exceeded. Please try again later.',
+    message: 'AI generation rate limit exceeded.',
   },
 });
 
-// Upload rate limiter (per-user)
+// 📤 Upload limiter
 const uploadLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 60 * 60 * 1000,
@@ -87,11 +120,11 @@ const uploadLimiter = rateLimit({
   store: getStore('upload'),
   message: {
     success: false,
-    message: 'Upload rate limit exceeded. Please try again later.',
+    message: 'Upload rate limit exceeded.',
   },
 });
 
-// Search rate limiter (per-user)
+// 🔎 Search limiter
 const searchLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 60 * 1000,
@@ -100,11 +133,11 @@ const searchLimiter = rateLimit({
   store: getStore('search'),
   message: {
     success: false,
-    message: 'Too many search requests. Please slow down.',
+    message: 'Too many search requests.',
   },
 });
 
-// Report rate limiter — prevent report abuse (per-user)
+// 🚨 Report limiter
 const reportLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000,
@@ -113,11 +146,11 @@ const reportLimiter = rateLimit({
   store: getStore('report'),
   message: {
     success: false,
-    message: 'Too many reports submitted. Please try again later.',
+    message: 'Too many reports submitted.',
   },
 });
 
-// Wallet / payments rate limiter (per-user)
+// 💰 Wallet limiter
 const walletLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000,
@@ -126,11 +159,11 @@ const walletLimiter = rateLimit({
   store: getStore('wallet'),
   message: {
     success: false,
-    message: 'Too many wallet requests. Please try again later.',
+    message: 'Too many wallet requests.',
   },
 });
 
-// Admin rate limiter (per-user, generous)
+// 🛠 Admin limiter
 const adminLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 15 * 60 * 1000,
@@ -139,11 +172,11 @@ const adminLimiter = rateLimit({
   store: getStore('admin'),
   message: {
     success: false,
-    message: 'Too many admin requests. Please try again later.',
+    message: 'Too many admin requests.',
   },
 });
 
-// Notifications rate limiter (per-user)
+// 🔔 Notifications limiter
 const notificationsLimiter = rateLimit({
   ...sharedOpts,
   windowMs: 60 * 1000,
@@ -152,10 +185,11 @@ const notificationsLimiter = rateLimit({
   store: getStore('notif'),
   message: {
     success: false,
-    message: 'Too many notification requests. Please slow down.',
+    message: 'Too many notification requests.',
   },
 });
 
+// ── Export ──────────────────────────────────────────────────────────────────
 module.exports = {
   globalLimiter,
   authLimiter,
