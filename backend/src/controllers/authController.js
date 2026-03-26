@@ -11,17 +11,28 @@ const { sendPasswordResetEmail } = require('../services/emailService');
 exports.register = async (req, res, next) => {
   try {
     const { username, email, password, displayName } = req.body;
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedDisplayName = typeof displayName === 'string' ? displayName.trim() : '';
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username: username.toLowerCase() }] });
+    const existingUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
+    });
     if (existingUser) {
-      return ApiResponse.error(res, 'Email or username already exists', 400);
+      if (existingUser.email === normalizedEmail) {
+        return ApiResponse.error(res, 'Email already exists', 409);
+      }
+      if (existingUser.username === normalizedUsername) {
+        return ApiResponse.error(res, 'Username already exists', 409);
+      }
+      return ApiResponse.error(res, 'Email or username already exists', 409);
     }
 
     const user = await User.create({
-      username: username.toLowerCase(),
-      email,
+      username: normalizedUsername,
+      email: normalizedEmail,
       password,
-      displayName: displayName || username,
+      displayName: trimmedDisplayName || normalizedUsername,
     });
 
     const { accessToken, refreshToken } = generateTokens(user._id, user.role);
@@ -41,6 +52,20 @@ exports.register = async (req, res, next) => {
       refreshToken,
     }, 'Registration successful');
   } catch (error) {
+    if (error?.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern || {})[0];
+
+      if (duplicateField === 'email') {
+        return ApiResponse.error(res, 'Email already exists', 409);
+      }
+
+      if (duplicateField === 'username') {
+        return ApiResponse.error(res, 'Username already exists', 409);
+      }
+
+      return ApiResponse.error(res, 'User already exists', 409);
+    }
+
     next(error);
   }
 };

@@ -8,6 +8,8 @@ import { register } from '@/store/slices/authSlice';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Crosshair, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const DISPLAY_NAME_MAX_LENGTH = 50;
+
 export default function RegisterPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -22,6 +24,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '', displayName: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isDisplayNameTooLong = form.displayName.trim().length > DISPLAY_NAME_MAX_LENGTH;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,13 +32,36 @@ export default function RegisterPage() {
       toast.error('Access key must be at least 6 characters');
       return;
     }
+
+    if (isDisplayNameTooLong) {
+      toast.error(`Display name must be ${DISPLAY_NAME_MAX_LENGTH} characters or less`);
+      return;
+    }
+
+    const trimmedDisplayName = form.displayName.trim();
+    const payload = {
+      username: form.username.trim().toLowerCase(),
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      displayName: trimmedDisplayName || undefined,
+    };
+
     setIsLoading(true);
     try {
-      await dispatch(register(form)).unwrap();
+      await dispatch(register(payload)).unwrap();
       toast.success('Access granted. Welcome to E.D.I.T.H.');
       router.push('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const rawMessage = error?.message || '';
+      const message = rawMessage.toLowerCase();
+
+      if (message.includes('already exists') || message.includes('duplicate')) {
+        toast.error('An account with this email or username already exists');
+      } else if (message.includes('display name')) {
+        toast.error(`Display name must be ${DISPLAY_NAME_MAX_LENGTH} characters or less`);
+      } else {
+        toast.error(rawMessage || 'Registration failed');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -182,9 +208,13 @@ export default function RegisterPage() {
                     value={form.displayName}
                     onChange={(e) => setForm({ ...form, displayName: e.target.value })}
                     placeholder="Display Name"
+                    maxLength={DISPLAY_NAME_MAX_LENGTH}
                     className="input-field pl-9 text-[12px]"
                   />
                 </div>
+                <p className="text-xs mt-1 text-right" style={{ color: 'var(--text-muted)' }}>
+                  {form.displayName.length}/{DISPLAY_NAME_MAX_LENGTH}
+                </p>
               </div>
             </div>
 
@@ -231,7 +261,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 gap-2">
+            <button type="submit" disabled={isLoading || isDisplayNameTooLong} className="btn-primary w-full py-3 gap-2">
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-edith-cyan/30 border-t-edith-cyan rounded-full animate-spin" />
               ) : (

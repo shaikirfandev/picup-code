@@ -12,6 +12,11 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { isAuthenticated, isLoading: authLoading } = useAppSelector((s) => s.auth);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Redirect authenticated users away from login page
   useEffect(() => {
@@ -39,7 +44,13 @@ export default function LoginPage() {
   };
 
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api';
-
+  if (!mounted || isAuthenticated || authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="w-7 h-7 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex">
       {/* Left – EDITH holographic display */}

@@ -25,7 +25,11 @@ const validateRegister = [
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters'),
-  body('displayName').optional().trim().isLength({ max: 50 }),
+  body('displayName')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Display name must be 50 characters or less'),
   handleValidation,
 ];
 

@@ -70,14 +70,27 @@ export interface SerializedError {
   message: string;
   code?: string | number;
   status?: number;
+  errors?: Array<{ field?: string; message: string }>;
 }
 
 export function serializeError(error: any): SerializedError {
   if (error?.response) {
+    const validationErrors = Array.isArray(error.response.data?.errors)
+      ? error.response.data.errors
+          .map((e: any) => ({
+            field: e?.field || e?.path,
+            message: e?.message || e?.msg || 'Invalid value',
+          }))
+          .filter((e: { field?: string; message: string }) => Boolean(e.message))
+      : undefined;
+
+    const primaryValidationMessage = validationErrors?.[0]?.message;
+
     return {
-      message: error.response.data?.message || error.message || 'Request failed',
+      message: primaryValidationMessage || error.response.data?.message || error.message || 'Request failed',
       status: error.response.status,
       code: error.response.data?.code || error.response.status,
+      errors: validationErrors,
     };
   }
   if (error?.message === 'Network Error' || !navigator?.onLine) {
