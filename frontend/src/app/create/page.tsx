@@ -43,6 +43,8 @@ export default function CreatePostPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState('');
   const [videoDuration, setVideoDuration] = useState(0);
+  const [videoThumbnail, setVideoThumbnail] = useState<Blob | null>(null);
+  const [videoThumbnailPreview, setVideoThumbnailPreview] = useState('');
   const [videoError, setVideoError] = useState('');
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [uploadedVideoData, setUploadedVideoData] = useState<any>(null);
@@ -103,22 +105,53 @@ export default function CreatePostPage() {
       setVideoFile(file);
       setVideoError('');
       setUploadedVideoData(null);
+      setVideoThumbnail(null);
+      setVideoThumbnailPreview('');
       const url = URL.createObjectURL(file);
       setVideoPreview(url);
 
-      // Validate video duration
+      // Validate duration + capture thumbnail frame
       const video = document.createElement('video');
-      video.preload = 'metadata';
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+
       video.onloadedmetadata = () => {
-        URL.revokeObjectURL(video.src);
         const dur = video.duration;
         setVideoDuration(dur);
-        if (dur > 15) {
-          setVideoError(`Video is ${Math.round(dur)}s long. Maximum allowed is 15 seconds.`);
+        if (dur > 45) {
+          setVideoError(`Video is ${Math.round(dur)}s long. Maximum allowed is 45 seconds.`);
+          URL.revokeObjectURL(url);
+          return;
         } else if (dur < 1) {
           setVideoError('Video is too short. Minimum is 1 second.');
+          URL.revokeObjectURL(url);
+          return;
+        }
+        // Seek to 1s (or 0 if shorter) to capture thumbnail
+        video.currentTime = Math.min(1, dur * 0.1);
+      };
+
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                setVideoThumbnail(blob);
+                setVideoThumbnailPreview(URL.createObjectURL(blob));
+              }
+            }, 'image/jpeg', 0.85);
+          }
+        } catch (e) {
+          console.warn('Could not capture video thumbnail:', e);
         }
       };
+
       video.src = url;
     }
   }, []);
@@ -138,6 +171,8 @@ export default function CreatePostPage() {
     setVideoFile(null);
     setVideoPreview('');
     setVideoDuration(0);
+    setVideoThumbnail(null);
+    setVideoThumbnailPreview('');
     setVideoError('');
     setUploadedVideoData(null);
   };
@@ -222,6 +257,12 @@ export default function CreatePostPage() {
           setIsUploadingVideo(true);
           const videoFormData = new FormData();
           videoFormData.append('video', videoFile);
+          if (videoThumbnail) {
+            videoFormData.append('thumbnail', videoThumbnail, 'thumbnail.jpg');
+          }
+          if (videoDuration) {
+            videoFormData.append('duration', String(videoDuration));
+          }
           try {
             const uploadRes = await uploadAPI.uploadVideo(videoFormData);
             const vData = uploadRes.data.data;
@@ -291,18 +332,19 @@ export default function CreatePostPage() {
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-2">Create New Pin</h1>
+        <h1 className="text-3xl font-bold mb-2">Create New me</h1>
         <p className="text-surface-500 mb-8">Upload an image, a short video, or generate with AI</p>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left — Media */}
           <div>
             {/* Tab switcher */}
-            <div className="flex rounded-xl bg-surface-100 dark:bg-surface-800 p-1 mb-4">
+            <div className="flex rounded-xl p-1 mb-4" style={{ background: 'var(--surface-secondary)' }}>
               <button
                 type="button"
                 onClick={() => setActiveTab('upload')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-surface-700 shadow-sm' : 'text-surface-500 hover:text-surface-700'}`}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
+                style={activeTab === 'upload' ? { background: 'var(--card-bg)', color: 'var(--foreground)' } : { color: 'var(--text-secondary)' }}
               >
                 <FileImage className="w-4 h-4" />
                 Image
@@ -310,7 +352,8 @@ export default function CreatePostPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('video')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'video' ? 'bg-white dark:bg-surface-700 shadow-sm' : 'text-surface-500 hover:text-surface-700'}`}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
+                style={activeTab === 'video' ? { background: 'var(--card-bg)', color: 'var(--foreground)' } : { color: 'var(--text-secondary)' }}
               >
                 <Video className="w-4 h-4" />
                 Video
@@ -318,7 +361,8 @@ export default function CreatePostPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('ai')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-surface-700 shadow-sm' : 'text-surface-500 hover:text-surface-700'}`}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm"
+                style={activeTab === 'ai' ? { background: 'var(--card-bg)', color: 'var(--foreground)' } : { color: 'var(--text-secondary)' }}
               >
                 <Sparkles className="w-4 h-4" />
                 AI
@@ -412,7 +456,7 @@ export default function CreatePostPage() {
                         <Video className="w-7 h-7 text-surface-400" />
                       </div>
                       <p className="font-medium mb-1">Drag & drop or click to upload video</p>
-                      <p className="text-sm text-surface-400">MP4, WebM, MOV • Max 15 seconds • 50 MB</p>
+                      <p className="text-sm text-surface-400">MP4, WebM, MOV • Max 45 seconds • 50 MB</p>
                     </div>
                   )}
                 </div>
@@ -516,22 +560,9 @@ export default function CreatePostPage() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Give your pin a catchy title"
+                placeholder="Give your post a catchy title"
                 className="input-field"
                 maxLength={200}
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tell everyone what your pin is about"
-                rows={4}
-                className="input-field resize-none"
-                maxLength={5000}
               />
             </div>
 
@@ -679,6 +710,19 @@ export default function CreatePostPage() {
               </div>
             </div>
 
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tell everyone what your post is about"
+                rows={4}
+                className="input-field resize-none"
+                maxLength={5000}
+              />
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
@@ -700,7 +744,7 @@ export default function CreatePostPage() {
               ) : (
                 <>
                   {activeTab === 'video' ? <Video className="w-5 h-5" /> : <ImagePlus className="w-5 h-5" />}
-                  Publish Pin
+                  Publish me
                 </>
               )}
             </button>

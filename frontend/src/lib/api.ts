@@ -6,6 +6,7 @@ const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
+  withCredentials: true, // 🔥 REQUIRED
 });
 
 // Request interceptor for auth token
@@ -107,6 +108,10 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/auth/change-password', data),
+  forgotPassword: (email: string) =>
+    api.post('/auth/forgot-password', { email }),
+  resetPassword: (data: { token: string; password: string }) =>
+    api.post('/auth/reset-password', data),
 };
 
 // Posts API
@@ -235,6 +240,10 @@ export const paymentAPI = {
   getWallet: () => api.get('/payments/wallet'),
   topUpWallet: (data: { amount: number; currency: string }) =>
     api.post('/payments/wallet/topup', data),
+  subscribe: (data: { plan: string; currency?: string }) =>
+    api.post('/payments/subscribe', data),
+  getSubscription: () => api.get('/payments/subscription'),
+  cancelSubscription: () => api.post('/payments/subscription/cancel'),
 };
 
 // Creator Analytics API

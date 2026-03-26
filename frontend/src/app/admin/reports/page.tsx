@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminAPI } from '@/lib/api';
 import { timeAgo } from '@/lib/utils';
+import { useDebounce } from '@/hooks';
 import {
   ChevronLeft, ChevronRight, CheckCircle, XCircle, Eye, AlertTriangle,
   Shield, Trash2, Ban, Search, Filter, X, ExternalLink,
@@ -54,6 +55,7 @@ export default function AdminReportsPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 400);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,13 +68,16 @@ export default function AdminReportsPage() {
   const [isResolving, setIsResolving] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Reset to page 1 when search changes
+  useEffect(() => { setPage(1); }, [debouncedSearchQuery]);
+
   const fetchReports = useCallback(async () => {
     setIsLoading(true);
     try {
       const params: any = { page, status: filter, limit: 20 };
       if (priorityFilter) params.priority = priorityFilter;
       if (reasonFilter) params.reason = reasonFilter;
-      if (searchQuery) params.search = searchQuery;
+      if (debouncedSearchQuery) params.search = debouncedSearchQuery;
       const { data } = await adminAPI.getReports(params);
       setReports(data.data || []);
       setTotalPages(data.pagination?.pages || 1);
@@ -81,7 +86,7 @@ export default function AdminReportsPage() {
       toast.error('Failed to load reports');
     }
     setIsLoading(false);
-  }, [page, filter, priorityFilter, reasonFilter, searchQuery]);
+  }, [page, filter, priorityFilter, reasonFilter, debouncedSearchQuery]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
 
@@ -151,8 +156,8 @@ export default function AdminReportsPage() {
             <Shield className="w-6 h-6 text-red-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--edith-text)' }}>Moderation Center</h1>
-            <p style={{ color: 'var(--edith-text-muted)' }} className="text-sm">Review and manage user reports</p>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Moderation Center</h1>
+            <p style={{ color: 'var(--text-tertiary)' }} className="text-sm">Review and manage user reports</p>
           </div>
         </div>
       </div>
@@ -171,8 +176,8 @@ export default function AdminReportsPage() {
                 <Icon className={`w-4 h-4 text-${color}-500`} />
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--edith-text)' }}>{count}</p>
-                <p className="text-xs" style={{ color: 'var(--edith-text-muted)' }}>{label}</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>{count}</p>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{label}</p>
               </div>
             </div>
           </div>
@@ -204,14 +209,14 @@ export default function AdminReportsPage() {
         {/* Search */}
         <div className="flex gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
             <input
               type="text"
               placeholder="Search reports..."
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
               className="pl-9 pr-4 py-2 rounded-lg text-sm w-56"
-              style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             />
           </div>
           <button
@@ -227,12 +232,12 @@ export default function AdminReportsPage() {
       {showFilters && (
         <div className="card p-4 mb-6 flex flex-wrap gap-4 items-center">
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--edith-text-dim)' }}>Priority</label>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Priority</label>
             <select
               value={priorityFilter}
               onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
               className="px-3 py-1.5 rounded-lg text-sm"
-              style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             >
               <option value="">All</option>
               <option value="critical">Critical</option>
@@ -242,12 +247,12 @@ export default function AdminReportsPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--edith-text-dim)' }}>Reason</label>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Reason</label>
             <select
               value={reasonFilter}
               onChange={(e) => { setReasonFilter(e.target.value); setPage(1); }}
               className="px-3 py-1.5 rounded-lg text-sm"
-              style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
             >
               <option value="">All</option>
               {Object.entries(REASON_LABELS).map(([val, label]) => (
@@ -297,22 +302,22 @@ export default function AdminReportsPage() {
                           src={r.post.image.url}
                           alt={r.post?.title || 'Post'}
                           className="w-16 h-16 rounded-lg object-cover"
-                          style={{ border: '1px solid var(--edith-border)' }}
+                          style={{ border: '1px solid var(--border)' }}
                         />
                       ) : r.blogPost?.coverImage?.url ? (
                         <img
                           src={r.blogPost.coverImage.url}
                           alt={r.blogPost?.title || 'Article'}
                           className="w-16 h-16 rounded-lg object-cover"
-                          style={{ border: '1px solid var(--edith-border)' }}
+                          style={{ border: '1px solid var(--border)' }}
                         />
                       ) : r.blogPost ? (
-                        <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' }}>
-                          <FileText className="w-6 h-6" style={{ color: 'var(--edith-text-muted)' }} />
+                        <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                          <FileText className="w-6 h-6" style={{ color: 'var(--text-tertiary)' }} />
                         </div>
                       ) : (
-                        <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)' }}>
-                          <ImageIcon className="w-6 h-6" style={{ color: 'var(--edith-text-muted)' }} />
+                        <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                          <ImageIcon className="w-6 h-6" style={{ color: 'var(--text-tertiary)' }} />
                         </div>
                       )}
                     </div>
@@ -323,7 +328,7 @@ export default function AdminReportsPage() {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${priorityColor.bg} ${priorityColor.text}`}>
                           {priorityColor.label}
                         </span>
-                        <span className="text-sm font-semibold capitalize" style={{ color: 'var(--edith-text)' }}>
+                        <span className="text-sm font-semibold capitalize" style={{ color: 'var(--foreground)' }}>
                           {REASON_LABELS[r.reason] || r.reason}
                         </span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${statusColor.bg} ${statusColor.text}`}>
@@ -337,12 +342,12 @@ export default function AdminReportsPage() {
                       </div>
 
                       {r.description && (
-                        <p className="text-sm line-clamp-1 mb-1.5" style={{ color: 'var(--edith-text-dim)' }}>
+                        <p className="text-sm line-clamp-1 mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                           {r.description}
                         </p>
                       )}
 
-                      <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: 'var(--edith-text-muted)' }}>
+                      <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: 'var(--text-tertiary)' }}>
                         <span className="flex items-center gap-1">
                           <UserIcon className="w-3 h-3" />
                           {r.reporter?.displayName || r.reporter?.username || 'Unknown'}
@@ -389,7 +394,7 @@ export default function AdminReportsPage() {
                           onClick={() => handleQuickDismiss(r._id)}
                           className="btn-ghost p-2 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700"
                           title="Dismiss"
-                          style={{ color: 'var(--edith-text-muted)' }}
+                          style={{ color: 'var(--text-tertiary)' }}
                         >
                           <XCircle className="w-4 h-4" />
                         </button>
@@ -402,9 +407,9 @@ export default function AdminReportsPage() {
 
         {!isLoading && reports.length === 0 && (
           <div className="text-center py-16">
-            <Shield className="w-14 h-14 mx-auto mb-4" style={{ color: 'var(--edith-text-muted)', opacity: 0.3 }} />
-            <p className="text-lg font-medium mb-1" style={{ color: 'var(--edith-text-dim)' }}>No {filter !== 'all' ? filter : ''} reports</p>
-            <p className="text-sm" style={{ color: 'var(--edith-text-muted)' }}>
+            <Shield className="w-14 h-14 mx-auto mb-4" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+            <p className="text-lg font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>No {filter !== 'all' ? filter : ''} reports</p>
+            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
               {filter === 'pending' ? 'All clear! No reports need attention.' : 'No reports match the current filters.'}
             </p>
           </div>
@@ -414,7 +419,7 @@ export default function AdminReportsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
-          <p className="text-sm" style={{ color: 'var(--edith-text-muted)' }}>Page {page} of {totalPages}</p>
+          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Page {page} of {totalPages}</p>
           <div className="flex gap-2">
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn-ghost p-2 disabled:opacity-40 rounded-lg">
               <ChevronLeft className="w-4 h-4" />
@@ -435,13 +440,13 @@ export default function AdminReportsPage() {
           {/* Drawer */}
           <div
             className="fixed top-0 right-0 h-full w-full max-w-xl z-50 overflow-y-auto shadow-2xl"
-            style={{ background: 'var(--edith-bg)', borderLeft: '1px solid var(--edith-border)' }}
+            style={{ background: 'var(--background)', borderLeft: '1px solid var(--border)' }}
           >
             {/* Drawer Header */}
-            <div className="sticky top-0 z-10 px-6 py-4 flex items-center justify-between" style={{ background: 'var(--edith-bg)', borderBottom: '1px solid var(--edith-border)' }}>
+            <div className="sticky top-0 z-10 px-6 py-4 flex items-center justify-between" style={{ background: 'var(--background)', borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3">
                 <AlertOctagon className="w-5 h-5 text-red-500" />
-                <h2 className="text-lg font-bold" style={{ color: 'var(--edith-text)' }}>Report Detail</h2>
+                <h2 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>Report Detail</h2>
               </div>
               <button onClick={closeDrawer} className="btn-ghost p-2 rounded-lg">
                 <X className="w-5 h-5" />
@@ -475,18 +480,18 @@ export default function AdminReportsPage() {
                     )}
                   </div>
                   <div>
-                    <label className="text-xs font-medium" style={{ color: 'var(--edith-text-muted)' }}>Reason</label>
-                    <p className="text-sm font-semibold capitalize" style={{ color: 'var(--edith-text)' }}>
+                    <label className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Reason</label>
+                    <p className="text-sm font-semibold capitalize" style={{ color: 'var(--foreground)' }}>
                       {REASON_LABELS[drawerData.report?.reason] || drawerData.report?.reason}
                     </p>
                   </div>
                   {drawerData.report?.description && (
                     <div>
-                      <label className="text-xs font-medium" style={{ color: 'var(--edith-text-muted)' }}>Description</label>
-                      <p className="text-sm mt-0.5" style={{ color: 'var(--edith-text-dim)' }}>{drawerData.report.description}</p>
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Description</label>
+                      <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>{drawerData.report.description}</p>
                     </div>
                   )}
-                  <div className="text-xs" style={{ color: 'var(--edith-text-muted)' }}>
+                  <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                     Reported {timeAgo(drawerData.report?.createdAt)}
                     {drawerData.report?.reviewedAt && ` · Reviewed ${timeAgo(drawerData.report.reviewedAt)}`}
                   </div>
@@ -495,7 +500,7 @@ export default function AdminReportsPage() {
                 {/* Post Preview */}
                 {drawerData.report?.post && (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Reported Post</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Reported Post</h3>
                     <div className="card p-4">
                       <div className="flex gap-4">
                         {drawerData.report.post.image?.url ? (
@@ -505,15 +510,15 @@ export default function AdminReportsPage() {
                             className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--edith-surface)' }}>
-                            <ImageIcon className="w-8 h-8" style={{ color: 'var(--edith-text-muted)' }} />
+                          <div className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface)' }}>
+                            <ImageIcon className="w-8 h-8" style={{ color: 'var(--text-tertiary)' }} />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: 'var(--edith-text)' }}>
+                          <p className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: 'var(--foreground)' }}>
                             {drawerData.report.post.title}
                           </p>
-                          <p className="text-xs mb-2" style={{ color: 'var(--edith-text-dim)' }}>
+                          <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
                             by {drawerData.report.post.author?.displayName || drawerData.report.post.author?.username}
                           </p>
                           <div className="flex items-center gap-3">
@@ -537,7 +542,7 @@ export default function AdminReportsPage() {
                 {/* Blog Post Preview */}
                 {drawerData.report?.blogPost && (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Reported Article</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Reported Article</h3>
                     <div className="card p-4">
                       <div className="flex gap-4">
                         {drawerData.report.blogPost.coverImage?.url ? (
@@ -547,8 +552,8 @@ export default function AdminReportsPage() {
                             className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--edith-surface)' }}>
-                            <FileText className="w-8 h-8" style={{ color: 'var(--edith-text-muted)' }} />
+                          <div className="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface)' }}>
+                            <FileText className="w-8 h-8" style={{ color: 'var(--text-tertiary)' }} />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
@@ -556,10 +561,10 @@ export default function AdminReportsPage() {
                             <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-purple-400">{drawerData.report.blogPost.category}</span>
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">Blog</span>
                           </div>
-                          <p className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: 'var(--edith-text)' }}>
+                          <p className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: 'var(--foreground)' }}>
                             {drawerData.report.blogPost.title}
                           </p>
-                          <p className="text-xs mb-2" style={{ color: 'var(--edith-text-dim)' }}>
+                          <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
                             by {drawerData.report.blogPost.author?.displayName || drawerData.report.blogPost.author?.username}
                           </p>
                           <div className="flex items-center gap-3">
@@ -584,26 +589,26 @@ export default function AdminReportsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Reporter */}
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Reporter</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Reporter</h3>
                     <div className="card p-3">
                       <div className="flex items-center gap-2 mb-2">
                         {drawerData.report?.reporter?.avatar ? (
                           <img src={drawerData.report.reporter.avatar} className="w-8 h-8 rounded-full object-cover" alt="" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--edith-surface)', color: 'var(--edith-text-dim)' }}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--surface)', color: 'var(--text-secondary)' }}>
                             {drawerData.report?.reporter?.displayName?.[0]?.toUpperCase() || '?'}
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-medium" style={{ color: 'var(--edith-text)' }}>
+                          <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
                             {drawerData.report?.reporter?.displayName || drawerData.report?.reporter?.username}
                           </p>
-                          <p className="text-[10px]" style={{ color: 'var(--edith-text-muted)' }}>
+                          <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
                             @{drawerData.report?.reporter?.username}
                           </p>
                         </div>
                       </div>
-                      <p className="text-[11px]" style={{ color: 'var(--edith-text-muted)' }}>
+                      <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
                         {drawerData.reporterTotalReports} total reports filed
                       </p>
                     </div>
@@ -612,21 +617,21 @@ export default function AdminReportsPage() {
                   {/* Reported User */}
                   {drawerData.report?.reportedUser && (
                     <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Reported User</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Reported User</h3>
                       <div className="card p-3">
                         <div className="flex items-center gap-2 mb-2">
                           {drawerData.report.reportedUser.avatar ? (
                             <img src={drawerData.report.reportedUser.avatar} className="w-8 h-8 rounded-full object-cover" alt="" />
                           ) : (
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--edith-surface)', color: 'var(--edith-text-dim)' }}>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'var(--surface)', color: 'var(--text-secondary)' }}>
                               {drawerData.report.reportedUser.displayName?.[0]?.toUpperCase() || '?'}
                             </div>
                           )}
                           <div>
-                            <p className="text-sm font-medium" style={{ color: 'var(--edith-text)' }}>
+                            <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
                               {drawerData.report.reportedUser.displayName || drawerData.report.reportedUser.username}
                             </p>
-                            <p className="text-[10px]" style={{ color: 'var(--edith-text-muted)' }}>
+                            <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
                               {drawerData.report.reportedUser.status === 'banned'
                                 ? '🚫 Banned'
                                 : drawerData.report.reportedUser.status === 'suspended'
@@ -635,7 +640,7 @@ export default function AdminReportsPage() {
                             </p>
                           </div>
                         </div>
-                        <p className="text-[11px]" style={{ color: 'var(--edith-text-muted)' }}>
+                        <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
                           {drawerData.reportedUserTotalReports} reports received
                         </p>
                       </div>
@@ -646,7 +651,7 @@ export default function AdminReportsPage() {
                 {/* Related Reports */}
                 {drawerData.relatedReports?.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>
                       Other Reports for This {drawerData.report?.blogPost ? 'Article' : 'Post'} ({drawerData.relatedReports.length})
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -656,14 +661,14 @@ export default function AdminReportsPage() {
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${PRIORITY_COLORS[rel.priority]?.bg || ''} ${PRIORITY_COLORS[rel.priority]?.text || ''}`}>
                               {rel.priority}
                             </span>
-                            <span className="font-medium capitalize" style={{ color: 'var(--edith-text)' }}>
+                            <span className="font-medium capitalize" style={{ color: 'var(--foreground)' }}>
                               {REASON_LABELS[rel.reason] || rel.reason}
                             </span>
-                            <span style={{ color: 'var(--edith-text-muted)' }}>by {rel.reporter?.displayName || rel.reporter?.username}</span>
-                            <span className="ml-auto" style={{ color: 'var(--edith-text-muted)' }}>{timeAgo(rel.createdAt)}</span>
+                            <span style={{ color: 'var(--text-tertiary)' }}>by {rel.reporter?.displayName || rel.reporter?.username}</span>
+                            <span className="ml-auto" style={{ color: 'var(--text-tertiary)' }}>{timeAgo(rel.createdAt)}</span>
                           </div>
                           {rel.description && (
-                            <p className="mt-1 line-clamp-1" style={{ color: 'var(--edith-text-dim)' }}>{rel.description}</p>
+                            <p className="mt-1 line-clamp-1" style={{ color: 'var(--text-secondary)' }}>{rel.description}</p>
                           )}
                         </div>
                       ))}
@@ -674,15 +679,15 @@ export default function AdminReportsPage() {
                 {/* Action Form (only for pending reports) */}
                 {drawerData.report?.status === 'pending' && (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Take Action</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Take Action</h3>
                     <div className="card p-4 space-y-4">
                       <div>
-                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--edith-text-dim)' }}>Resolution</label>
+                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Resolution</label>
                         <select
                           value={actionForm.status}
                           onChange={(e) => setActionForm({ ...actionForm, status: e.target.value })}
                           className="w-full px-3 py-2 rounded-lg text-sm"
-                          style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+                          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                         >
                           <option value="resolved">Resolve</option>
                           <option value="dismissed">Dismiss</option>
@@ -691,7 +696,7 @@ export default function AdminReportsPage() {
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--edith-text-dim)' }}>Action</label>
+                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Action</label>
                         <div className="grid grid-cols-1 gap-1.5">
                           {ACTION_OPTIONS.map((opt) => (
                             <button
@@ -703,9 +708,9 @@ export default function AdminReportsPage() {
                                   : ''
                               }`}
                               style={{
-                                background: actionForm.actionTaken === opt.value ? 'var(--edith-brand-bg, rgba(59,130,246,0.08))' : 'var(--edith-surface)',
-                                border: '1px solid var(--edith-border)',
-                                color: 'var(--edith-text)',
+                                background: actionForm.actionTaken === opt.value ? 'var(--accent-muted)' : 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                color: 'var(--foreground)',
                               }}
                             >
                               <span>{opt.icon}</span>
@@ -716,21 +721,21 @@ export default function AdminReportsPage() {
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--edith-text-dim)' }}>Internal Notes (optional)</label>
+                        <label className="text-xs font-medium block mb-1.5" style={{ color: 'var(--text-secondary)' }}>Internal Notes (optional)</label>
                         <textarea
                           value={actionForm.reviewNotes}
                           onChange={(e) => setActionForm({ ...actionForm, reviewNotes: e.target.value })}
                           placeholder="Add notes about this resolution..."
                           rows={3}
                           className="w-full px-3 py-2 rounded-lg text-sm resize-none"
-                          style={{ background: 'var(--edith-surface)', border: '1px solid var(--edith-border)', color: 'var(--edith-text)' }}
+                          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                         />
                       </div>
 
                       {(actionForm.actionTaken === 'removed' || actionForm.actionTaken === 'banned') && (
                         <div className="flex items-start gap-2 p-3 rounded-lg text-xs" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                           <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                          <p style={{ color: 'var(--edith-text-dim)' }}>
+                          <p style={{ color: 'var(--text-secondary)' }}>
                             {actionForm.actionTaken === 'removed'
                               ? `This will remove the ${drawerData?.report?.blogPost ? 'article' : 'post'} and auto-resolve all pending reports for it.`
                               : 'This will ban the user and auto-resolve all their pending reports.'}
@@ -749,7 +754,7 @@ export default function AdminReportsPage() {
                         <button
                           onClick={closeDrawer}
                           className="px-4 py-2.5 rounded-xl text-sm font-medium"
-                          style={{ border: '1px solid var(--edith-border)', color: 'var(--edith-text-dim)' }}
+                          style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                         >
                           Cancel
                         </button>
@@ -761,22 +766,22 @@ export default function AdminReportsPage() {
                 {/* Previous Resolution Info */}
                 {drawerData.report?.status !== 'pending' && drawerData.report?.reviewedBy && (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--edith-text-muted)' }}>Resolution</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Resolution</h3>
                     <div className="card p-4 space-y-2">
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[drawerData.report.status]?.bg} ${STATUS_COLORS[drawerData.report.status]?.text}`}>
                           {drawerData.report.status}
                         </span>
                         {drawerData.report.actionTaken && drawerData.report.actionTaken !== 'none' && (
-                          <span className="text-xs font-medium capitalize" style={{ color: 'var(--edith-text)' }}>
+                          <span className="text-xs font-medium capitalize" style={{ color: 'var(--foreground)' }}>
                             → {drawerData.report.actionTaken}
                           </span>
                         )}
                       </div>
                       {drawerData.report.reviewNotes && (
-                        <p className="text-sm" style={{ color: 'var(--edith-text-dim)' }}>{drawerData.report.reviewNotes}</p>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{drawerData.report.reviewNotes}</p>
                       )}
-                      <p className="text-xs" style={{ color: 'var(--edith-text-muted)' }}>
+                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                         Reviewed by {drawerData.report.reviewedBy?.displayName || drawerData.report.reviewedBy?.username}
                         {drawerData.report.reviewedAt && ` · ${timeAgo(drawerData.report.reviewedAt)}`}
                       </p>
@@ -786,8 +791,8 @@ export default function AdminReportsPage() {
               </div>
             ) : (
               <div className="p-6 text-center">
-                <AlertTriangle className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--edith-text-muted)', opacity: 0.3 }} />
-                <p style={{ color: 'var(--edith-text-dim)' }}>Failed to load report details</p>
+                <AlertTriangle className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)', opacity: 0.3 }} />
+                <p style={{ color: 'var(--text-secondary)' }}>Failed to load report details</p>
               </div>
             )}
           </div>

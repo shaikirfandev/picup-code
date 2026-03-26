@@ -1,38 +1,37 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Search, ArrowLeft, Crosshair } from 'lucide-react';
+import { Home, Search, ArrowLeft, SearchX } from 'lucide-react';
 
 export default function NotFound() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-6">
       <div className="max-w-lg w-full text-center space-y-8">
-        {/* HUD diamond icon */}
         <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
           <div
             className="absolute inset-0 rounded border rotate-45 animate-pulse"
-            style={{ borderColor: 'var(--edith-accent-muted)' }}
+            style={{ borderColor: 'var(--accent-muted)' }}
           />
           <div
             className="absolute inset-3 rounded border rotate-45"
-            style={{ borderColor: 'var(--edith-border)' }}
+            style={{ borderColor: 'var(--border)' }}
           />
-          <Crosshair className="w-8 h-8 text-edith-cyan relative z-10" />
+          <SearchX className="w-8 h-8 text-accent relative z-10" />
         </div>
 
         {/* Error code */}
         <div className="space-y-3">
           <h1
-            className="text-6xl font-display font-bold tracking-widest"
-            style={{ color: 'var(--edith-accent)' }}
+            className="text-6xl font-semibold tracking-widest"
+            style={{ color: 'var(--accent)' }}
           >
             404
           </h1>
-          <h2 className="text-lg font-display font-bold tracking-wide text-edith-text">
+          <h2 className="text-lg font-semibold tracking-wide text-foreground">
             TARGET NOT FOUND
           </h2>
-          <p className="text-xs font-mono leading-relaxed" style={{ color: 'var(--edith-text-dim)' }}>
-            // E.D.I.T.H scan complete — no matching target in database<br />
+          <p className="text-xs font-mono leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            // Sorry, we couldn&apos;t find that page<br />
             // The requested resource has been moved or does not exist
           </p>
         </div>
@@ -58,7 +57,7 @@ export default function NotFound() {
 
         {/* Decorative scan line */}
         <div className="mx-auto w-48 h-[1px]" style={{
-          background: 'linear-gradient(90deg, transparent, var(--edith-accent-muted), transparent)',
+          background: 'linear-gradient(90deg, transparent, var(--accent-muted), transparent)',
         }} />
       </div>
     </div>

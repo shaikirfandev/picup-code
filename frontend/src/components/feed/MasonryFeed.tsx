@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { useRef, useState, useEffect, useCallback, memo } from 'react';
 import Masonry from 'react-masonry-css';
 import PostCard from './PostCard';
 import { Post } from '@/types';
@@ -23,10 +23,59 @@ const breakpointColumns = {
 };
 
 /**
- * Standard masonry grid with infinite scroll.
- * Memoized to prevent re-renders when parent state changes but posts haven't.
+ * Lazy wrapper — only mounts PostCard when the slot is near the viewport.
+ * Shows a lightweight placeholder until then, avoiding hundreds of heavy
+ * PostCard instances in the DOM simultaneously.
  */
-const MasonryFeed = memo(function MasonryFeed({
+const LazyPostCard = memo(function LazyPostCard({ post, index }: { post: Post; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); // once visible, stay mounted
+        }
+      },
+      { rootMargin: '600px 0px' } // pre-render 600px ahead of viewport
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!isVisible) {
+    // Lightweight placeholder — same break-inside:avoid as pin-card
+    return (
+      <div
+        ref={ref}
+        className="rounded-xl mb-2.5"
+        style={{
+          height: 220 + (index % 5) * 40,
+          background: 'var(--edith-surface)',
+          border: '1px solid var(--edith-border)',
+          breakInside: 'avoid',
+        }}
+      />
+    );
+  }
+
+  return (
+    <div ref={ref}>
+      <PostCard post={post} index={index} />
+    </div>
+  );
+});
+
+/**
+ * Standard masonry grid with infinite scroll + lazy rendering.
+ * Uses react-masonry-css for layout + IntersectionObserver for loading.
+ */
+export default function MasonryFeed({
   posts,
   hasMore,
   onLoadMore,
@@ -42,7 +91,7 @@ const MasonryFeed = memo(function MasonryFeed({
         columnClassName="masonry-grid-column"
       >
         {posts.map((post, index) => (
-          <PostCard key={post._id} post={post} index={index} />
+          <LazyPostCard key={post._id} post={post} index={index} />
         ))}
       </Masonry>
 
@@ -65,6 +114,4 @@ const MasonryFeed = memo(function MasonryFeed({
       )}
     </div>
   );
-});
-
-export default MasonryFeed;
+}

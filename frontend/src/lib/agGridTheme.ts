@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { themeQuartz } from 'ag-grid-community';
 
-/* ── AG Grid — EDITH Dark Theme ───────────────────────────────────────── */
-const edithDarkTheme = themeQuartz.withParams({
+/* ── AG Grid — Picup Dark Theme ───────────────────────────────────────── */
+const picupDarkTheme = themeQuartz.withParams({
   backgroundColor: 'transparent',
   foregroundColor: 'rgba(200,230,255,0.92)',
   headerBackgroundColor: 'rgba(0,200,255,0.04)',
@@ -22,8 +22,8 @@ const edithDarkTheme = themeQuartz.withParams({
   accentColor: '#00d4ff',
 });
 
-/* ── AG Grid — EDITH Light Theme ──────────────────────────────────────── */
-const edithLightTheme = themeQuartz.withParams({
+/* ── AG Grid — Picup Light Theme ──────────────────────────────────────── */
+const picupLightTheme = themeQuartz.withParams({
   backgroundColor: 'transparent',
   foregroundColor: '#1a2233',
   headerBackgroundColor: 'rgba(0, 100, 140, 0.05)',
@@ -41,14 +41,14 @@ const edithLightTheme = themeQuartz.withParams({
 });
 
 /**
- * Returns the correct AG Grid theme based on the current EDITH light/dark mode.
+ * Returns the correct AG Grid theme based on the current Picup light/dark mode.
  */
-export function useEdithGridTheme() {
+export function usePicupGridTheme() {
   const { resolvedTheme } = useTheme();
   return useMemo(
-    () => (resolvedTheme === 'light' ? edithLightTheme : edithDarkTheme),
+    () => (resolvedTheme === 'light' ? picupLightTheme : picupDarkTheme),
     [resolvedTheme],
   );
 }
 
-export { edithDarkTheme, edithLightTheme };
+export { picupDarkTheme, picupLightTheme };

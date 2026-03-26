@@ -28,7 +28,7 @@ export default function AdminAILogsPage() {
     <div className="p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">AI Generation Logs</h1>
-        <p className="text-surface-500">Monitor AI image generation activity</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Monitor AI image generation activity</p>
       </div>
 
       <div className="space-y-4">
@@ -36,10 +36,10 @@ export default function AdminAILogsPage() {
           ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="card p-5 animate-pulse">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-xl" />
+                  <div className="w-20 h-20 rounded-xl" style={{ background: 'var(--surface-hover)' }} />
                   <div className="flex-1">
-                    <div className="h-4 bg-surface-200 dark:bg-surface-700 rounded w-2/3 mb-2" />
-                    <div className="h-3 bg-surface-200 dark:bg-surface-700 rounded w-1/3" />
+                    <div className="h-4 rounded w-2/3 mb-2" style={{ background: 'var(--surface-hover)' }} />
+                    <div className="h-3 rounded w-1/3" style={{ background: 'var(--surface-hover)' }} />
                   </div>
                 </div>
               </div>
@@ -56,7 +56,7 @@ export default function AdminAILogsPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm mb-1 line-clamp-2">&ldquo;{log.prompt}&rdquo;</p>
-                    <div className="flex flex-wrap gap-3 text-xs text-surface-500">
+                    <div className="flex flex-wrap gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
                         {log.user?.displayName || 'Unknown'}
@@ -85,15 +85,15 @@ export default function AdminAILogsPage() {
             ))}
         {!isLoading && logs.length === 0 && (
           <div className="text-center py-12">
-            <Sparkles className="w-12 h-12 text-surface-300 mx-auto mb-3" />
-            <p className="text-surface-500">No AI generation logs yet</p>
+            <Sparkles className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>No AI generation logs yet</p>
           </div>
         )}
       </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
-          <p className="text-sm text-surface-500">Page {page} of {totalPages}</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Page {page} of {totalPages}</p>
           <div className="flex gap-2">
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn-ghost p-2 disabled:opacity-40">
               <ChevronLeft className="w-4 h-4" />

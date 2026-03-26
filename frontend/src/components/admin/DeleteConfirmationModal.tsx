@@ -64,9 +64,9 @@ export default function DeleteConfirmationModal({
       <div
         className="relative w-full max-w-md rounded-xl overflow-hidden animate-scale-in"
         style={{
-          background: 'var(--edith-dropdown-bg)',
-          border: '1px solid var(--edith-border-strong)',
-          boxShadow: 'var(--edith-dropdown-shadow)',
+          background: 'var(--dropdown-bg)',
+          border: '1px solid var(--border-strong)',
+          boxShadow: 'var(--dropdown-shadow)',
         }}
       >
         {/* Top glow */}
@@ -84,8 +84,8 @@ export default function DeleteConfirmationModal({
           </div>
           <div>
             <h3
-              className="text-sm font-display font-bold tracking-wider"
-              style={{ color: 'var(--edith-text)' }}
+              className="text-sm font-semibold font-bold tracking-wider"
+              style={{ color: 'var(--foreground)' }}
             >
               {doubleConfirm
                 ? 'CONFIRM AGAIN'
@@ -93,7 +93,7 @@ export default function DeleteConfirmationModal({
                   ? `DELETE ${count} POSTS`
                   : 'DELETE POST'}
             </h3>
-            <p className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+            <p className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
               {doubleConfirm
                 ? 'This is a large operation — double-confirm to proceed'
                 : 'This action requires confirmation'}
@@ -109,7 +109,7 @@ export default function DeleteConfirmationModal({
             style={{
               background: 'rgba(239,68,68,0.05)',
               border: '1px solid rgba(239,68,68,0.15)',
-              color: 'var(--edith-text-dim)',
+              color: 'var(--text-secondary)',
             }}
           >
             {isBulk ? (
@@ -139,7 +139,7 @@ export default function DeleteConfirmationModal({
           {!doubleConfirm && (
             <>
               <div>
-                <label className="block text-[10px] font-mono font-medium tracking-wider mb-1.5" style={{ color: 'var(--edith-text-dim)' }}>
+                <label className="block text-[10px] font-mono font-medium tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                   REASON (OPTIONAL)
                 </label>
                 <textarea
@@ -149,9 +149,9 @@ export default function DeleteConfirmationModal({
                   rows={2}
                   className="w-full px-3 py-2 text-[11px] font-mono rounded-lg outline-none resize-none transition-all"
                   style={{
-                    background: 'var(--edith-input-bg)',
-                    border: '1px solid var(--edith-input-border)',
-                    color: 'var(--edith-text)',
+                    background: 'var(--input-bg)',
+                    border: '1px solid var(--input-border)',
+                    color: 'var(--foreground)',
                   }}
                   maxLength={500}
                 />
@@ -160,7 +160,7 @@ export default function DeleteConfirmationModal({
               {/* Hard delete toggle */}
               <label
                 className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-red-500/5"
-                style={{ border: '1px solid var(--edith-border)' }}
+                style={{ border: '1px solid var(--border)' }}
               >
                 <input
                   type="checkbox"
@@ -169,10 +169,10 @@ export default function DeleteConfirmationModal({
                   className="accent-red-500 w-4 h-4"
                 />
                 <div>
-                  <p className="text-[11px] font-mono font-medium" style={{ color: 'var(--edith-text)' }}>
+                  <p className="text-[11px] font-mono font-medium" style={{ color: 'var(--foreground)' }}>
                     Permanent delete
                   </p>
-                  <p className="text-[9px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+                  <p className="text-[9px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                     Hard delete — removes all associated data. Cannot be undone.
                   </p>
                 </div>
@@ -187,14 +187,14 @@ export default function DeleteConfirmationModal({
               style={{
                 background: 'rgba(239,68,68,0.1)',
                 border: '1px solid rgba(239,68,68,0.25)',
-                color: 'var(--edith-text)',
+                color: 'var(--foreground)',
               }}
             >
               <Shield className="w-6 h-6 text-red-400 mx-auto mb-2" />
               <p>
                 Deleting <strong className="text-red-400">{count}</strong> posts is a significant action.
               </p>
-              <p className="mt-1" style={{ color: 'var(--edith-text-muted)' }}>
+              <p className="mt-1" style={{ color: 'var(--text-tertiary)' }}>
                 Click &quot;Confirm Delete&quot; to proceed.
               </p>
             </div>
@@ -204,13 +204,13 @@ export default function DeleteConfirmationModal({
         {/* Footer */}
         <div
           className="flex items-center justify-end gap-2 px-5 py-4"
-          style={{ borderTop: '1px solid var(--edith-border)' }}
+          style={{ borderTop: '1px solid var(--border)' }}
         >
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-[11px] font-mono tracking-wider rounded-lg transition-colors hover:bg-edith-cyan/5 disabled:opacity-50"
-            style={{ color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+            className="px-4 py-2 text-[11px] font-mono tracking-wider rounded-lg transition-colors hover:bg-accent/5 disabled:opacity-50"
+            style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
           >
             CANCEL
           </button>

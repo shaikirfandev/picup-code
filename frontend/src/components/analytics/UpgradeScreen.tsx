@@ -72,7 +72,7 @@ export default function UpgradeScreen() {
               </div>
 
               <Link
-                href="/settings?tab=subscription"
+                href="/upgrade"
                 className="btn-primary w-full flex items-center justify-center gap-2 py-3"
               >
                 Upgrade to Pro

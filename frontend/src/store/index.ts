@@ -6,7 +6,10 @@ import postReducer from './slices/postSlice';
 import userReducer from './slices/userSlice';
 import analyticsReducer from './slices/analyticsSlice';
 import creatorAnalyticsReducer from './slices/creatorAnalyticsSlice';
+import creatorDashboardReducer from './slices/creatorDashboardSlice';
 import boardReducer from './slices/boardSlice';
+import adReducer from './slices/adSlice';
+import walletReducer from './slices/walletSlice';
 import affiliateReducer from './slices/affiliateSlice';
 import { errorToastMiddleware, attachOnlineListeners } from './middleware';
 
@@ -19,7 +22,10 @@ export const store = configureStore({
     users: userReducer,
     analytics: analyticsReducer,
     creatorAnalytics: creatorAnalyticsReducer,
+    creatorDashboard: creatorDashboardReducer,
     boards: boardReducer,
+    ads: adReducer,
+    wallet: walletReducer,
     affiliate: affiliateReducer,
   },
   middleware: (getDefaultMiddleware) =>

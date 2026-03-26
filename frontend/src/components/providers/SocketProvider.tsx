@@ -25,6 +25,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -49,7 +50,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     s.on('connect', () => {
       console.log('🔌 Socket connected');
-      dispatch(fetchUnreadCount());
+      // Debounce: cancel any pending call and wait 2s to avoid rapid reconnect spam
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = setTimeout(() => {
+        dispatch(fetchUnreadCount());
+      }, 2000);
     });
 
     s.on('new-notification', (notification: Notification) => {
@@ -76,6 +81,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     setSocket(s);
 
     return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       s.disconnect();
       socketRef.current = null;
       setSocket(null);

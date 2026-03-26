@@ -7,9 +7,9 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { closeSidebar } from '@/store/slices/uiSlice';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import {
-  X, Home, Zap, Wrench, FileText, Plus,
+  X, Home, Compass, Wrench, FileText, Plus,
   User, Bookmark, LayoutDashboard, Activity, CreditCard,
-  Shield, Settings, LogOut, Search, Crosshair,
+  Shield, Settings, LogOut, Search, Crown,
 } from 'lucide-react';
 
 export default function MobileSidebar() {
@@ -21,7 +21,6 @@ export default function MobileSidebar() {
 
   const isPaid = user?.accountType === 'paid' || user?.role === 'admin';
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dispatch(closeSidebar());
@@ -45,25 +44,27 @@ export default function MobileSidebar() {
   };
 
   const navItems = [
-    { href: '/', label: 'HOME', icon: Home },
-    { href: '/explore', label: 'EXPLORE', icon: Zap },
-    { href: '/tools', label: 'TOOLS', icon: Wrench },
-    { href: '/blog', label: 'BLOG', icon: FileText },
-    { href: '/search', label: 'SEARCH', icon: Search },
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/explore', label: 'Discover', icon: Compass },
+    { href: '/tools', label: 'Tools', icon: Wrench },
+    { href: '/blog', label: 'Blog', icon: FileText },
+    { href: '/search', label: 'Search', icon: Search },
   ];
 
   const userItems = [
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
-    { href: '/saved', label: 'Saved Intel', icon: Bookmark },
+    { href: '/saved', label: 'Saved', icon: Bookmark },
     { href: '/boards', label: 'Boards', icon: LayoutDashboard },
     ...(isPaid
       ? [
-          { href: '/analytics', label: 'Creator Analytics', icon: Activity },
-          { href: '/wallet', label: 'Credits / Wallet', icon: CreditCard },
+          { href: '/analytics', label: 'Analytics', icon: Activity },
+          { href: '/wallet', label: 'Wallet', icon: CreditCard },
         ]
-      : []),
+      : [
+          { href: '/upgrade', label: 'Upgrade', icon: Crown },
+        ]),
     ...(user?.role === 'admin'
-      ? [{ href: '/admin', label: 'Command Center', icon: Shield }]
+      ? [{ href: '/admin', label: 'Admin', icon: Shield }]
       : []),
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -72,83 +73,66 @@ export default function MobileSidebar() {
 
   return (
     <>
-      {/* Overlay backdrop */}
+      {/* Overlay */}
       <div
         ref={overlayRef}
         onClick={close}
-        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300"
-        style={{ opacity: sidebarOpen ? 1 : 0 }}
+        className="fixed inset-0 z-[60] transition-opacity duration-300"
+        style={{ background: 'var(--overlay-bg)', opacity: sidebarOpen ? 1 : 0 }}
       />
 
-      {/* Drawer panel */}
+      {/* Drawer */}
       <aside
         className="fixed top-0 right-0 bottom-0 z-[61] w-72 max-w-[85vw] flex flex-col overflow-y-auto animate-slide-in-right"
         style={{
-          background: 'var(--edith-surface)',
-          borderLeft: '1px solid var(--edith-border-strong)',
-          boxShadow: 'var(--edith-shadow-xl)',
+          background: 'var(--surface)',
+          borderLeft: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-xl)',
         }}
       >
-        {/* Top accent line */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[1px]"
-          style={{
-            background: 'linear-gradient(90deg, transparent, var(--edith-accent-muted), transparent)',
-          }}
-        />
-
         {/* Header */}
-        <div
-          className="flex items-center justify-between p-4"
-          style={{ borderBottom: '1px solid var(--edith-border)' }}
-        >
-          <Link href="/" onClick={close} className="flex items-center gap-2.5 group">
-            <div className="relative w-7 h-7 flex items-center justify-center">
-              <div className="absolute inset-0 rounded border border-edith-cyan/30 rotate-45 group-hover:rotate-[225deg] transition-transform duration-700" />
-              <Crosshair className="w-3.5 h-3.5 text-edith-cyan relative z-10" />
-            </div>
-            <span className="text-[13px] font-display font-bold tracking-[0.2em] text-edith-cyan">
-              E.D.I.T.H
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <Link href="/" onClick={close} className="flex items-center gap-2">
+            <span className="text-base font-semibold" style={{ color: 'var(--foreground)' }}>
+              mepiks
             </span>
           </Link>
           <button
             onClick={close}
-            className="p-2 rounded hover:bg-edith-cyan/10 transition-colors"
-            style={{ color: 'var(--edith-text-dim)' }}
+            className="p-2 rounded-lg hover:bg-[var(--surface-secondary)] transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* User info (if logged in) */}
+        {/* User info */}
         {isAuthenticated && user && (
-          <div
-            className="px-4 py-3 flex items-center gap-3"
-            style={{ borderBottom: '1px solid var(--edith-border)' }}
-          >
+          <div className="px-4 py-3 flex items-center gap-3 border-b" style={{ borderColor: 'var(--border)' }}>
             {user.avatar ? (
               <img
                 src={user.avatar}
                 alt={user.displayName}
-                className="w-9 h-9 rounded object-cover"
-                style={{ border: '1px solid var(--edith-border)' }}
+                className="w-10 h-10 rounded-full object-cover"
+                style={{ border: '1px solid var(--border)' }}
               />
             ) : (
               <div
-                className="w-9 h-9 rounded flex items-center justify-center text-xs font-mono font-bold text-edith-cyan"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
                 style={{
-                  background: 'var(--edith-accent-muted)',
-                  border: '1px solid var(--edith-border)',
+                  background: 'var(--surface-secondary)',
+                  color: 'var(--foreground)',
+                  border: '1px solid var(--border)',
                 }}
               >
                 {user.displayName?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold truncate" style={{ color: 'var(--edith-text)' }}>
+              <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>
                 {user.displayName}
               </p>
-              <p className="text-[10px] font-mono truncate" style={{ color: 'var(--edith-text-dim)' }}>
+              <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
                 @{user.username}
               </p>
             </div>
@@ -157,8 +141,8 @@ export default function MobileSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 py-2">
-          <div className="px-3 py-2">
-            <span className="text-[9px] font-mono tracking-[0.2em] uppercase" style={{ color: 'var(--edith-text-muted)' }}>
+          <div className="px-4 py-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Navigation
             </span>
           </div>
@@ -167,30 +151,30 @@ export default function MobileSidebar() {
               key={item.href}
               href={item.href}
               onClick={close}
-              className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono tracking-wider hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
-              style={{ color: 'var(--edith-text-dim)' }}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--surface-secondary)]"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              <item.icon className="w-4 h-4" />
+              <item.icon className="w-4.5 h-4.5" />
               {item.label}
             </Link>
           ))}
 
           {isAuthenticated && (
             <>
-              {/* Create button */}
               <div className="px-4 py-3">
                 <Link
                   href="/create"
                   onClick={close}
-                  className="btn-primary w-full gap-2 text-[10px] py-2.5 justify-center"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all"
+                  style={{ background: 'var(--foreground)', color: 'var(--background)' }}
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  CREATE
+                  <Plus className="w-4 h-4" />
+                  Create
                 </Link>
               </div>
 
-              <div className="px-3 py-2">
-                <span className="text-[9px] font-mono tracking-[0.2em] uppercase" style={{ color: 'var(--edith-text-muted)' }}>
+              <div className="px-4 py-2">
+                <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Account
                 </span>
               </div>
@@ -199,10 +183,10 @@ export default function MobileSidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={close}
-                  className="flex items-center gap-3 px-4 py-2.5 text-[11px] font-mono tracking-wider hover:text-edith-cyan hover:bg-edith-cyan/5 transition-all"
-                  style={{ color: 'var(--edith-text-dim)' }}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--surface-secondary)]"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-4.5 h-4.5" />
                   {item.label}
                 </Link>
               ))}
@@ -210,34 +194,34 @@ export default function MobileSidebar() {
           )}
         </nav>
 
-        {/* Footer actions */}
-        <div
-          className="p-4"
-          style={{ borderTop: '1px solid var(--edith-border)' }}
-        >
+        {/* Footer */}
+        <div className="p-4 border-t" style={{ borderColor: 'var(--border)' }}>
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-2.5 text-[11px] font-mono text-edith-red/60 hover:text-edith-red hover:bg-edith-red/5 rounded transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-[var(--error-bg)]"
+              style={{ color: 'var(--error)' }}
             >
-              <LogOut className="w-3.5 h-3.5" />
-              DISCONNECT
+              <LogOut className="w-4 h-4" />
+              Log out
             </button>
           ) : (
             <div className="flex gap-2">
               <Link
                 href="/login"
                 onClick={close}
-                className="btn-ghost flex-1 text-[10px] font-mono tracking-wider justify-center"
+                className="flex-1 text-center py-2.5 text-sm font-medium rounded-lg transition-colors hover:bg-[var(--surface-secondary)]"
+                style={{ color: 'var(--text-secondary)' }}
               >
-                LOG IN
+                Log in
               </Link>
               <Link
                 href="/register"
                 onClick={close}
-                className="btn-primary flex-1 text-[10px] py-2 justify-center"
+                className="flex-1 text-center py-2.5 text-sm font-medium rounded-lg transition-all"
+                style={{ background: 'var(--foreground)', color: 'var(--background)' }}
               >
-                SIGN UP
+                Sign up
               </Link>
             </div>
           )}

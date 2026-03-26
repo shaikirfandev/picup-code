@@ -10,7 +10,7 @@ import {
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import type { ColDef, ICellRendererParams, GridReadyEvent } from 'ag-grid-community';
-import { useEdithGridTheme } from '@/lib/agGridTheme';
+import { usePicupGridTheme } from '@/lib/agGridTheme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -40,7 +40,7 @@ function CheckboxCellRenderer(params: ICellRendererParams) {
   return (
     <button onClick={() => _onToggleSelect(post._id)} className="flex items-center justify-center w-full">
       <div className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${
-        isSelected ? 'bg-[var(--edith-accent)] border-[var(--edith-accent)]' : 'border-[var(--edith-border)]'
+        isSelected ? 'bg-[var(--accent)] border-[var(--accent)]' : 'border-[var(--border)]'
       }`}>
         {isSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
       </div>
@@ -51,7 +51,7 @@ function CheckboxCellRenderer(params: ICellRendererParams) {
 function CheckboxHeaderRenderer() {
   return (
     <button onClick={() => _onToggleSelectAll()} className="flex items-center justify-center w-full">
-      <div className="w-4 h-4 rounded border border-[var(--edith-border)] flex items-center justify-center hover:border-[var(--edith-accent)] transition-colors" />
+      <div className="w-4 h-4 rounded border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] transition-colors" />
     </button>
   );
 }
@@ -62,12 +62,12 @@ function PostCellRenderer(params: ICellRendererParams) {
   const thumb = post.image?.url || post.video?.thumbnailUrl;
   return (
     <div className="flex items-center gap-3 py-1">
-      <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid var(--edith-border)' }}>
+      <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0" style={{ border: '1px solid var(--border)' }}>
         {thumb ? (
           <img src={thumb} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--edith-accent-muted)' }}>
-            <ImageIcon className="w-4 h-4" style={{ color: 'var(--edith-text-muted)' }} />
+          <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--accent-muted)' }}>
+            <ImageIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
           </div>
         )}
         {post.mediaType === 'video' && (
@@ -77,7 +77,7 @@ function PostCellRenderer(params: ICellRendererParams) {
         )}
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-mono font-medium truncate leading-tight" style={{ color: 'var(--edith-text)' }}>
+        <p className="text-[11px] font-mono font-medium truncate leading-tight" style={{ color: 'var(--foreground)' }}>
           {post.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
@@ -100,13 +100,13 @@ function AuthorCellRenderer(params: ICellRendererParams) {
   return (
     <div className="flex items-center gap-2">
       {post.author?.avatar ? (
-        <img src={post.author.avatar} alt="" className="w-5 h-5 rounded object-cover" style={{ border: '1px solid var(--edith-border)' }} />
+        <img src={post.author.avatar} alt="" className="w-5 h-5 rounded object-cover" style={{ border: '1px solid var(--border)' }} />
       ) : (
-        <div className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-mono font-bold text-[var(--edith-accent)]" style={{ background: 'var(--edith-accent-muted)' }}>
+        <div className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-mono font-bold text-[var(--accent)]" style={{ background: 'var(--accent-muted)' }}>
           {post.author?.displayName?.[0]?.toUpperCase() || '?'}
         </div>
       )}
-      <span className="text-[10px] font-mono truncate" style={{ color: 'var(--edith-text-dim)' }}>
+      <span className="text-[10px] font-mono truncate" style={{ color: 'var(--text-secondary)' }}>
         {post.author?.displayName || 'Unknown'}
       </span>
     </div>
@@ -117,7 +117,7 @@ function StatsCellRenderer(params: ICellRendererParams) {
   const post = params.data as Post;
   if (!post) return null;
   return (
-    <div className="text-[10px] font-mono" style={{ color: 'var(--edith-text-muted)' }}>
+    <div className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
       <span title="Views">👁 {post.viewsCount}</span>{' '}
       <span title="Likes">❤️ {post.likesCount}</span>
     </div>
@@ -157,7 +157,7 @@ function ActionsCellRenderer(params: ICellRendererParams) {
       <Link
         href={`/post/${post._id}`}
         className="p-1.5 rounded-lg transition-colors hover:bg-[rgba(0,200,255,0.1)] dark:hover:bg-[rgba(0,200,255,0.1)] hover:bg-[rgba(0,145,179,0.1)]"
-        style={{ color: 'var(--edith-text-muted)' }}
+        style={{ color: 'var(--text-tertiary)' }}
         title="View post"
         onClick={(e) => e.stopPropagation()}
       >
@@ -195,7 +195,7 @@ export default function PostTable({
   onRestore,
 }: PostTableProps) {
   const gridRef = useRef<AgGridReact>(null);
-  const edithTheme = useEdithGridTheme();
+  const picupTheme = usePicupGridTheme();
 
   // Expose callbacks to cell renderers
   _selectedIds = selectedIds;
@@ -253,7 +253,7 @@ export default function PostTable({
         return p.value ? timeAgo(p.value) : '—';
       },
       cellStyle: ((p: any) => ({
-        color: (p.data as Post)?.isDeleted ? '#f87171' : 'var(--edith-text-muted)',
+        color: (p.data as Post)?.isDeleted ? '#f87171' : 'var(--text-tertiary)',
         fontSize: '10px',
         fontFamily: 'JetBrains Mono, monospace',
       })) as any,
@@ -299,15 +299,15 @@ export default function PostTable({
           <div
             key={i}
             className="flex items-center gap-4 p-4 rounded-lg animate-pulse"
-            style={{ background: 'var(--edith-elevated)', border: '1px solid var(--edith-border)' }}
+            style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}
           >
-            <div className="w-5 h-5 rounded bg-edith-cyan/10" />
-            <div className="w-12 h-12 rounded bg-edith-cyan/10" />
+            <div className="w-5 h-5 rounded bg-accent/10" />
+            <div className="w-12 h-12 rounded bg-accent/10" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-40 rounded bg-edith-cyan/10" />
-              <div className="h-2 w-24 rounded bg-edith-cyan/10" />
+              <div className="h-3 w-40 rounded bg-accent/10" />
+              <div className="h-2 w-24 rounded bg-accent/10" />
             </div>
-            <div className="h-3 w-16 rounded bg-edith-cyan/10" />
+            <div className="h-3 w-16 rounded bg-accent/10" />
           </div>
         ))}
       </div>
@@ -318,10 +318,10 @@ export default function PostTable({
     return (
       <div
         className="flex flex-col items-center justify-center py-16 rounded-lg"
-        style={{ border: '1px solid var(--edith-border)', background: 'var(--edith-elevated)' }}
+        style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)' }}
       >
-        <ImageIcon className="w-10 h-10 mb-3" style={{ color: 'var(--edith-text-muted)' }} />
-        <p className="text-sm font-mono" style={{ color: 'var(--edith-text-muted)' }}>No posts found</p>
+        <ImageIcon className="w-10 h-10 mb-3" style={{ color: 'var(--text-tertiary)' }} />
+        <p className="text-sm font-mono" style={{ color: 'var(--text-tertiary)' }}>No posts found</p>
       </div>
     );
   }
@@ -330,7 +330,7 @@ export default function PostTable({
     <div className="card overflow-hidden" style={{ height: Math.min(rowData.length * 56 + 48, 700) }}>
       <AgGridReact
         ref={gridRef}
-        theme={edithTheme}
+        theme={picupTheme}
         rowData={rowData}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
@@ -340,7 +340,7 @@ export default function PostTable({
         suppressCellFocus={true}
         onGridReady={onGridReady}
         getRowStyle={getRowStyle}
-        overlayNoRowsTemplate='<span style="color: var(--edith-text-muted)">No posts found</span>'
+        overlayNoRowsTemplate='<span style="color: var(--text-tertiary)">No posts found</span>'
       />
     </div>
   );

@@ -32,8 +32,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-2.5 py-1.5 text-[10px] font-mono tracking-wider rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-edith-cyan/5 hover:text-edith-cyan"
-        style={{ color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        className="px-2.5 py-1.5 text-[10px] font-mono tracking-wider rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/5 hover:text-accent"
+        style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
       >
         PREV
       </button>
@@ -42,7 +42,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
           <span
             key={`e-${i}`}
             className="px-1.5 text-xs font-mono"
-            style={{ color: 'var(--edith-text-muted)' }}
+            style={{ color: 'var(--text-tertiary)' }}
           >
             …
           </span>
@@ -50,11 +50,11 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className="w-8 h-8 text-[10px] font-mono rounded transition-all hover:bg-edith-cyan/10"
+            className="w-8 h-8 text-[10px] font-mono rounded transition-all hover:bg-accent/10"
             style={{
-              background: page === currentPage ? 'var(--edith-accent-muted)' : 'transparent',
-              color: page === currentPage ? 'var(--edith-accent)' : 'var(--edith-text-dim)',
-              border: `1px solid ${page === currentPage ? 'var(--edith-accent)' : 'var(--edith-border)'}`,
+              background: page === currentPage ? 'var(--accent-muted)' : 'transparent',
+              color: page === currentPage ? 'var(--accent)' : 'var(--text-secondary)',
+              border: `1px solid ${page === currentPage ? 'var(--accent)' : 'var(--border)'}`,
             }}
           >
             {page}
@@ -64,8 +64,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-2.5 py-1.5 text-[10px] font-mono tracking-wider rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-edith-cyan/5 hover:text-edith-cyan"
-        style={{ color: 'var(--edith-text-dim)', border: '1px solid var(--edith-border)' }}
+        className="px-2.5 py-1.5 text-[10px] font-mono tracking-wider rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/5 hover:text-accent"
+        style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
       >
         NEXT
       </button>

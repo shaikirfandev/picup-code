@@ -14,7 +14,7 @@ const sizeMap = {
 export default function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   return (
     <div
-      className={`${sizeMap[size]} border-edith-cyan/20 border-t-edith-cyan rounded-full animate-spin ${className}`}
+      className={`${sizeMap[size]} border-accent/20 border-t-accent rounded-full animate-spin ${className}`}
       role="status"
       aria-label="Loading"
     />

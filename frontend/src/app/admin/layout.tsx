@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -44,17 +44,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'moderator')) return null;
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--background)' }}>
       {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800 hidden lg:flex flex-col">
-        <div className="p-6 border-b border-surface-100 dark:border-surface-800">
+      <aside className="w-64 hidden lg:flex flex-col" style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+        <div className="p-6" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold">Admin Panel</p>
-              <p className="text-xs text-surface-500 capitalize">{user?.role}</p>
+              <p className="font-bold" style={{ color: 'var(--foreground)' }}>Admin Panel</p>
+              <p className="text-xs capitalize" style={{ color: 'var(--text-secondary)' }}>{user?.role}</p>
             </div>
           </div>
         </div>
@@ -65,11 +65,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                style={
                   isActive
-                    ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-600'
-                    : 'text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800'
-                }`}
+                    ? { background: 'var(--accent-muted)', color: 'var(--accent)' }
+                    : { color: 'var(--text-secondary)' }
+                }
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
               >
                 <Icon className="w-4.5 h-4.5" />
                 {label}

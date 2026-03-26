@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 export const contentType = 'image/png';
 export const size = { width: 1200, height: 630 };
-export const alt = 'E.D.I.T.H — Visual Discovery & Target Analysis';
+export const alt = 'mepiks — Visual Discovery & Inspiration';
 
 export default async function Image() {
   return new ImageResponse(
@@ -69,7 +69,7 @@ export default async function Image() {
             marginBottom: 16,
           }}
         >
-          E.D.I.T.H
+          mepiks
         </div>
 
         {/* Subtitle */}
@@ -82,7 +82,7 @@ export default async function Image() {
             textTransform: 'uppercase',
           }}
         >
-          Visual Discovery & Target Analysis
+          Visual Discovery & Inspiration
         </div>
 
         {/* Bottom accent line */}

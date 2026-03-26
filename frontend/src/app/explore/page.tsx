@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCategories, fetchExplore } from '@/store/slices/postSlice';
 import { selectExplorePosts, selectCategories } from '@/store/selectors';
 import PostCard from '@/components/feed/PostCard';
-import { Crosshair, TrendingUp, Radar, Loader2 } from 'lucide-react';
+import { Compass, TrendingUp, Radar, Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
 export default function ExplorePage() {
@@ -27,31 +27,30 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen">
-      {/* EDITH Hero */}
+      {/* Hero */}
       <div className="relative overflow-hidden py-14 text-center">
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
             style={{
-              background: 'radial-gradient(circle, var(--edith-radial-hero) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, transparent 0%, transparent 70%)',
             }}
           />
         </div>
         <div className="relative max-w-4xl mx-auto px-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded mb-4"
-            style={{ background: 'var(--edith-accent-subtle)', border: '1px solid var(--edith-border)' }}
+            style={{ background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}
           >
-            <Radar className="w-3 h-3 text-edith-cyan" />
-            <span className="text-[10px] font-mono tracking-wider uppercase" style={{ color: 'var(--edith-text-dim)' }}>
-              Scanning Visual Database
+            <Radar className="w-3 h-3 text-accent" />
+            <span className="text-[10px] font-mono tracking-wider uppercase" style={{ color: 'var(--text-secondary)' }}>
+              Discover trending content
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold mb-3 tracking-tight">
-            <span style={{ color: 'var(--edith-gradient-text)' }}>Explore </span>
-            <span className="text-gradient">Targets</span>
+          <h1 className="text-3xl md:text-4xl font-semibold font-bold mb-3 tracking-tight">
+            <span style={{ color: 'var(--foreground)' }}>Explore</span>
           </h1>
-          <p className="text-sm font-mono max-w-lg mx-auto" style={{ color: 'var(--edith-text-muted)' }}>
-            // Discover trending products, creative pins, and AI-generated assets
+          <p className="text-sm font-mono max-w-lg mx-auto" style={{ color: 'var(--text-tertiary)' }}>
+            Discover trending products, creative pins, and AI-generated assets
           </p>
         </div>
       </div>
@@ -63,10 +62,10 @@ export default function ExplorePage() {
             onClick={() => handleCategorySelect('')}
             className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
               !selectedCategory
-                ? 'text-edith-cyan border border-edith-cyan/30'
-                : 'border hover:border-edith-cyan/15'
+                ? 'text-accent border border-accent/30'
+                : 'border hover:border-accent/15'
             }`}
-            style={!selectedCategory ? { background: 'var(--edith-accent-muted)', boxShadow: 'var(--edith-shadow-sm)' } : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }}
+            style={!selectedCategory ? { background: 'var(--accent-muted)', boxShadow: 'var(--shadow-sm)' } : { background: 'var(--tag-bg)', borderColor: 'var(--tag-border)', color: 'var(--tag-text)' }}
           >
             <TrendingUp className="w-3 h-3 inline mr-1 -mt-0.5" />
             ALL
@@ -78,12 +77,12 @@ export default function ExplorePage() {
               className={`px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${
                 selectedCategory === cat._id
                   ? 'text-white border'
-                  : 'border hover:border-edith-cyan/15'
+                  : 'border hover:border-accent/15'
               }`}
               style={
                 selectedCategory === cat._id
-                  ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, color: cat.color, boxShadow: 'var(--edith-shadow-sm)' }
-                  : { background: 'var(--edith-tag-bg)', borderColor: 'var(--edith-tag-border)', color: 'var(--edith-tag-text)' }
+                  ? { backgroundColor: `${cat.color}22`, borderColor: `${cat.color}66`, color: cat.color, boxShadow: 'var(--shadow-sm)' }
+                  : { background: 'var(--tag-bg)', borderColor: 'var(--tag-border)', color: 'var(--tag-text)' }
               }
             >
               {cat.icon} {cat.name}
@@ -94,9 +93,9 @@ export default function ExplorePage() {
         {/* Grid */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="w-6 h-6 text-edith-cyan/40 animate-spin" />
-            <span className="text-[10px] font-mono text-edith-cyan/20 tracking-wider">
-              SCANNING...
+            <Loader2 className="w-6 h-6 text-accent/40 animate-spin" />
+            <span className="text-[10px] font-mono text-accent/20 tracking-wider">
+              LOADING...
             </span>
           </div>
         ) : posts.length > 0 ? (
@@ -111,12 +110,12 @@ export default function ExplorePage() {
           </Masonry>
         ) : (
           <div className="text-center py-20">
-            <Crosshair className="w-12 h-12 text-edith-cyan/20 mx-auto mb-3" />
-            <p className="text-sm font-display font-medium tracking-wider" style={{ color: 'var(--edith-text-secondary)' }}>
-              NO TARGETS DETECTED
+            <Compass className="w-12 h-12 text-accent/20 mx-auto mb-3" />
+            <p className="text-sm font-semibold font-medium tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+              NO RESULTS FOUND
             </p>
-            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--edith-text-muted)' }}>
-              // Adjust scan parameters or check back later
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--text-tertiary)' }}>
+              Adjust filters or check back later
             </p>
           </div>
         )}

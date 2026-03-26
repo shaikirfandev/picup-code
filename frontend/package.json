@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.1.0",
+    "@tailwindcss/typography": "^0.5.19",
     "ag-grid-community": "^35.1.0",
     "ag-grid-react": "^35.1.0",
     "axios": "^1.6.3",

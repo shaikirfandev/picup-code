@@ -26,7 +26,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <label
             htmlFor={selectId}
             className="block text-[10px] font-mono tracking-wider uppercase"
-            style={{ color: 'var(--edith-text-dim)' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             {label}
           </label>
@@ -37,7 +37,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             className={clsx(
               'input-field appearance-none pr-10 cursor-pointer',
-              error && 'border-edith-error/50 focus:border-edith-error',
+              error && 'border-error/50 focus:border-error',
               className
             )}
             {...props}
@@ -55,11 +55,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <ChevronDown
             className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-            style={{ color: 'var(--edith-text-muted)' }}
+            style={{ color: 'var(--text-tertiary)' }}
           />
         </div>
         {error && (
-          <p className="text-[10px] font-mono" style={{ color: 'var(--edith-error)' }}>
+          <p className="text-[10px] font-mono" style={{ color: 'var(--error)' }}>
             {error}
           </p>
         )}

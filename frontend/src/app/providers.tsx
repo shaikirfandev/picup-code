@@ -52,13 +52,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         toastOptions={{
           duration: 3000,
           style: {
-            background: 'var(--edith-elevated)',
-            color: 'var(--edith-text)',
+            background: 'var(--surface-elevated)',
+            color: 'var(--foreground)',
             borderRadius: '4px',
             fontSize: '12px',
             fontFamily: "var(--font-mono, 'JetBrains Mono'), monospace",
-            border: '1px solid var(--edith-border)',
-            boxShadow: 'var(--edith-shadow-lg)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-lg)',
             padding: '12px 16px',
           },
         }}
