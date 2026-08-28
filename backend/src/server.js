@@ -36,7 +36,6 @@ const analyticsRoutes = require('./routes/analytics');
 const creatorAnalyticsRoutes = require('./routes/creatorAnalytics');
 const walletRoutes = require('./routes/wallet');
 const adminWalletRoutes = require('./routes/adminWallet');
-
 const affiliateRoutes = require('./routes/affiliate');
 
 const app = express();
@@ -130,7 +129,6 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/payments', walletLimiter, paymentRoutes);
 app.use('/api/notifications', notificationsLimiter, notificationRoutes);
 app.use('/api/creator-analytics', creatorAnalyticsRoutes);
-app.use('/api/creator-dashboard', creatorDashboardRoutes);
 app.use('/api/wallet', walletLimiter, walletRoutes);
 app.use('/api/admin/wallet', adminLimiter, adminWalletRoutes);
 app.use('/api/affiliate', affiliateRoutes);
