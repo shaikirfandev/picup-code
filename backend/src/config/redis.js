@@ -1,55 +1,94 @@
 /**
  * Redis Client Configuration
  * Shared Redis connection for caching, real-time counters, and event buffering.
+ * 
+ * Features:
+ * - Graceful fallback if Redis is unavailable
+ * - Automatic retry with exponential backoff
+ * - Safe wrapper methods that never throw
+ * - In-memory mock for development mode
  */
 const Redis = require('ioredis');
+const { MemoryRedis } = require('./memoryRedis');
+
+const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+const forceReal = process.env.USE_REAL_REDIS === 'true';
+const useMemory = isDev && !forceReal;
 
 let redisClient = null;
 let isConnected = false;
+let connectionAttempted = false;
 
 function getRedisClient() {
   if (redisClient && isConnected) return redisClient;
+  
+  // Use in-memory Redis for development
+  if (useMemory) {
+    if (!connectionAttempted) {
+      connectionAttempted = true;
+      redisClient = new MemoryRedis();
+      isConnected = true;
+      console.log('🟢 Using MemoryRedis (development mode) — zero latency, no dependencies');
+    }
+    return redisClient;
+  }
 
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  // Real ioredis for production
+  if (!connectionAttempted) {
+    connectionAttempted = true;
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-  redisClient = new Redis(redisUrl, {
-    maxRetriesPerRequest: 3,
-    retryStrategy(times) {
-      const delay = Math.min(times * 200, 5000);
-      return delay;
-    },
-    reconnectOnError(err) {
-      const targetErrors = ['READONLY', 'ECONNRESET', 'ECONNREFUSED'];
-      return targetErrors.some((e) => err.message.includes(e));
-    },
-    lazyConnect: false,
-    enableReadyCheck: true,
-    connectTimeout: 10000,
-  });
+    redisClient = new Redis(redisUrl, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times) {
+        const delay = Math.min(times * 200, 5000);
+        return delay;
+      },
+      reconnectOnError(err) {
+        const targetErrors = ['READONLY', 'ECONNRESET', 'ECONNREFUSED'];
+        return targetErrors.some((e) => err.message.includes(e));
+      },
+      lazyConnect: false,
+      enableReadyCheck: true,
+      connectTimeout: 10000,
+      maxReconnectAttempts: 10,
+    });
 
-  redisClient.on('connect', () => {
-    isConnected = true;
-    console.log('🔴 Redis connected');
-  });
+    redisClient.on('connect', () => {
+      isConnected = true;
+      console.log('✅ Redis connected successfully');
+    });
 
-  redisClient.on('error', (err) => {
-    isConnected = false;
-    console.error('Redis error:', err.message);
-  });
+    redisClient.on('ready', () => {
+      console.log('🔴 Redis ready');
+    });
 
-  redisClient.on('close', () => {
-    isConnected = false;
-  });
+    redisClient.on('error', (err) => {
+      isConnected = false;
+      console.error('❌ Redis error:', err.message);
+    });
+
+    redisClient.on('close', () => {
+      isConnected = false;
+      console.warn('⚠️ Redis connection closed');
+    });
+
+    redisClient.on('reconnecting', () => {
+      console.warn('🔄 Attempting to reconnect to Redis...');
+    });
+  }
 
   return redisClient;
 }
 
 function isRedisConnected() {
+  if (useMemory) return true; // MemoryRedis is always "connected"
   return isConnected && redisClient && redisClient.status === 'ready';
 }
 
 /**
  * Safe Redis operations — fallback gracefully if Redis is down.
+ * All methods return safe defaults, never throw.
  */
 const safeRedis = {
   async get(key) {
@@ -59,6 +98,10 @@ const safeRedis = {
   async set(key, value, ...args) {
     if (!isRedisConnected()) return null;
     try { return await redisClient.set(key, value, ...args); } catch { return null; }
+  },
+  async setex(key, seconds, value) {
+    if (!isRedisConnected()) return null;
+    try { return await redisClient.setex(key, seconds, value); } catch { return null; }
   },
   async incr(key) {
     if (!isRedisConnected()) return null;
@@ -104,6 +147,10 @@ const safeRedis = {
     if (!isRedisConnected()) return null;
     try { return await redisClient.hset(key, field, value); } catch { return null; }
   },
+  async hget(key, field) {
+    if (!isRedisConnected()) return null;
+    try { return await redisClient.hget(key, field); } catch { return null; }
+  },
   async hincrby(key, field, amount) {
     if (!isRedisConnected()) return null;
     try { return await redisClient.hincrby(key, field, amount); } catch { return null; }
@@ -130,4 +177,27 @@ const safeRedis = {
   },
 };
 
-module.exports = { getRedisClient, isRedisConnected, safeRedis };
+/**
+ * safeRedisOp — call any redis method by name, fail-safe.
+ * Used by services: safeRedisOp('get', key), safeRedisOp('set', key, val, 'EX', 300)
+ */
+async function safeRedisOp(method, ...args) {
+  if (!isRedisConnected() || !redisClient) return null;
+  try {
+    if (typeof redisClient[method] !== 'function') return null;
+    return await redisClient[method](...args);
+  } catch {
+    return null;
+  }
+}
+
+// Eagerly initialize so `const { redisClient } = require('./redis')` works
+getRedisClient();
+
+module.exports = {
+  getRedisClient,
+  isRedisConnected,
+  safeRedis,
+  safeRedisOp,
+  redisClient,
+};
