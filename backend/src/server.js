@@ -130,6 +130,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/payments', walletLimiter, paymentRoutes);
 app.use('/api/notifications', notificationsLimiter, notificationRoutes);
 app.use('/api/creator-analytics', creatorAnalyticsRoutes);
+app.use('/api/creator-dashboard', creatorDashboardRoutes);
 app.use('/api/wallet', walletLimiter, walletRoutes);
 app.use('/api/admin/wallet', adminLimiter, adminWalletRoutes);
 app.use('/api/affiliate', affiliateRoutes);
@@ -161,12 +162,20 @@ server.listen(PORT, () => {
   console.log(`📌 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔌 Socket.io ready`);
 
-  // Initialize Redis for analytics
+  // Initialize Redis for analytics — graceful handling if unavailable
   try {
-    const { getRedisClient } = require('./config/redis');
+    const { getRedisClient, isRedisConnected } = require('./config/redis');
     getRedisClient();
+    
+    // Wait briefly for connection attempt
+    setTimeout(() => {
+      if (!isRedisConnected()) {
+        console.warn('⚠️  Redis unavailable — analytics will use fallback mode (direct DB writes)');
+      }
+    }, 2000);
   } catch (err) {
-    console.warn('⚠️ Redis not available — analytics will use direct DB writes');
+    console.warn('⚠️  Failed to initialize Redis:', err.message);
+    console.warn('   → Analytics will use direct database writes as fallback');
   }
 
   // Start analytics background workers
@@ -187,6 +196,27 @@ server.listen(PORT, () => {
 
   // Compute yesterday's stats on startup (if not already computed)
   computeDailyStats().catch(() => {});
+
+  // Start scheduled post publisher worker (checks every 60s)
+  const SchedulerWorker = require('./workers/schedulerWorker');
+  SchedulerWorker.start(60 * 1000);
+
+  // Start content metrics aggregation (runs daily at 1 AM)
+  const ContentMetricsWorker = require('./workers/contentMetricsWorker');
+  setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === 1 && now.getMinutes() < 5) {
+      ContentMetricsWorker.runAll().catch(err => {
+        console.error('[ContentMetricsWorker] Scheduled run failed:', err.message);
+      });
+    }
+  }, 5 * 60 * 1000);
+  // Run initial aggregation on startup
+  ContentMetricsWorker.runAll().catch(() => {});
+
+  // Start ad campaign worker (expiry, budget enforcement, daily stats)
+  const { startAdCampaignWorker } = require('./workers/adCampaignWorker');
+  startAdCampaignWorker();
 });
 
 module.exports = { app, server, io };
